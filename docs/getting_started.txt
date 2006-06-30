@@ -1,0 +1,98 @@
+Supported operating systems
+---------------------------
+
+The following instructions apply to Linux, which I'm using. Other Unices shouldn't see any difference. Windows users will have to find equivalent instructions for their system, but it should be straightforward. Admin scripts (see the bin/ directory) are provided for both systems ; the ones for Windows have the extension ".bat" (as expected).
+
+Software requirements
+---------------------
+
+java version "1.4.2-03" (or later)
+Apache Ant (I used version 1.6.2)
+BeanShell (I used version 2.0b4)
+
+BeanShell is for databeans admin scripts. It can also run client interaction, provided it is given the right classpath and import statements (see below : Running a beanshell client). The latest version is available from http://www.beanshell.org/download.html . Copy the jar file into the lib/ directory with the changed name below:
+  ln -s bsh-2.0b4.jar lib/bsh.jar
+
+OS environment setup
+--------------------
+
+From now on, the installed databeans directory will be referred to as $DATABEANS_HOME. Put the bin/ directory into your path:
+  PATH=$PATH:$DATABEANS_HOME/bin
+
+Under Unix, you'll have to make the admin scripts executable, because they have been extracted from a zip file:
+  ant chmod
+
+Running the sample
+------------------
+
+Run the RMI registry:
+  rmiregistry &
+  rmiregistry 2000 &
+
+(The second instance is for the admin connection. Its port (2000) should be made available to priviledged users-administrators only.)
+
+Create a working copy of the sample directory and change dir to it:
+  cp -r $DATABEANS_HOME/sample mysample
+  cd mysample
+
+Create a "heapspace":
+  cd server
+  mkheapspace 262144
+
+This creates a file named "heapspace" of sample size 250Kb (but feel free to take anything else). The command above is tantamount to the unix command (that you may prefer):
+  dd if=/dev/zero of=heapspace count=512
+
+Prepare the server directory:
+  ant -Ddatabeans.home=$DATABEANS_HOME setup
+
+(Once you've executed this, you've got a standalone server application, you don't need the databeans installation directory anymore.)
+
+Run the server:
+  ant debug
+
+Prepare the client directory:
+  cd ..
+  cd client
+  ant -Ddatabeans.home=$DATABEANS_HOME setup
+
+(As above with this you've got a standalone client application and you need no more the databeans installation directory.)
+
+Run the client:
+  ant debug
+
+You should get something like the following as the output:
+
+[[Clark Research New York Manager $2,000.00 Clark], [Miller Research New York Clerk $1,000.00 Clark]]
+
+We've printed a few contents of the database that the sample was aimed to create. If you've made it all through here, congratulations, you will now be able to experiment with the sample at your will and then create a new one from scratch to build your own databeans application. We may now shutdown the server:
+  databeans_shutdown
+
+To re-enter the running cycle (for instance after you've made some changes to the sample source files), first go to the server directory:
+  cd ..
+  cd server
+  ant
+
+Instead of the automated command above, what you can do is:
+  java -classpath . -Djava.rmi.server.codebase=http://localhost:2001/ -Djava.security.policy=policy persistence.server.Server &
+
+Next go to the client directory and, likewise, issue either "ant", or:
+  java -classpath databeans_client.jar:. -Djava.security.policy=policy Sample
+
+Running a beanshell client
+--------------------------
+
+For an easy interaction with your databeans server, using BeanShell is a must:
+  java -classpath bsh.jar:databeans_client.jar:. -Djava.security.policy=policy bsh.Interpreter
+
+The following statements will just get the connection, commit the transaction, and exit. Feel free to try anything in between (after perhaps reading the manual !)
+
+import persistence.*;
+System.setSecurityManager(new SecurityManager());
+conn=Connections.getConnection("//localhost/store");
+conn.commit();
+exit();
+
+Reading the manual
+------------------
+
+http://databeans.sourceforge.net/manual.html

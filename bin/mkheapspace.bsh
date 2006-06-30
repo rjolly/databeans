@@ -1,0 +1,4 @@
+import java.io.*;
+file=new RandomAccessFile("heapspace","rw");
+file.setLength(new Long(bsh.args[0]).longValue());
+file.close();

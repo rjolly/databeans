@@ -1,0 +1,33 @@
+<project name="client" default="run" basedir=".">
+  <property name="classpath" value="databeans_client.jar:."/>
+
+  <target name="setup">
+    <copy file="${databeans.home}/lib/databeans_client.jar" tofile="databeans_client.jar"/>
+    <copy failonerror="false" file="${databeans.home}/lib/bsh.jar" tofile="bsh.jar"/>
+  </target>
+
+  <target name="compile">
+    <javac srcdir="." classpath="${classpath}"/>
+  </target>
+
+  <target name="compile-debug">
+    <javac debug="on" srcdir="." classpath="${classpath}"/>
+  </target>
+
+  <target name="run" depends="compile">
+    <java classpath="${classpath}" classname="Sample">
+      <sysproperty key="java.security.policy" value="policy"/>
+    </java>
+  </target>
+
+  <target name="debug" depends="compile-debug">
+    <antcall target="run"/>
+  </target>
+
+  <target name="clean">
+    <delete>
+      <fileset dir="." includes="**/*.class"/>
+    </delete>
+  </target>
+
+</project>

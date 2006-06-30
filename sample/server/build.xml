@@ -1,0 +1,41 @@
+<project name="server" default="run" basedir=".">
+
+  <target name="setup">
+    <unzip src="${databeans.home}/lib/databeans.jar" dest="."/>
+  </target>
+
+  <target name="compile">
+    <javac srcdir="." classpath="."/>
+    <rmic base="."
+          includes="DepartmentImpl.class
+                    EmployeeImpl.class"
+    />
+  </target>
+
+  <target name="compile-debug">
+    <javac debug="on" srcdir="." classpath="."/>
+    <rmic debug="on"
+          base="."
+          includes="DepartmentImpl.class
+                    EmployeeImpl.class"
+    />
+  </target>
+
+  <target name="run" depends="compile">
+    <java fork="true" spawn="true" classpath="." classname="persistence.server.Server">
+      <sysproperty key="java.rmi.server.codebase" value="http://localhost:2001/"/>
+      <sysproperty key="java.security.policy" value="policy"/>
+    </java>
+  </target>
+
+  <target name="debug" depends="compile-debug">
+    <antcall target="run"/>
+  </target>
+
+  <target name="clean">
+    <delete>
+      <fileset dir="." includes="**/*.class" excludes="persistence/**/*"/>
+    </delete>
+  </target>
+
+</project>

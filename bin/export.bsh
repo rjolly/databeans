@@ -1,0 +1,5 @@
+import java.io.*;
+import java.rmi.*;
+System.setSecurityManager(new SecurityManager());
+admin=Naming.lookup("//localhost:2000/admin");
+admin.export(new File(bsh.args[0]).getAbsolutePath());
