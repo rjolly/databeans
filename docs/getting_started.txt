@@ -10,17 +10,21 @@ java version "1.4.2-03" (or later)
 Apache Ant (I used version 1.6.2)
 BeanShell (I used version 2.0b4)
 
-BeanShell is for databeans admin scripts. It can also run client interaction, provided it is given the right classpath and import statements (see below : Running a beanshell client). The latest version is available from http://www.beanshell.org/download.html . Copy the jar file into the lib/ directory with the changed name below:
-  ln -s bsh-2.0b4.jar lib/bsh.jar
+BeanShell is for databeans admin scripts. It can also run client interaction, provided it is given the right classpath and import statements (see below : Running a beanshell client). It is available from:
+
+http://www.beanshell.org/download.html
 
 OS environment setup
 --------------------
 
-From now on, the installed databeans directory will be referred to as $DATABEANS_HOME. Put the bin/ directory into your path:
+From now on, the installed databeans directory will be referred to as $DATABEANS_HOME. Copy the BeanShell jar file into the lib/ directory with the changed name below:
+  cp bsh-2.0b4.jar $DATABEANS_HOME/lib/bsh.jar
+
+Put the bin/ directory into your path:
   PATH=$PATH:$DATABEANS_HOME/bin
 
 Under Unix, you'll have to make the admin scripts executable, because they have been extracted from a zip file:
-  ant chmod
+  ant -f $DATABEANS_HOME/build.xml chmod
 
 Running the sample
 ------------------
@@ -84,7 +88,7 @@ Running a beanshell client
 For an easy interaction with your databeans server, using BeanShell is a must:
   java -classpath bsh.jar:databeans_client.jar:. -Djava.security.policy=policy bsh.Interpreter
 
-The following statements will just get the connection, commit the transaction, and exit. Feel free to try anything in between (after perhaps reading the manual !)
+The following statements will just get the connection, commit the transaction, and exit. Feel free to try anything in between (after perhaps reading the databeans manual !)
 
 import persistence.*;
 System.setSecurityManager(new SecurityManager());
