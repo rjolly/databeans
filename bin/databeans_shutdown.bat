@@ -1,1 +1,1 @@
-echo "please terminate the server manually"
+echo "please stop the server manually"
