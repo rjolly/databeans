@@ -15,7 +15,7 @@
   </target>
 
   <target name="run" depends="compile">
-    <java classpath="${classpath}" classname="Sample">
+    <java fork="true" classpath="${classpath}" classname="Sample">
       <sysproperty key="java.security.policy" value="policy"/>
     </java>
   </target>
