@@ -22,7 +22,7 @@
   </target>
 
   <target name="run" depends="compile">
-    <java fork="true" spawn="true" classpath="." classname="persistence.server.Server">
+    <java fork="true" classpath="." classname="persistence.server.Server">
       <sysproperty key="java.rmi.server.codebase" value="http://localhost:2001/"/>
       <sysproperty key="java.security.policy" value="policy"/>
     </java>

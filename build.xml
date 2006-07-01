@@ -1,0 +1,120 @@
+<project name="databeans" default="libs" basedir=".">
+
+  <target name="compile">
+    <javac srcdir="src"/>
+    <rmic base="src"
+          includes="persistence/*Impl.class
+                    persistence/util/*.class
+                    persistence/beans/Persistent*.class
+                    persistence/PersistentArray.class
+                    persistence/PersistentSystem.class
+                    persistence/Transaction.class"
+          excludes="persistence/util/PersistentCollections$*.class
+                    persistence/util/PersistentCollections.class
+                    persistence/util/Remote*.class"
+    />
+  </target>
+
+  <target name="compile-debug">
+    <javac debug="on" srcdir="src"/>
+    <rmic debug="on"
+          base="src"
+          includes="persistence/*Impl.class
+                    persistence/util/*.class
+                    persistence/beans/Persistent*.class
+                    persistence/PersistentArray.class
+                    persistence/PersistentSystem.class
+                    persistence/Transaction.class"
+          excludes="persistence/util/PersistentCollections$*.class
+                    persistence/util/PersistentCollections.class
+                    persistence/util/Remote*.class"
+    />
+  </target>
+
+  <target name="libs" depends="lib, interface, admin"/>
+
+  <target name="lib" depends="compile">
+    <zip destfile="lib/databeans.jar"
+         basedir="src"
+         compress="false"
+         includes="**/*.class"
+    />
+  </target>
+
+  <target name="interface" depends="compile">
+    <zip destfile="lib/databeans_client.jar"
+         basedir="src"
+         compress="false"
+         includes="persistence/util/Remote*.class
+                   persistence/util/PersistentCollections$*.class
+                   persistence/util/PersistentCollections.class
+                   persistence/beans/Remote*.class
+                   persistence/Notified.class
+                   persistence/Array.class
+                   persistence/RemoteArray.class
+                   persistence/PersistentArrays$LocalArray.class
+                   persistence/PersistentArrays.class
+                   persistence/PersistentException.class
+                   persistence/Connections.class
+                   persistence/Connection.class
+                   persistence/Store.class"
+    />
+  </target>
+
+  <target name="admin" depends="compile">
+    <zip destfile="lib/databeans_admin.jar"
+         basedir="src"
+         compress="false"
+         includes="persistence/Admin.class
+                   persistence/RemoteTransaction.class
+                   persistence/RemoteSystem.class
+                   persistence/util/Remote*.class
+                   persistence/util/PersistentCollections$*.class
+                   persistence/util/PersistentCollections.class
+                   persistence/beans/Remote*.class
+                   persistence/Notified.class
+                   persistence/Array.class
+                   persistence/RemoteArray.class
+                   persistence/PersistentArrays$LocalArray.class
+                   persistence/PersistentArrays.class
+                   persistence/PersistentException.class
+                   persistence/Connections.class
+                   persistence/Connection.class
+                   persistence/Store.class"
+    />
+  </target>
+
+  <target name="libs-debug" depends="compile-debug">
+    <antcall target="libs"/>
+  </target>
+
+  <target name="debug" depends="libs-debug"/>
+
+  <target name="clean">
+    <delete>
+      <fileset dir="src" includes="**/*.class"/>
+    </delete>
+  </target>
+
+  <target name="javadoc">
+    <delete dir="api" quiet="true"/>
+    <mkdir dir="api"/>
+    <javadoc sourcepath="src" destdir="api" packagenames="*"/>
+  </target>
+
+  <target name="bundle" depends="javadoc">
+    <delete file="lib/bsh.jar" quiet="true"/>
+    <zip destfile="../databeans.zip" basedir=".." includes="databeans/**"/>
+  </target>
+
+  <target name="chmod">
+    <chmod dir="bin"
+           perm="+x"
+           includes="databeans_admin
+                     databeans_export
+                     databeans_import
+                     mkheapspace"
+    />
+  </target>
+
+</project>

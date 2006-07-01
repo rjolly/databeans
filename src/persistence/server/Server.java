@@ -8,12 +8,21 @@ public class Server {
 		if (System.getSecurityManager() == null) System.setSecurityManager(new RMISecurityManager());
 		ClassServer cs=new ClassFileServer(2001, ".");
 		try {
-			StoreImpl store=new StoreImpl("heapspace");
+			final StoreImpl store=new StoreImpl("heapspace");
 			Naming.rebind("store", store);
 			System.out.println("store bound in registry");
 			AdminImpl admin=new AdminImpl(store);
 			Naming.rebind("//localhost:2000/admin", admin);
 			System.out.println("admin bound in registry");
+			Runtime.getRuntime().addShutdownHook(new Thread() {
+				public void run() {
+					try {
+						store.close();
+					} catch (RemoteException e) {
+						throw new RuntimeException("remote error");
+					}
+				}
+			});
 		} catch (Exception e) {
 			cs.close();
 			throw e;

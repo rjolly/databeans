@@ -1,4 +1,0 @@
-import java.rmi.*;
-System.setSecurityManager(new SecurityManager());
-admin=Naming.lookup("//localhost:2000/admin");
-admin.close();

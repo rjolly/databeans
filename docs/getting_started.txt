@@ -1,12 +1,12 @@
 Supported operating systems
 ---------------------------
 
-The following instructions apply to Linux, which I'm using. Other Unices shouldn't see any difference. Windows users will have to find equivalent instructions for their system, but it should be straightforward. Admin scripts (see the bin/ directory) are provided for both systems ; the ones for Windows have the extension ".bat" (as expected).
+The following instructions apply to Linux. Other Unices shouldn't see any difference. Win32 users will have to find equivalent instructions for their system, but it should be straightforward. Admin scripts (see the bin/ directory) are provided for both systems ; the ones for Win32 have the extension ".bat" (as expected).
 
 Software requirements
 ---------------------
 
-java version "1.4.2-03" (or later)
+java version "1.4.2-03" (or higher)
 Apache Ant (I used version 1.6.2)
 BeanShell (I used version 2.0b4)
 
@@ -33,7 +33,7 @@ Run the RMI registry:
   rmiregistry &
   rmiregistry 2000 &
 
-(The second instance is for the admin connection. Its port (2000) should be made available to priviledged users-administrators only.)
+(The second instance is for the admin connection. Its port (2000) should be made available to priviledged users/administrators only.)
 
 Create a working copy of the sample directory and change dir to it:
   cp -r $DATABEANS_HOME/sample mysample
@@ -54,9 +54,13 @@ Prepare the server directory:
 Run the server:
   ant debug
 
-Prepare the client directory:
-  cd ..
-  cd client
+You should get the output:
+
+store bound in registry
+admin bound in registry
+
+Take another window (make sure $DATABEANS_HOME is defined). Prepare the client directory:
+  cd mysample/client
   ant -Ddatabeans.home=$DATABEANS_HOME setup
 
 (As above with this you've got a standalone client application and you need no more the databeans installation directory.)
@@ -64,28 +68,25 @@ Prepare the client directory:
 Run the client:
   ant debug
 
-You should get something like the following as the output:
+You should get the output:
 
 [[Clark Research New York Manager $2,000.00 Clark], [Miller Research New York Clerk $1,000.00 Clark]]
 
-We've printed a few contents of the database that the sample was aimed to create. If you've made it all through here, congratulations, you will now be able to experiment with the sample at your will and then create a new one from scratch to build your own databeans application. We may now shutdown the server:
+We've printed a few contents of the database that the sample was aimed to create. If you've made it all through here, congratulations, you will now be able to experiment with the sample at your will and then create a new one from scratch to build your own databeans application.
+
+We may now shutdown the server. Type CTRL-C in the server window, or issue the following command:
   databeans_shutdown
 
-To re-enter the running cycle (for instance after you've made some changes to the sample source files), first go to the server directory:
-  cd ..
-  cd server
+To re-enter the running cycle (for instance after you've made some changes to the sample source files), first go to the server window:
   ant
 
-Instead of the automated command above, what you can do is:
-  java -classpath . -Djava.rmi.server.codebase=http://localhost:2001/ -Djava.security.policy=policy persistence.server.Server &
-
-Next go to the client directory and, likewise, issue either "ant", or:
-  java -classpath databeans_client.jar:. -Djava.security.policy=policy Sample
+Next go to the client directory and, likewise, type:
+  ant
 
 Running a beanshell client
 --------------------------
 
-For an easy interaction with your databeans server, using BeanShell is a must:
+For an easy interaction with your databeans server, using a scripting language like BeanShell is a must:
   java -classpath bsh.jar:databeans_client.jar:. -Djava.security.policy=policy bsh.Interpreter
 
 The following statements will just get the connection, commit the transaction, and exit. Feel free to try anything in between (after perhaps reading the databeans manual !)
