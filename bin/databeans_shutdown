@@ -1,2 +1,0 @@
-#!/bin/sh
-kill -1 `ps auxww | grep persistence.server.Server | grep -v grep | nawk '{print $2}'`
