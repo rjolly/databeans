@@ -86,7 +86,7 @@ Running a beanshell client
 It is possible to connect to the server in interactive mode using a scripting language like BeanShell:
   java -classpath bsh.jar:databeans_client.jar:. -Djava.security.policy=policy bsh.Interpreter
 
-The following statements will just get the connection, commit the transaction, and exit. Feel free to try anything in between (after perhaps reading the databeans manual !)
+The following statements will just get the connection, commit the transaction, and exit. Feel free to try anything in between (provided perhaps you have read the databeans manual !)
 
 import persistence.*;
 System.setSecurityManager(new SecurityManager());
