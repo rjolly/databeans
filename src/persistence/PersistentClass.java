@@ -45,7 +45,9 @@ public class PersistentClass extends UnicastSerializedObject {
 	}
 
 	Field getField(String name) {
-		return (Field)map.get(name);
+		Field f=(Field)map.get(name);
+		if(f==null) throw new PersistentException("no such property : "+name+" in class : "+this.name);
+		return f;
 	}
 
 	Iterator fieldIterator() {

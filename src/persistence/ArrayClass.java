@@ -24,9 +24,11 @@ public class ArrayClass extends PersistentClass {
 	}
 
 	Field getField(int index) {
-		Field f=new Field("element["+index+"]",typeCode);
-		f.setOffset(header+f.size*index);
-		return f;
+		if(index<length) {
+			Field f=new Field("element["+index+"]",typeCode);
+			f.setOffset(header+f.size*index);
+			return f;
+		} else throw new PersistentException("array index : "+index+" out of bounds : "+length);
 	}
 
 	Iterator fieldIterator() {

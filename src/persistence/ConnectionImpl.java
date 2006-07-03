@@ -191,7 +191,13 @@ class ConnectionXAResource implements XAResource, Serializable {
 		this.connection=connection;
 	}
 
-	public void commit(Xid xid, boolean onePhase) {}
+	public void commit(Xid xid, boolean onePhase) {
+		try {
+			connection.commit();
+		} catch (RemoteException e) {
+			throw new RuntimeException("remote error");
+		}
+	}
 
 	public void end(Xid xid, int flags) {}
 
@@ -214,17 +220,23 @@ class ConnectionXAResource implements XAResource, Serializable {
 	}
 
 	public int prepare(Xid xid) {
-		return 0;
+		return XA_OK;
 	}
 
 	public Xid[] recover(int flag) {
-		return null;
+		return new Xid[] {};
 	}
 
-	public void rollback(Xid xid) {}
+	public void rollback(Xid xid) {
+		try {
+			connection.rollback();
+		} catch (RemoteException e) {
+			throw new RuntimeException("remote error");
+		}
+	}
 
 	public boolean setTransactionTimeout(int seconds) {
-		return false;
+		return seconds==0;
 	}
 
 	public void start(Xid xid, int flags) {}
