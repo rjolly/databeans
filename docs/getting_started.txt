@@ -1,7 +1,7 @@
 Supported operating systems
 ---------------------------
 
-The following instructions apply to Linux. Other Unices shouldn't see any difference. Win32 users will have to find equivalent instructions for their system, but it should be straightforward. Admin scripts (see the bin/ directory) are provided for both systems ; the ones for Win32 have the extension ".bat" (as expected).
+The following instructions apply to Linux. Other Unices shouldn't make any difference. Win32 users will have to find equivalent instructions for their system, but it should be straightforward. Admin scripts (see the bin/ directory) are provided for both systems ; the ones for Win32 have the extension ".bat", as expected.
 
 Software requirements
 ---------------------
@@ -10,7 +10,7 @@ java version "1.4.2-03" (or higher)
 Apache Ant (I used version 1.6.2)
 BeanShell (I used version 2.0b4)
 
-BeanShell is for databeans admin scripts. It can also run client interaction, provided it is given the right classpath and import statements (see below : Running a beanshell client). It is available from:
+BeanShell is used for databeans admin scripts. It can also run client interaction, provided it is given the right classpath and import statements (see below : Running a beanshell client). It is available from:
 
 http://www.beanshell.org/download.html
 
@@ -72,7 +72,7 @@ You should get the output:
 
 [[Clark Research New York Manager $2,000.00 Clark], [Miller Research New York Clerk $1,000.00 Clark]]
 
-We've printed a few contents of the database that the sample was aimed to create. If you've made it all through here, congratulations, you will now be able to experiment with the sample at your will and then create a new one from scratch to build your own databeans application.
+We've printed a few contents of the database that the sample was intended to create. If you've made it all through here, congratulations, you will now be able to experiment with the sample at your will and then create a new one from scratch to build your own databeans application.
 
 We may now shutdown the server. Type CTRL-C in the server window. To re-enter the running cycle (for instance after you've made some changes to the sample source files), type again:
   ant

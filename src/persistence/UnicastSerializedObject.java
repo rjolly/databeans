@@ -2,7 +2,7 @@ package persistence;
 
 import java.io.*;
 
-public class UnicastSerializedObject implements Serializable {
+class UnicastSerializedObject implements Serializable {
 	transient long base;
 
 	public final int hashCode() {
