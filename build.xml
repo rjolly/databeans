@@ -92,25 +92,10 @@
 
   <target name="debug" depends="jars-debug"/>
 
-  <target name="registry">
-    <java classname="sun.rmi.registry.RegistryImpl" fork="true"/>
-  </target>
-
-  <target name="admin_registry">
-    <java classname="sun.rmi.registry.RegistryImpl" fork="true">
-      <arg value="2000"/>
-    </java>
-  </target>
-
-  <target name="run_sample_server" depends="jars">
-    <copy file="databeans.jar" todir="sample/server"/>
+  <target name="setup_sample" depends="jars">
     <ant dir="sample/server" target="mkheapspace"/>
-    <ant dir="sample/server"/>
-  </target>
-
-  <target name="run_sample_client" depends="jars">
+    <copy file="databeans.jar" todir="sample/server"/>
     <copy file="databeans_client.jar" todir="sample/client"/>
-    <ant dir="sample/client"/>
   </target>
 
   <target name="clean_sample">
@@ -135,7 +120,6 @@
   </target>
 
   <target name="bundle">
-    <delete dir="classes" quiet="true"/>
     <zip destfile="../databeans.zip" basedir=".." includes="databeans/**"/>
   </target>
 
