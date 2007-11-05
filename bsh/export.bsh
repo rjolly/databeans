@@ -1,0 +1,4 @@
+import java.io.*;
+import java.rmi.*;
+admin=Naming.lookup("//localhost:2000/admin");
+admin.export(new File("data.xml").getAbsolutePath());

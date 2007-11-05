@@ -96,12 +96,14 @@
     <ant dir="sample/server" target="mkheapspace"/>
     <copy file="databeans.jar" todir="sample/server"/>
     <copy file="databeans_client.jar" todir="sample/client"/>
+    <copy file="lib/bsh-2.0b4.jar" todir="sample/client"/>
   </target>
 
   <target name="clean_sample">
     <delete file="sample/server/heapspace" quiet="true"/>
     <delete file="sample/server/databeans.jar" quiet="true"/>
     <delete file="sample/client/databeans_client.jar" quiet="true"/>
+    <delete file="sample/client/bsh-2.0b4.jar" quiet="true"/>
     <ant dir="sample/client" target="clean"/>
     <ant dir="sample/server" target="clean"/>
   </target>
@@ -123,14 +125,11 @@
     <zip destfile="../databeans.zip" basedir=".." includes="databeans/**"/>
   </target>
 
-  <target name="chmod">
-    <chmod dir="bin"
-           perm="+x"
-           includes="databeans_admin
-                     databeans_export
-                     databeans_import
-                     mkheapspace"
-    />
+  <target name="admin" depends="jars">
+    <java classname="bsh.Console" classpath="lib/bsh-2.0b4.jar:databeans_admin.jar" fork="true">
+      <sysproperty key="java.security.manager" value=""/>
+      <sysproperty key="java.security.policy" value="policy"/>
+    </java>
   </target>
 
 </project>
