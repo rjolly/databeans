@@ -1,6 +1,6 @@
-databeans_client.jar
-classes
-lib
-databeans.jar
-databeans_admin.jar
 api
+classes
+databeans.jar
+databeans_client.jar
+databeans_admin.jar
+lib
