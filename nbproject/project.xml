@@ -72,12 +72,12 @@
             </compilation-unit>
             <compilation-unit>
                 <package-root>sample/client</package-root>
-                <classpath mode="compile">databeans_client.jar</classpath>
+                <classpath mode="compile">sample/client/databeans_client.jar</classpath>
                 <source-level>1.4</source-level>
             </compilation-unit>
             <compilation-unit>
                 <package-root>sample/server</package-root>
-                <classpath mode="compile">databeans.jar</classpath>
+                <classpath mode="compile">sample/server/databeans.jar</classpath>
                 <source-level>1.4</source-level>
             </compilation-unit>
         </java-data>
