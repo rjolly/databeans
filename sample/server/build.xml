@@ -1,28 +1,36 @@
 <project name="server" default="run" basedir=".">
 
-  <target name="setup">
-    <unzip src="${databeans.home}/lib/databeans.jar" dest="."/>
+  <target name="mkheapspace">
+    <exec executable="dd">
+      <arg value="if=/dev/zero"/>
+      <arg value="of=heapspace"/>
+      <arg value="count=512"/>
+    </exec>
   </target>
 
   <target name="compile">
-    <javac srcdir="." classpath="."/>
-    <rmic base="."
+    <mkdir dir="classes"/>
+    <unzip src="databeans.jar" dest="classes" overwrite="false"/>
+    <javac srcdir="." destdir="classes"/>
+    <rmic base="classes"
           includes="DepartmentImpl.class
                     EmployeeImpl.class"
     />
   </target>
 
   <target name="compile-debug">
-    <javac debug="on" srcdir="." classpath="."/>
+    <mkdir dir="classes"/>
+    <unzip src="databeans.jar" dest="classes" overwrite="false"/>
+    <javac debug="on" srcdir="." destdir="classes"/>
     <rmic debug="on"
-          base="."
+          base="classes"
           includes="DepartmentImpl.class
                     EmployeeImpl.class"
     />
   </target>
 
   <target name="run" depends="compile">
-    <java fork="true" classpath="." classname="persistence.server.Server">
+    <java fork="true" classpath="classes" classname="persistence.server.Server">
       <sysproperty key="java.rmi.server.codebase" value="http://localhost:2001/"/>
       <sysproperty key="java.security.policy" value="policy"/>
     </java>
@@ -33,9 +41,7 @@
   </target>
 
   <target name="clean">
-    <delete>
-      <fileset dir="." includes="**/*.class" excludes="persistence/**/*"/>
-    </delete>
+    <delete dir="classes" quiet="true"/>
   </target>
 
 </project>

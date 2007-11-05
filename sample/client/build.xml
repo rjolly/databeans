@@ -1,21 +1,17 @@
 <project name="client" default="run" basedir=".">
-  <property name="classpath" value="databeans_client.jar:."/>
-
-  <target name="setup">
-    <copy file="${databeans.home}/lib/databeans_client.jar" tofile="databeans_client.jar"/>
-    <copy failonerror="false" file="${databeans.home}/lib/bsh.jar" tofile="bsh.jar"/>
-  </target>
 
   <target name="compile">
-    <javac srcdir="." classpath="${classpath}"/>
+    <mkdir dir="classes"/>
+    <javac srcdir="." destdir="classes" classpath="databeans_client.jar"/>
   </target>
 
   <target name="compile-debug">
-    <javac debug="on" srcdir="." classpath="${classpath}"/>
+    <mkdir dir="classes"/>
+    <javac debug="on" srcdir="." destdir="classes" classpath="databeans_client.jar"/>
   </target>
 
   <target name="run" depends="compile">
-    <java fork="true" classpath="${classpath}" classname="Sample">
+    <java fork="true" classpath="databeans_client.jar:classes" classname="Sample">
       <sysproperty key="java.security.policy" value="policy"/>
     </java>
   </target>
@@ -25,9 +21,7 @@
   </target>
 
   <target name="clean">
-    <delete>
-      <fileset dir="." includes="**/*.class"/>
-    </delete>
+    <delete dir="classes" quiet="true"/>
   </target>
 
 </project>
