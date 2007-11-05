@@ -1,8 +1,9 @@
 <project name="databeans" default="libs" basedir=".">
 
   <target name="compile">
-    <javac srcdir="src"/>
-    <rmic base="src"
+    <mkdir dir="classes"/>
+    <javac srcdir="src" destdir="classes"/>
+    <rmic base="classes"
           includes="persistence/*Impl.class
                     persistence/util/*.class
                     persistence/beans/Persistent*.class
@@ -16,9 +17,9 @@
   </target>
 
   <target name="compile-debug">
-    <javac debug="on" srcdir="src"/>
+    <javac debug="on" srcdir="src" destdir="classes"/>
     <rmic debug="on"
-          base="src"
+          base="classes"
           includes="persistence/*Impl.class
                     persistence/util/*.class
                     persistence/beans/Persistent*.class
@@ -35,7 +36,7 @@
 
   <target name="lib" depends="compile">
     <zip destfile="lib/databeans.jar"
-         basedir="src"
+         basedir="classes"
          compress="false"
          includes="**/*.class"
     />
@@ -43,7 +44,7 @@
 
   <target name="interface" depends="compile">
     <zip destfile="lib/databeans_client.jar"
-         basedir="src"
+         basedir="classes"
          compress="false"
          includes="persistence/util/Remote*.class
                    persistence/util/PersistentCollections$*.class
@@ -63,7 +64,7 @@
 
   <target name="admin" depends="compile">
     <zip destfile="lib/databeans_admin.jar"
-         basedir="src"
+         basedir="classes"
          compress="false"
          includes="persistence/Admin.class
                    persistence/RemoteTransaction.class
@@ -91,9 +92,7 @@
   <target name="debug" depends="libs-debug"/>
 
   <target name="clean">
-    <delete>
-      <fileset dir="src" includes="**/*.class"/>
-    </delete>
+    <delete dir="classes" quiet="true"/>
   </target>
 
   <target name="javadoc">
