@@ -1,2 +1,5 @@
-classes
 api
+classes
+databeans_client.jar
+databeans.jar
+databeans_admin.jar

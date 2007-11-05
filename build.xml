@@ -1,4 +1,4 @@
-<project name="databeans" default="libs" basedir=".">
+<project name="databeans" default="jars" basedir=".">
 
   <target name="compile">
     <mkdir dir="classes"/>
@@ -32,10 +32,10 @@
     />
   </target>
 
-  <target name="libs" depends="lib, interface, admin"/>
+  <target name="jars" depends="jar, interface, admin"/>
 
-  <target name="lib" depends="compile">
-    <zip destfile="lib/databeans.jar"
+  <target name="jar" depends="compile">
+    <zip destfile="databeans.jar"
          basedir="classes"
          compress="false"
          includes="**/*.class"
@@ -43,7 +43,7 @@
   </target>
 
   <target name="interface" depends="compile">
-    <zip destfile="lib/databeans_client.jar"
+    <zip destfile="databeans_client.jar"
          basedir="classes"
          compress="false"
          includes="persistence/util/Remote*.class
@@ -63,7 +63,7 @@
   </target>
 
   <target name="admin" depends="compile">
-    <zip destfile="lib/databeans_admin.jar"
+    <zip destfile="databeans_admin.jar"
          basedir="classes"
          compress="false"
          includes="persistence/Admin.class
@@ -85,11 +85,11 @@
     />
   </target>
 
-  <target name="libs-debug" depends="compile-debug">
-    <antcall target="libs"/>
+  <target name="jars-debug" depends="compile-debug">
+    <antcall target="jars"/>
   </target>
 
-  <target name="debug" depends="libs-debug"/>
+  <target name="debug" depends="jars-debug"/>
 
   <target name="clean">
     <delete dir="classes" quiet="true"/>
@@ -102,7 +102,6 @@
   </target>
 
   <target name="bundle" depends="javadoc">
-    <delete file="lib/bsh.jar" quiet="true"/>
     <zip destfile="../databeans.zip" basedir=".." includes="databeans/**"/>
   </target>
 
