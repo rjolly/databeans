@@ -12,16 +12,6 @@
                     <type>java</type>
                     <location>src</location>
                 </source-folder>
-                <source-folder>
-                    <label>sample/client</label>
-                    <type>java</type>
-                    <location>sample/client</location>
-                </source-folder>
-                <source-folder>
-                    <label>sample/server</label>
-                    <type>java</type>
-                    <location>sample/server</location>
-                </source-folder>
             </folders>
             <ide-actions>
                 <action name="build">
@@ -44,14 +34,6 @@
                         <label>src</label>
                         <location>src</location>
                     </source-folder>
-                    <source-folder style="packages">
-                        <label>sample/client</label>
-                        <location>sample/client</location>
-                    </source-folder>
-                    <source-folder style="packages">
-                        <label>sample/server</label>
-                        <location>sample/server</location>
-                    </source-folder>
                     <source-file>
                         <location>build.xml</location>
                     </source-file>
@@ -68,16 +50,6 @@
         <java-data xmlns="http://www.netbeans.org/ns/freeform-project-java/1">
             <compilation-unit>
                 <package-root>src</package-root>
-                <source-level>1.4</source-level>
-            </compilation-unit>
-            <compilation-unit>
-                <package-root>sample/client</package-root>
-                <classpath mode="compile">sample/client/databeans_client.jar</classpath>
-                <source-level>1.4</source-level>
-            </compilation-unit>
-            <compilation-unit>
-                <package-root>sample/server</package-root>
-                <classpath mode="compile">sample/server/databeans.jar</classpath>
                 <source-level>1.4</source-level>
             </compilation-unit>
         </java-data>
