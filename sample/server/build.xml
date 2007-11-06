@@ -1,5 +1,5 @@
 <project name="server" default="run" basedir=".">
-
+<!--
   <target name="mkheapspace">
     <exec executable="dd">
       <arg value="if=/dev/zero"/>
@@ -7,11 +7,17 @@
       <arg value="count=512"/>
     </exec>
   </target>
+-->
+  <target name="mkheapspace">
+    <java fork="true" classpath="databeans.jar" classname="persistence.server.MakeHeapSpace">
+      <arg value="262144"/>
+    </java>
+  </target>
 
   <target name="compile">
     <mkdir dir="classes"/>
     <unzip src="databeans.jar" dest="classes" overwrite="false"/>
-    <javac srcdir="." destdir="classes"/>
+    <javac srcdir="src" destdir="classes"/>
     <rmic base="classes"
           includes="DepartmentImpl.class
                     EmployeeImpl.class"
@@ -21,7 +27,7 @@
   <target name="compile-debug">
     <mkdir dir="classes"/>
     <unzip src="databeans.jar" dest="classes" overwrite="false"/>
-    <javac debug="on" srcdir="." destdir="classes"/>
+    <javac debug="on" srcdir="src" destdir="classes"/>
     <rmic debug="on"
           base="classes"
           includes="DepartmentImpl.class

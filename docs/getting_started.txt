@@ -89,7 +89,6 @@ It is possible to connect to the server in interactive mode using a scripting la
 The following statements will just get the connection, commit the transaction, and exit. Feel free to try anything in between (provided perhaps you have read the databeans manual !)
 
 import persistence.*;
-System.setSecurityManager(new SecurityManager());
 conn=Connections.getConnection("//localhost/store");
 conn.commit();
 exit();

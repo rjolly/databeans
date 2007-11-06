@@ -2,12 +2,12 @@
 
   <target name="compile">
     <mkdir dir="classes"/>
-    <javac srcdir="." destdir="classes" classpath="databeans_client.jar"/>
+    <javac srcdir="src" destdir="classes" classpath="databeans_client.jar"/>
   </target>
 
   <target name="compile-debug">
     <mkdir dir="classes"/>
-    <javac debug="on" srcdir="." destdir="classes" classpath="databeans_client.jar"/>
+    <javac debug="on" srcdir="src" destdir="classes" classpath="databeans_client.jar"/>
   </target>
 
   <target name="run" depends="compile">
