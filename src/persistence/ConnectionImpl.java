@@ -38,7 +38,7 @@ public class ConnectionImpl extends UnicastRemoteObject implements Connection {
 	}
 
 	public Remote create(Class clazz) {
-		return create(clazz, new Class[] {}, new Object[] {});
+		return create(clazz,new Class[] {},new Object[] {});
 	}
 
 	public Remote create(Class clazz, Class types[], Object args[]) {
@@ -46,13 +46,13 @@ public class ConnectionImpl extends UnicastRemoteObject implements Connection {
 	}
 
 	public RemoteArray create(Class componentType, int length) {
-		return (RemoteArray)create(new ArrayClass(componentType,length), new Class[] {}, new Object[] {});
+		return (RemoteArray)create(new ArrayClass(componentType,length),new Class[] {},new Object[] {});
 	}
 
 	public RemoteArray create(Object component[]) {
 		Class componentType=component.getClass().getComponentType();
 		int length=component.length;
-		return (RemoteArray)create(new ArrayClass(componentType,length), new Class[] {Object[].class}, new Object[] {component});
+		return (RemoteArray)create(new ArrayClass(componentType,length),new Class[] {Object[].class},new Object[] {component});
 	}
 
 	synchronized PersistentObject create(PersistentClass c, Class types[], Object args[]) {
@@ -131,6 +131,18 @@ public class ConnectionImpl extends UnicastRemoteObject implements Connection {
 		if(closed) throw new PersistentException("connection closed");
 		if(transaction==null || readOnly) this.readOnly=readOnly;
 		if(transaction!=null) transaction.setReadOnly(this.readOnly);
+	}
+
+	synchronized Object execute(Accessor accessor, PrivilegedAction action) {
+		Object obj;
+		synchronized(accessor) {
+			obj=action.run();
+		}
+		autoCommit();
+		return obj;
+	}
+
+	void record(PersistentObject obj, String method, Class types[], Object args[]) {
 	}
 
 	synchronized Accessor copy(Accessor obj, boolean read) {

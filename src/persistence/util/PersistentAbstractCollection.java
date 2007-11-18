@@ -156,7 +156,7 @@ public abstract class PersistentAbstractCollection extends PersistentObject impl
 	}
 	}
 
-	public void clear() throws RemoteException {
+	public void clear() {
 	synchronized(mutex) {
 		Iterator e = PersistentCollections.localCollection(this).iterator();
 		while (e.hasNext()) {

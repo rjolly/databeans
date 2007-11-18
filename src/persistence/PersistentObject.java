@@ -1,8 +1,8 @@
 package persistence;
 
-import java.util.*;
 import java.rmi.*;
 import java.rmi.server.*;
+import java.security.PrivilegedAction;
 
 public abstract class PersistentObject extends UnicastRemoteObject {
 	Accessor accessor;
@@ -43,26 +43,37 @@ public abstract class PersistentObject extends UnicastRemoteObject {
 		return connection.create(component);
 	}
 
-	protected final Object get(String name) {
-		return get(accessor.clazz.getField(name));
+	protected final Object get(final String name) {
+		return connection.execute(accessor,
+			new PrivilegedAction() {
+				public Object run() {
+					Field field=accessor.clazz.getField(name);
+					return get(field);
+				}
+			}
+		);
 	}
 
-	protected final void set(String name, Object value) {
-		set(accessor.clazz.getField(name),value);
+	protected final void set(final String name, final Object value) {
+		connection.execute(accessor,
+			new PrivilegedAction() {
+				public Object run() {
+					Field field=accessor.clazz.getField(name);
+					Object obj=get(field);
+					set(field,value);
+					connection.record(PersistentObject.this,"set",new Class[] {String.class,Object.class},new Object[] {name,obj});
+					return obj;
+				}
+			}
+		);
 	}
 
 	Object get(Field field) {
-		Object obj;
-		Accessor a=connection.copy(accessor,true);
-		obj=connection.attach(a.get(field));
-		connection.autoCommit();
-		return obj;
+		return connection.attach(accessor.get(field));
 	}
 
 	void set(Field field, Object value) {
-		Accessor a=connection.copy(accessor,false);
-		a.set(field,connection.detach(value));
-		connection.autoCommit();
+		accessor.set(field,connection.detach(value));
 	}
 
 	public final String toString() {
