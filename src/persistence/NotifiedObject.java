@@ -1,8 +1,11 @@
 package persistence;
 
-import java.beans.*;
-import java.rmi.*;
-import persistence.beans.*;
+import java.beans.PropertyVetoException;
+import java.rmi.RemoteException;
+import persistence.beans.PersistentPropertyChangeSupport;
+import persistence.beans.PersistentVetoableChangeSupport;
+import persistence.beans.RemotePropertyChangeListener;
+import persistence.beans.RemoteVetoableChangeListener;
 
 public abstract class NotifiedObject extends PersistentObject {
 	public PersistentPropertyChangeSupport getPropertyChangeSupport() {
@@ -69,18 +72,18 @@ public abstract class NotifiedObject extends PersistentObject {
 		return getVetoableChangeSupport().hasListeners(propertyName);
 	}
 
-	synchronized void set(Field field, Object value) {
+	Object set(Field field, Object value) {
 		Object oldValue=get(field);
 		try {
 			PersistentVetoableChangeSupport support=getVetoableChangeSupport();
 			if(support!=null) support.fireVetoableChange(field.name,oldValue,value);
 		} catch (PropertyVetoException e) {
-			throw new PersistentException("property veto error");
+			throw new RuntimeException(e);
 		}
 		{
 			PersistentPropertyChangeSupport support=getPropertyChangeSupport();
 			if(support!=null) support.firePropertyChange(field.name,oldValue,value);
 		}
-		super.set(field,value);
+		return super.set(field,value);
 	}
 }

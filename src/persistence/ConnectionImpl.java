@@ -1,18 +1,26 @@
 package persistence;
 
-import java.io.*;
-import java.util.*;
-import java.lang.ref.*;
-import java.security.*;
-import java.rmi.*;
-import java.rmi.server.*;
-import javax.transaction.xa.*;
+import java.io.Serializable;
+import java.lang.ref.Reference;
+import java.lang.ref.WeakReference;
+import java.rmi.Remote;
+import java.rmi.RemoteException;
+import java.rmi.server.RemoteServer;
+import java.rmi.server.RemoteStub;
+import java.rmi.server.ServerNotActiveException;
+import java.rmi.server.UnicastRemoteObject;
+import java.security.Principal;
+import java.util.Map;
+import java.util.WeakHashMap;
+import javax.transaction.xa.XAResource;
+import javax.transaction.xa.Xid;
 
 public class ConnectionImpl extends UnicastRemoteObject implements Connection {
 	StoreImpl store;
 	Transaction transaction;
 	Map cache=new WeakHashMap();
 	Map refCache=new WeakHashMap();
+	boolean suspended;
 	boolean autoCommit;
 	boolean readOnly;
 	boolean closed;
@@ -25,7 +33,9 @@ public class ConnectionImpl extends UnicastRemoteObject implements Connection {
 		name=user.getName();
 		try {
 			name+="@"+RemoteServer.getClientHost();
-		} catch (ServerNotActiveException e) {}
+		} catch (ServerNotActiveException e) {
+			throw new RuntimeException(e);
+		}
 		store.connections.add(this);
 	}
 
@@ -33,7 +43,7 @@ public class ConnectionImpl extends UnicastRemoteObject implements Connection {
 		try {
 			return create(Class.forName(name));
 		} catch (ClassNotFoundException e) {
-			throw new PersistentException("class not found");
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -70,7 +80,7 @@ public class ConnectionImpl extends UnicastRemoteObject implements Connection {
 		return cache(a);
 	}
 
-	synchronized PersistentObject cache(Accessor a) {
+	PersistentObject cache(Accessor a) {
 		PersistentObject obj;
 		Reference w;
 		if((obj=(w=(Reference)cache.get(new Long(a.base)))==null?null:(PersistentObject)w.get())==null) {
@@ -85,6 +95,10 @@ public class ConnectionImpl extends UnicastRemoteObject implements Connection {
 		return obj instanceof Accessor?instantiate((Accessor)obj):obj;
 	}
 
+	Object attach(ConnectionImpl connection, Object obj) {
+		return connection==this?obj:attach(connection.detach(obj));
+	}
+
 	Object detach(Object obj) {
 		if(obj instanceof PersistentObject) {
 			PersistentObject b;
@@ -97,63 +111,78 @@ public class ConnectionImpl extends UnicastRemoteObject implements Connection {
 	}
 
 	public Object getRoot() {
-		if(closed) throw new PersistentException("connection closed");
-		return ((PersistentSystem)attach(store.system.accessor)).getRoot();
+		return store.getSystem(this).getRoot();
 	}
 
 	public void setRoot(Object obj) {
-		if(closed) throw new PersistentException("connection closed");
-		((PersistentSystem)attach(store.system.accessor)).setRoot(obj);
+		store.getSystem(this).setRoot(obj);
 	}
 
 	public int getTransactionIsolation() {
-		if(closed) throw new PersistentException("connection closed");
 		return level;
 	}
 
 	public void setTransactionIsolation(int level) {
-		if(closed) throw new PersistentException("connection closed");
-		if(transaction==null || this.level<level) this.level=level;
-		if(transaction!=null) transaction.setLevel(this.level);
+		this.level=level;
+	}
+
+	public boolean isAutoCommit() {
+		return autoCommit;
 	}
 
 	public void setAutoCommit(boolean autoCommit) {
-		if(closed) throw new PersistentException("connection closed");
 		this.autoCommit=autoCommit;
 	}
 
 	public boolean isReadOnly() {
-		if(closed) throw new PersistentException("connection closed");
 		return readOnly;
 	}
 
 	public void setReadOnly(boolean readOnly) {
-		if(closed) throw new PersistentException("connection closed");
-		if(transaction==null || readOnly) this.readOnly=readOnly;
-		if(transaction!=null) transaction.setReadOnly(this.readOnly);
+		this.readOnly=readOnly;
 	}
 
-	synchronized Object execute(Accessor accessor, PrivilegedAction action) {
-		Object obj;
-		synchronized(accessor) {
-			obj=action.run();
+	void begin(boolean read) {
+		if(!suspended) {
+			if(closed) throw new PersistentException("connection closed");
+			if(!read && readOnly) throw new PersistentException("read only");
+			if(transaction==null && level!=TRANSACTION_NONE) transaction=store.getTransaction(name);
 		}
-		autoCommit();
-		return obj;
 	}
 
-	void record(PersistentObject obj, String method, Class types[], Object args[]) {
+	Object call(PersistentObject target, String method, Class types[], Object args[]) {
+		if(!suspended) {
+			suspended=true;
+			if(level==TRANSACTION_SERIALIZABLE) target.lock(transaction);
+			Object obj=target.call(method,types,args);
+			suspended=false;
+			return obj;
+		} else {
+			return target.call(method,types,args);
+		}
 	}
 
-	synchronized Accessor copy(Accessor obj, boolean read) {
-		if(closed) throw new PersistentException("connection closed");
-		if(!read && this.readOnly) throw new PersistentException("read only");
-		if(transaction==null && level!=TRANSACTION_NONE) transaction=store.getTransaction(level,readOnly,name);
-		return transaction==null?obj:transaction.copy(obj,read);
+	void record(PersistentObject target) {
+		if(!suspended) {
+			transaction.record((PersistentObject)store.attach(this,target));
+		}
+	}
+
+	void record(PersistentObject target, String method, Class types[], Object args[]) {
+		if(!suspended) {
+			transaction.record((PersistentObject)store.attach(this,target), method, types, store.attach(this,args));
+		}
 	}
 
 	void autoCommit() {
-		if(autoCommit) commit();
+		if(!suspended) {
+			if(autoCommit) commit();
+		}
+	}
+
+	synchronized void close() {
+		store.connections.remove(this);
+		closed=true;
 	}
 
 	public synchronized void commit() {
@@ -172,25 +201,6 @@ public class ConnectionImpl extends UnicastRemoteObject implements Connection {
 		}
 	}
 
-	public synchronized void close() throws RemoteException {
-		if(closed) throw new PersistentException("connection closed");
-		Iterator t=cache.values().iterator();
-		while(t.hasNext()) {
-			PersistentObject obj;
-			Reference w;
-			if((obj=(w=(Reference)t.next())==null?null:(PersistentObject)w.get())==null);
-			else UnicastRemoteObject.unexportObject(obj,true);
-		}
-		rollback();
-		UnicastRemoteObject.unexportObject(this,true);
-		store.connections.remove(this);
-		closed=true;
-	}
-
-	public boolean isClosed() {
-		return closed;
-	}
-
 	public XAResource getXAResource() {
 		return new ConnectionXAResource(this);
 	}
@@ -207,7 +217,7 @@ class ConnectionXAResource implements XAResource, Serializable {
 		try {
 			connection.commit();
 		} catch (RemoteException e) {
-			throw new RuntimeException("remote error");
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -243,7 +253,7 @@ class ConnectionXAResource implements XAResource, Serializable {
 		try {
 			connection.rollback();
 		} catch (RemoteException e) {
-			throw new RuntimeException("remote error");
+			throw new RuntimeException(e);
 		}
 	}
 

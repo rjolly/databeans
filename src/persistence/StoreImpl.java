@@ -17,9 +17,9 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	Map classes;
 	Collection transactions;
 	PersistentSystem system;
-	Collection connections;
 	ConnectionImpl systemConnection;
 	Map cache=new WeakHashMap();
+	Collection connections=Collections.synchronizedCollection(new ArrayList());
 	boolean closed;
 	long boot;
 
@@ -27,9 +27,8 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		try {
 			heap=new FileHeap(name,this);
 		} catch (FileNotFoundException e) {
-			throw new PersistentException("bad storage area");
+			throw new RuntimeException(e);
 		}
-		connections=Collections.synchronizedCollection(new ArrayList());
 		systemConnection=new ConnectionImpl(this,Connection.TRANSACTION_NONE,none);
 		if((boot=heap.boot())==0) {
 			heap.mount(true);
@@ -43,7 +42,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 				UnicastRemoteObject.unexportObject(this,true);
 				throw new PersistentException("not cleanly unmounted");
 			}
-			system=(PersistentSystem)systemConnection.attach(instantiate(boot));
+			instantiateSystem();
 			init();
 			clearTransactions();
 			gc(false);
@@ -79,6 +78,10 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		putAllClasses(classes);
 	}
 
+	void instantiateSystem() {
+		system=(PersistentSystem)systemConnection.attach(instantiate(boot));
+	}
+
 	void putAllClasses(Map map) {
 		Map classes=PersistentCollections.localMap(system.getClasses());
 		Iterator t=map.entrySet().iterator();
@@ -92,6 +95,16 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		users=PersistentCollections.localMap(system.getUsers());
 		classes=PersistentCollections.localMap(system.getClasses());
 		transactions=PersistentCollections.localCollection(system.getTransactions());
+	}
+
+	Object attach(ConnectionImpl connection, Object obj) {
+		return systemConnection.attach(connection,obj);
+	}
+
+	Object[] attach(ConnectionImpl connection, Object obj[]) {
+		Object a[]=new Object[obj.length];
+		for(int i=0;i<obj.length;i++) a[i]=attach(connection,obj[i]);
+		return a;
 	}
 
 	public void createUser(String username, byte[] password) {
@@ -115,12 +128,15 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		return s==null?0:(char)((s.password[0] << 8) | s.password[1]);
 	}
 
-	Transaction getTransaction(int level, boolean readOnly, String client) {
-		return (Transaction)systemConnection.create(Transaction.class, new Class[] {Integer.class, Boolean.class, String.class}, new Object[] {new Integer(level), new Boolean(readOnly), client});
+	Transaction getTransaction(String client) {
+		return (Transaction)systemConnection.create(Transaction.class,new Class[] {String.class},new Object[] {client});
 	}
 
-	public RemoteSystem getSystem() {
-		if(closed) throw new PersistentException("store closed");
+	PersistentSystem getSystem(ConnectionImpl connection) {
+		return (PersistentSystem)connection.attach(systemConnection,system);
+	}
+
+	PersistentSystem getSystem() {
 		return system;
 	}
 
@@ -196,30 +212,29 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		}
 	}
 
-	void disconnect() throws RemoteException {
+	void disconnect() {
 		Collection collection;
 		synchronized(connections) {
 			collection=new ArrayList(connections);
 		}
 		Iterator t=collection.iterator();
 		while(t.hasNext()) {
-			Connection c=(Connection)t.next();
+			ConnectionImpl c=(ConnectionImpl)t.next();
 			if(c!=systemConnection) c.close();
 		}
 	}
 
-	public synchronized void close() throws RemoteException {
+	public void close() {
 		if(closed) throw new PersistentException("store closed");
 		disconnect();
 		systemConnection.close();
-		UnicastRemoteObject.unexportObject(this,true);
 		heap.mount(false);
 		closed=true;
 	}
 
 	public synchronized void gc() {
 		if(closed) throw new PersistentException("store closed");
-		System.gc();
+		System.runFinalization();
 		gc(true);
 	}
 
@@ -373,9 +388,8 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	}
 
 	synchronized void setReference(long base, Field field, Object value) {
-		long dst;
 		long src=((Long)field.get(heap,base)).longValue();
-		dst=value==null?0:value instanceof Accessor?((Accessor)value).base:writeObject(value);
+		long dst=value==null?0:value instanceof Accessor?((Accessor)value).base:writeObject(value);
 		if(dst!=0) incRefCount(dst);
 		field.set(heap,base,new Long(dst));
 		if(src!=0) decRefCount(src);
@@ -405,13 +419,13 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		}
 	}
 
-	Transaction getLock(long base) {
+	Accessor getLock(long base) {
 		long ptr=((Long)Field.LOCK.get(heap,base)).longValue();
-		return ptr==0?null:(Transaction)systemConnection.attach(instantiate(ptr));
+		return ptr==0?null:instantiate(ptr);
 	}
 
-	void setLock(long base, Transaction t) {
-		Field.LOCK.set(heap,base,new Long(t==null?0:t.accessor.base));
+	void setLock(long base, Accessor accessor) {
+		Field.LOCK.set(heap,base,new Long(accessor==null?0:accessor.base));
 	}
 
 	Object readObject(long base) {

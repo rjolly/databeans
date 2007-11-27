@@ -1,7 +1,6 @@
 package persistence;
 
 import java.rmi.*;
-import java.security.PrivilegedAction;
 
 public final class PersistentArray extends PersistentObject implements RemoteArray {
 	public PersistentArray() throws RemoteException {}
@@ -96,36 +95,23 @@ public final class PersistentArray extends PersistentObject implements RemoteArr
 	}
 
 	public Object get(int index) {
-		return get(new Integer(index));
+		Object obj=connection.call(this,"get",new Class[] {Integer.class},new Object[] {new Integer(index)});
+		connection.autoCommit();
+		return obj;
 	}
 
 	public void set(int index, Object value) {
-		set(new Integer(index),value);
+		Object obj=connection.call(this,"set",new Class[] {Integer.class,Object.class},new Object[] {new Integer(index),value});
+		connection.record(this,"set",new Class[] {Integer.class,Object.class},new Object[] {new Integer(index),obj});
+		connection.autoCommit();
 	}
 
-	Object get(final Integer index) {
-		return connection.execute(accessor,
-			new PrivilegedAction() {
-				public Object run() {
-					Field field=((ArrayClass)accessor.clazz).getField(index.intValue());
-					return get(field);
-				}
-			}
-		);
+	Object getImpl(Integer index) {
+		return get(((ArrayClass)accessor.clazz).getField(index.intValue()));
 	}
 
-	void set(final Integer index, final Object value) {
-		connection.execute(accessor,
-			new PrivilegedAction() {
-				public Object run() {
-					Field field=((ArrayClass)accessor.clazz).getField(index.intValue());
-					Object obj=get(field);
-					set(field,value);
-					connection.record(PersistentArray.this,"set",new Class[] {Integer.class,Object.class},new Object[] {index,obj});
-					return obj;
-				}
-			}
-		);
+	Object setImpl(Integer index, Object value) {
+		return set(((ArrayClass)accessor.clazz).getField(index.intValue()),value);
 	}
 
 	public String remoteToString() throws RemoteException {

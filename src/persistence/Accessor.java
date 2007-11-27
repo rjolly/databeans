@@ -1,6 +1,6 @@
 package persistence;
 
-import java.util.*;
+import java.util.Iterator;
 
 public class Accessor {
 	static final int TIMEOUT=60000;
@@ -19,36 +19,34 @@ public class Accessor {
 	}
 
 	synchronized void set(Field field, Object value) {
-		Transaction t;
-		t=getLock();
+		Accessor t=getLock();
 		if(t==null);
 		else {
 			try {
 				wait(TIMEOUT);
 			} catch (InterruptedException e) {
-				throw new PersistentException(lockedBy(t));
+				throw new RuntimeException(e);
 			}
 			t=getLock();
 			if(t==null);
-			else throw new PersistentException(lockedBy(t));
+			else throw new PersistentException(this+" locked by "+store.systemConnection.attach(t));
 		}
 		store.set(base,field,value);
 	}
 
-	synchronized void lock(Transaction transaction) {
-		Transaction t;
-		t=getLock();
+	synchronized void lock(Accessor transaction) {
+		Accessor t=getLock();
 		if(t==null) setLock(transaction);
-		else if(t.accessor==transaction.accessor);
+		else if(t==transaction);
 		else {
 			try {
 				wait(TIMEOUT);
 			} catch (InterruptedException e) {
-				throw new PersistentException(lockedBy(t));
+				throw new RuntimeException(e);
 			}
 			t=getLock();
 			if(t==null) setLock(transaction);
-			else throw new PersistentException(lockedBy(t));
+			else throw new PersistentException(this+" locked by "+store.systemConnection.attach(t));
 		}
 	}
 
@@ -57,16 +55,12 @@ public class Accessor {
 		notify();
 	}
 
-	Transaction getLock() {
+	Accessor getLock() {
 		return store.getLock(base);
 	}
 
-	void setLock(Transaction t) {
-		store.setLock(base,t);
-	}
-
-	String lockedBy(Transaction t) {
-		return ""+this+" locked by "+t;
+	void setLock(Accessor accessor) {
+		store.setLock(base,accessor);
 	}
 
 	public int hashCode() {

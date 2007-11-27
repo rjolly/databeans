@@ -1,8 +1,10 @@
 package persistence;
 
-import java.rmi.*;
-import java.rmi.server.*;
-import java.security.PrivilegedAction;
+import java.rmi.Remote;
+import java.rmi.RemoteException;
+import java.rmi.server.RemoteObject;
+import java.rmi.server.RemoteRef;
+import java.rmi.server.UnicastRemoteObject;
 
 public abstract class PersistentObject extends UnicastRemoteObject {
 	Accessor accessor;
@@ -43,37 +45,58 @@ public abstract class PersistentObject extends UnicastRemoteObject {
 		return connection.create(component);
 	}
 
-	protected final Object get(final String name) {
-		return connection.execute(accessor,
-			new PrivilegedAction() {
-				public Object run() {
-					Field field=accessor.clazz.getField(name);
-					return get(field);
-				}
-			}
-		);
+	protected final Object get(String name) {
+		synchronized(connection) {
+			connection.begin(true);
+			Object obj=connection.call(this,"get",new Class[] {String.class},new Object[] {name});
+			connection.record(this);
+			connection.autoCommit();
+			return obj;
+		}
 	}
 
-	protected final void set(final String name, final Object value) {
-		connection.execute(accessor,
-			new PrivilegedAction() {
-				public Object run() {
-					Field field=accessor.clazz.getField(name);
-					Object obj=get(field);
-					set(field,value);
-					connection.record(PersistentObject.this,"set",new Class[] {String.class,Object.class},new Object[] {name,obj});
-					return obj;
-				}
-			}
-		);
+	protected final Object set(String name, Object value) {
+		synchronized(connection) {
+			connection.begin(false);
+			Object obj=connection.call(this,"set",new Class[] {String.class,Object.class},new Object[] {name,value});
+			connection.record(this,"set",new Class[] {String.class,Object.class},new Object[] {name,obj});
+			connection.autoCommit();
+			return obj;
+		}
+	}
+
+	void lock(PersistentObject transaction) {
+		accessor.lock(transaction.accessor);
+	}
+
+	void unlock() {
+		if(accessor.getLock()!=null) accessor.unlock();
+	}
+
+	Object call(String method, Class types[], Object args[]) {
+		try {
+			return getClass().getMethod(method+"Impl",types).invoke(this,args);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	Object getImpl(String name) {
+		return get(accessor.clazz.getField(name));
+	}
+
+	Object setImpl(String name, Object value) {
+		return set(accessor.clazz.getField(name),value);
 	}
 
 	Object get(Field field) {
 		return connection.attach(accessor.get(field));
 	}
 
-	void set(Field field, Object value) {
+	Object set(Field field, Object value) {
+		Object obj=connection.attach(accessor.get(field));
 		accessor.set(field,connection.detach(value));
+		return obj;
 	}
 
 	public final String toString() {

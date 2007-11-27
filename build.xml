@@ -9,7 +9,8 @@
                     persistence/beans/Persistent*.class
                     persistence/PersistentArray.class
                     persistence/PersistentSystem.class
-                    persistence/Transaction.class"
+                    persistence/Transaction.class
+                    persistence/MethodCall.class"
           excludes="persistence/util/PersistentCollections$*.class
                     persistence/util/PersistentCollections.class
                     persistence/util/Remote*.class"
@@ -26,7 +27,8 @@
                     persistence/beans/Persistent*.class
                     persistence/PersistentArray.class
                     persistence/PersistentSystem.class
-                    persistence/Transaction.class"
+                    persistence/Transaction.class
+                    persistence/MethodCall.class"
           excludes="persistence/util/PersistentCollections$*.class
                     persistence/util/PersistentCollections.class
                     persistence/util/Remote*.class"
@@ -52,7 +54,7 @@
                    persistence/util/PersistentCollections.class
                    persistence/beans/Remote*.class
                    persistence/Notified.class
-                   persistence/Array.class
+                   persistence/Arrays.class
                    persistence/RemoteArray.class
                    persistence/PersistentArrays$LocalArray.class
                    persistence/PersistentArrays.class
@@ -68,6 +70,7 @@
          basedir="classes"
          compress="false"
          includes="persistence/Admin.class
+                   persistence/RemoteMethodCall.class
                    persistence/RemoteTransaction.class
                    persistence/RemoteSystem.class
                    persistence/util/Remote*.class
@@ -75,7 +78,7 @@
                    persistence/util/PersistentCollections.class
                    persistence/beans/Remote*.class
                    persistence/Notified.class
-                   persistence/Array.class
+                   persistence/Arrays.class
                    persistence/RemoteArray.class
                    persistence/PersistentArrays$LocalArray.class
                    persistence/PersistentArrays.class

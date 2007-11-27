@@ -1,7 +1,9 @@
 package persistence.server;
 
-import java.rmi.*;
-import persistence.*;
+import java.rmi.Naming;
+import java.rmi.RMISecurityManager;
+import persistence.AdminImpl;
+import persistence.StoreImpl;
 
 public class Server {
 	public static void main(String args[]) throws Exception {
@@ -16,11 +18,7 @@ public class Server {
 			System.out.println("admin bound in registry");
 			Runtime.getRuntime().addShutdownHook(new Thread() {
 				public void run() {
-					try {
-						store.close();
-					} catch (RemoteException e) {
-						throw new RuntimeException("remote error");
-					}
+					store.close();
 				}
 			});
 		} catch (Exception e) {
