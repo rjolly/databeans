@@ -54,7 +54,7 @@
                    persistence/util/PersistentCollections.class
                    persistence/beans/Remote*.class
                    persistence/Notified.class
-                   persistence/Arrays.class
+                   persistence/Array.class
                    persistence/RemoteArray.class
                    persistence/PersistentArrays$LocalArray.class
                    persistence/PersistentArrays.class
@@ -78,7 +78,7 @@
                    persistence/util/PersistentCollections.class
                    persistence/beans/Remote*.class
                    persistence/Notified.class
-                   persistence/Arrays.class
+                   persistence/Array.class
                    persistence/RemoteArray.class
                    persistence/PersistentArrays$LocalArray.class
                    persistence/PersistentArrays.class
