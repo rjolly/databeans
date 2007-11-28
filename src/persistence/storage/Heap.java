@@ -1,11 +1,12 @@
 package persistence.storage;
 
-import java.util.*;
+import java.util.Iterator;
 
 public interface Heap {
 	long boot();
 	void setBoot(long ptr);
-	boolean mount(boolean n);
+	boolean mounted();
+	void mount(boolean n);
 	long alloc(int size);
 	long realloc(long ptr, int size);
 	void free(long ptr);

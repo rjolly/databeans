@@ -1,7 +1,10 @@
 package persistence.storage;
 
-import java.io.*;
-import java.util.*;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 public class FileHeap extends RandomAccessFile implements Heap {
 	static final int Long_SIZE=MemoryModel.model.pointerSize;
@@ -42,11 +45,14 @@ public class FileHeap extends RandomAccessFile implements Heap {
 		MemoryModel.model.writePointer(this,2*Long_SIZE,ptr);
 	}
 
-	public boolean mount(boolean n) {
+	public boolean mounted() {
 		if(minSpace>maxSpace) return false;
-		if(n && MemoryModel.model.readPointer(this,3*Long_SIZE)>0) return false;
+		return MemoryModel.model.readPointer(this,3*Long_SIZE)>0;
+	}
+
+	public void mount(boolean n) {
+		if(minSpace>maxSpace) return;
 		MemoryModel.model.writePointer(this,3*Long_SIZE,n?1:0);
-		return true;
 	}
 
 	public synchronized long alloc(int size) {

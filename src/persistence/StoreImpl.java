@@ -44,7 +44,6 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	ConnectionImpl systemConnection;
 	Collection connections=Collections.synchronizedCollection(new ArrayList());
 	Map cache=new WeakHashMap();
-	boolean closed;
 	long boot;
 
 	public StoreImpl(String name) throws RemoteException {
@@ -61,7 +60,10 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 			users.put(none.getName(),none);
 			users.put(anonymous.getName(),anonymous);
 		} else {
-			if(!heap.mount(true)) throw new PersistentException("not cleanly unmounted");
+			if(heap.mounted()) {
+				systemConnection.close();
+				throw new PersistentException("heap not cleanly unmounted");
+			} else heap.mount(true);
 			instantiate();
 			init();
 			clear();
@@ -194,29 +196,25 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		}
 	}
 
-	public synchronized void createUser(String username, byte[] password) {
-		if(closed) throw new PersistentException("store closed");
+	public void createUser(String username, byte[] password) {
 		synchronized(users) {
 			if(users.containsKey(username)) throw new PersistentException("the user "+username+" already exists");
 			else users.put(username, new User(username,password));
 		}
 	}
 
-	public synchronized Connection getConnection(String username, byte[] password) throws RemoteException {
-		if(closed) throw new PersistentException("store closed");
+	public Connection getConnection(String username, byte[] password) throws RemoteException {
 		User s=(User)users.get(username);
 		if(s!=null && !s.equals(none) && Arrays.equals(s.password,password)) return new ConnectionImpl(this,Connection.TRANSACTION_READ_UNCOMMITTED,s,connections);
 		else throw new PersistentException("permission denied");
 	}
 
-	public synchronized char salt(String username) {
-		if(closed) throw new PersistentException("store closed");
+	public char salt(String username) {
 		User s=(User)users.get(username);
 		return s==null?0:(char)((s.password[0] << 8) | s.password[1]);
 	}
 
-	public synchronized void inport(String name) {
-		if(closed) throw new PersistentException("store closed");
+	public void inport(String name) {
 		try {
 			XMLDecoder d = new XMLDecoder(systemConnection,new BufferedInputStream(new FileInputStream(name)));
 			system.setRoot(d.readObject());
@@ -226,8 +224,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		}
 	}
 
-	public synchronized void export(String name) {
-		if(closed) throw new PersistentException("store closed");
+	public void export(String name) {
 		try {
 			XMLEncoder e = new XMLEncoder(systemConnection,new BufferedOutputStream(new FileOutputStream(name)));
 			e.writeObject(system.getRoot());
@@ -237,8 +234,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		}
 	}
 
-	public synchronized void close() {
-		if(closed) throw new PersistentException("store closed");
+	public void close() {
 		synchronized(((PersistentObject)system.getTransactions()).accessor) {
 			Iterator it=new ArrayList(transactions).iterator();
 			while(it.hasNext()) ((Transaction)it.next()).kick();
@@ -247,20 +243,22 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 			Iterator it=new ArrayList(connections).iterator();
 			while(it.hasNext()) ((ConnectionImpl)it.next()).close();
 		}
+		systemConnection.close();
 		heap.mount(false);
-		closed=true;
 	}
 
-	public synchronized void gc() {
-		if(closed) throw new PersistentException("store closed");
+	public void gc() {
+		if(!heap.mounted()) throw new PersistentException("head unmounted");
 		System.runFinalization();
 		gc(true);
 	}
 
 	void gc(boolean keep) {
-		mark(boot);
-		if(keep) mark();
-		sweep();
+		synchronized(heap) {
+			mark(boot);
+			if(keep) mark();
+			sweep();
+		}
 	}
 
 	void mark() {
@@ -268,7 +266,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		while(t.hasNext()) {
 			long ptr=((Long)t.next()).longValue();
 			if(heap.status(ptr)) {
-				 if(inuse(ptr)) mark(ptr);
+				if(inuse(ptr)) mark(ptr);
 			}
 		}
 	}
@@ -528,8 +526,11 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		public void setBoot(long ptr) {
 		}
 
-		public boolean mount(boolean n) {
+		public boolean mounted() {
 			return false;
+		}
+
+		public void mount(boolean n) {
 		}
 
 		public long alloc(int size) {
