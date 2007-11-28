@@ -1,13 +1,37 @@
 package persistence;
 
-import java.io.*;
-import java.util.*;
-import java.lang.ref.*;
-import java.rmi.*;
-import java.rmi.server.*;
-import persistence.util.*;
-import persistence.storage.*;
-import persistence.beans.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.lang.ref.Reference;
+import java.lang.ref.WeakReference;
+import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.WeakHashMap;
+import persistence.beans.XMLDecoder;
+import persistence.beans.XMLEncoder;
+import persistence.storage.Collector;
+import persistence.storage.FileHeap;
+import persistence.storage.Heap;
+import persistence.storage.MemoryModel;
+import persistence.util.PersistentCollections;
+import persistence.util.RemoteCollection;
 
 public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	static final User none=new User("none","");
@@ -18,8 +42,8 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	Collection transactions;
 	PersistentSystem system;
 	ConnectionImpl systemConnection;
-	Map cache=new WeakHashMap();
 	Collection connections=Collections.synchronizedCollection(new ArrayList());
+	Map cache=new WeakHashMap();
 	boolean closed;
 	long boot;
 
@@ -29,57 +53,44 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		} catch (FileNotFoundException e) {
 			throw new RuntimeException(e);
 		}
-		systemConnection=new ConnectionImpl(this,Connection.TRANSACTION_NONE,none);
+		systemConnection=new ConnectionImpl(this,Connection.TRANSACTION_NONE,none,new ArrayList());
 		if((boot=heap.boot())==0) {
 			heap.mount(true);
-			createSystem();
+			create();
 			init();
-			users.put(none.getName(), none);
-			users.put(anonymous.getName(), anonymous);
+			users.put(none.getName(),none);
+			users.put(anonymous.getName(),anonymous);
 		} else {
-			if(!heap.mount(true)) {
-				systemConnection.close();
-				UnicastRemoteObject.unexportObject(this,true);
-				throw new PersistentException("not cleanly unmounted");
-			}
-			instantiateSystem();
+			if(!heap.mount(true)) throw new PersistentException("not cleanly unmounted");
+			instantiate();
 			init();
-			clearTransactions();
+			clear();
 			gc(false);
 			updateClasses();
 		}
 	}
 
-	void clearTransactions() {
-		Iterator t=new ArrayList(transactions).iterator();
-		while(t.hasNext()) ((Transaction)t.next()).rollback();
+	void clear() {
+		Iterator it=new ArrayList(transactions).iterator();
+		while(it.hasNext()) ((Transaction)it.next()).rollback();
 	}
 
 	void updateClasses() {
-		Iterator t=classes.values().iterator();
-		while(t.hasNext()) {
-			long ptr=((PersistentClass)t.next()).base;
-			if(refCount(ptr)==1) t.remove();
+		Iterator it=classes.values().iterator();
+		while(it.hasNext()) {
+			long ptr=((PersistentClass)it.next()).base;
+			if(refCount(ptr)==1) it.remove();
 		}
 	}
 
-	void createSystem() {
+	void create() {
 		classes=new HashMap();
-		{
-			system=(PersistentSystem)systemConnection.create(PersistentSystem.class);
-			incRefCount(boot=system.accessor.base);
-			heap.setBoot(boot);
-			heap.mount(true);
-		}
+		createSystem();
 		Map map=new HashMap();
 		map.putAll(classes);
 		classes.clear();
 		putAllClasses(map);
 		putAllClasses(classes);
-	}
-
-	void instantiateSystem() {
-		system=(PersistentSystem)systemConnection.attach(instantiate(boot));
 	}
 
 	void putAllClasses(Map map) {
@@ -91,10 +102,32 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		}
 	}
 
+	void createSystem() {
+		system=(PersistentSystem)systemConnection.create(PersistentSystem.class);
+		incRefCount(boot=system.accessor.base);
+		heap.setBoot(boot);
+	}
+
+	void instantiate() {
+		system=(PersistentSystem)systemConnection.attach(instantiate(boot));
+	}
+
 	void init() {
 		users=PersistentCollections.localMap(system.getUsers());
 		classes=PersistentCollections.localMap(system.getClasses());
 		transactions=PersistentCollections.localCollection(system.getTransactions());
+	}
+
+	PersistentSystem getSystem() {
+		return system;
+	}
+
+	PersistentSystem getSystem(ConnectionImpl connection) {
+		return (PersistentSystem)connection.attach(systemConnection,system);
+	}
+
+	Transaction getTransaction(String client) {
+		return (Transaction)systemConnection.create(Transaction.class,new Class[] {String.class,RemoteCollection.class},new Object[] {client,system.getTransactions()});
 	}
 
 	Object attach(ConnectionImpl connection, Object obj) {
@@ -107,40 +140,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		return a;
 	}
 
-	public void createUser(String username, byte[] password) {
-		if(closed) throw new PersistentException("store closed");
-		synchronized(users) {
-			if(users.containsKey(username)) throw new PersistentException("the user "+username+" already exists");
-			else users.put(username, new User(username,password));
-		}
-	}
-
-	public Connection getConnection(String username, byte[] password) throws RemoteException {
-		if(closed) throw new PersistentException("store closed");
-		User s=(User)users.get(username);
-		if(s!=null && !s.equals(none) && Arrays.equals(s.password,password)) return new ConnectionImpl(this,Connection.TRANSACTION_READ_UNCOMMITTED,s);
-		else throw new PersistentException("permission denied");
-	}
-
-	public char salt(String username) {
-		if(closed) throw new PersistentException("store closed");
-		User s=(User)users.get(username);
-		return s==null?0:(char)((s.password[0] << 8) | s.password[1]);
-	}
-
-	Transaction getTransaction(String client) {
-		return (Transaction)systemConnection.create(Transaction.class,new Class[] {String.class},new Object[] {client});
-	}
-
-	PersistentSystem getSystem(ConnectionImpl connection) {
-		return (PersistentSystem)connection.attach(systemConnection,system);
-	}
-
-	PersistentSystem getSystem() {
-		return system;
-	}
-
-	synchronized Accessor create(PersistentClass c) {
+	Accessor create(PersistentClass c) {
 		byte b[]=new byte[c.size];
 		long base=heap.alloc(b.length);
 		heap.writeBytes(base,b);
@@ -149,85 +149,104 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	}
 
 	PersistentClass cache(PersistentClass c) {
-		PersistentClass d;
-		if((d=(PersistentClass)classes.get(c.name))==null) {
-			classes.put(c.name,c);
-		} else c.base=d.base;
-		return c;
+		synchronized(classes) {
+			PersistentClass d;
+			if((d=(PersistentClass)classes.get(c.name))==null) {
+				classes.put(c.name,c);
+			} else c.base=d.base;
+			return c;
+		}
 	}
 
 	Accessor cache(Accessor obj) {
-		hold(obj.base);
-		cache.put(obj,new WeakReference(obj));
-		return obj;
+		synchronized(cache) {
+			hold(obj.base);
+			cache.put(obj,new WeakReference(obj));
+			return obj;
+		}
 	}
 
 	Accessor instantiate(long base) {
-		return cache(base);
+		synchronized(cache) {
+			Accessor b;
+			Accessor obj=new Accessor(base,getClass(base),this);
+			Reference w;
+			if((b=(w=(Reference)cache.get(obj))==null?null:(Accessor)w.get())==null) {
+				hold(obj.base);
+				cache.put(obj,new WeakReference(obj));
+			} else obj=b;
+			return obj;
+		}
 	}
 
-	synchronized Accessor cache(long base) {
-		Accessor b;
-		Accessor obj=new Accessor(base,getClass(base),this);
-		Reference w;
-		if((b=(w=(Reference)cache.get(obj))==null?null:(Accessor)w.get())==null) {
-			hold(obj.base);
-			cache.put(obj,new WeakReference(obj));
-		} else obj=b;
-		return obj;
-	}
-
-	synchronized void release(Accessor obj) {
-		Accessor b;
-		Reference w;
-		if((b=(w=(Reference)cache.get(obj))==null?null:(Accessor)w.get())==null) {
-			release(obj.base);
-		} else {
-			if(b==obj) {
-				cache.remove(obj);
+	void release(Accessor obj) {
+		synchronized(cache) {
+			Accessor b;
+			Reference w;
+			if((b=(w=(Reference)cache.get(obj))==null?null:(Accessor)w.get())==null) {
 				release(obj.base);
+			} else {
+				if(b==obj) {
+					cache.remove(obj);
+					release(obj.base);
+				}
 			}
 		}
 	}
 
-	public void inport(String name) {
+	public synchronized void createUser(String username, byte[] password) {
+		if(closed) throw new PersistentException("store closed");
+		synchronized(users) {
+			if(users.containsKey(username)) throw new PersistentException("the user "+username+" already exists");
+			else users.put(username, new User(username,password));
+		}
+	}
+
+	public synchronized Connection getConnection(String username, byte[] password) throws RemoteException {
+		if(closed) throw new PersistentException("store closed");
+		User s=(User)users.get(username);
+		if(s!=null && !s.equals(none) && Arrays.equals(s.password,password)) return new ConnectionImpl(this,Connection.TRANSACTION_READ_UNCOMMITTED,s,connections);
+		else throw new PersistentException("permission denied");
+	}
+
+	public synchronized char salt(String username) {
+		if(closed) throw new PersistentException("store closed");
+		User s=(User)users.get(username);
+		return s==null?0:(char)((s.password[0] << 8) | s.password[1]);
+	}
+
+	public synchronized void inport(String name) {
 		if(closed) throw new PersistentException("store closed");
 		try {
 			XMLDecoder d = new XMLDecoder(systemConnection,new BufferedInputStream(new FileInputStream(name)));
 			system.setRoot(d.readObject());
 			d.close();
 		} catch (IOException e) {
-			throw new PersistentException("i/o error");
+			throw new RuntimeException(e);
 		}
 	}
 
-	public void export(String name) {
+	public synchronized void export(String name) {
 		if(closed) throw new PersistentException("store closed");
 		try {
 			XMLEncoder e = new XMLEncoder(systemConnection,new BufferedOutputStream(new FileOutputStream(name)));
 			e.writeObject(system.getRoot());
 			e.close();
 		} catch (IOException e) {
-			throw new PersistentException("i/o error");
+			throw new RuntimeException(e);
 		}
 	}
 
-	void disconnect() {
-		Collection collection;
-		synchronized(connections) {
-			collection=new ArrayList(connections);
-		}
-		Iterator t=collection.iterator();
-		while(t.hasNext()) {
-			ConnectionImpl c=(ConnectionImpl)t.next();
-			if(c!=systemConnection) c.close();
-		}
-	}
-
-	public void close() {
+	public synchronized void close() {
 		if(closed) throw new PersistentException("store closed");
-		disconnect();
-		systemConnection.close();
+		synchronized(((PersistentObject)system.getTransactions()).accessor) {
+			Iterator it=new ArrayList(transactions).iterator();
+			while(it.hasNext()) ((Transaction)it.next()).kick();
+		}
+		synchronized(connections) {
+			Iterator it=new ArrayList(connections).iterator();
+			while(it.hasNext()) ((ConnectionImpl)it.next()).close();
+		}
 		heap.mount(false);
 		closed=true;
 	}
@@ -334,37 +353,45 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		return s==MemoryModel.model.pointerMinValue;
 	}
 
-	synchronized void hold(long base) {
-		long r=((Long)Field.REF_COUNT.get(heap,base)).longValue();
-		long s=r&MemoryModel.model.pointerMinValue;
-		r=r^s;
-		s=MemoryModel.model.pointerMinValue;
-		Field.REF_COUNT.set(heap,base,new Long(r^s));
+	void hold(long base) {
+		synchronized(heap) {
+			long r=((Long)Field.REF_COUNT.get(heap,base)).longValue();
+			long s=r&MemoryModel.model.pointerMinValue;
+			r=r^s;
+			s=MemoryModel.model.pointerMinValue;
+			Field.REF_COUNT.set(heap,base,new Long(r^s));
+		}
 	}
 
-	synchronized void release(long base) {
-		long r=((Long)Field.REF_COUNT.get(heap,base)).longValue();
-		long s=r&MemoryModel.model.pointerMinValue;
-		r=r^s;
-		s=0;
-		Field.REF_COUNT.set(heap,base,new Long(r^s));
-		if(r==0) free(base);
+	void release(long base) {
+		synchronized(heap) {
+			long r=((Long)Field.REF_COUNT.get(heap,base)).longValue();
+			long s=r&MemoryModel.model.pointerMinValue;
+			r=r^s;
+			s=0;
+			Field.REF_COUNT.set(heap,base,new Long(r^s));
+			if(r==0) free(base);
+		}
 	}
 
-	synchronized void incRefCount(long base) {
-		long r=((Long)Field.REF_COUNT.get(heap,base)).longValue();
-		long s=r&MemoryModel.model.pointerMinValue;
-		r=(r^s)+1;
-		Field.REF_COUNT.set(heap,base,new Long(r^s));
+	void incRefCount(long base) {
+		synchronized(heap) {
+			long r=((Long)Field.REF_COUNT.get(heap,base)).longValue();
+			long s=r&MemoryModel.model.pointerMinValue;
+			r=(r^s)+1;
+			Field.REF_COUNT.set(heap,base,new Long(r^s));
+		}
 	}
 
-	synchronized void decRefCount(long base) {
-		if(!heap.status(base)) return;
-		long r=((Long)Field.REF_COUNT.get(heap,base)).longValue();
-		long s=r&MemoryModel.model.pointerMinValue;
-		r=(r^s)-1;
-		Field.REF_COUNT.set(heap,base,new Long(r^s));
-		if(r==0 && !inuse(base)) free(base);
+	void decRefCount(long base) {
+		synchronized(heap) {
+			if(!heap.status(base)) return;
+			long r=((Long)Field.REF_COUNT.get(heap,base)).longValue();
+			long s=r&MemoryModel.model.pointerMinValue;
+			r=(r^s)-1;
+			Field.REF_COUNT.set(heap,base,new Long(r^s));
+			if(r==0 && !inuse(base)) free(base);
+		}
 	}
 
 	long refCount(long base) {
@@ -387,12 +414,14 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		return ptr==0?null:getClass(ptr)==null?readObject(ptr):instantiate(ptr);
 	}
 
-	synchronized void setReference(long base, Field field, Object value) {
-		long src=((Long)field.get(heap,base)).longValue();
-		long dst=value==null?0:value instanceof Accessor?((Accessor)value).base:writeObject(value);
-		if(dst!=0) incRefCount(dst);
-		field.set(heap,base,new Long(dst));
-		if(src!=0) decRefCount(src);
+	void setReference(long base, Field field, Object value) {
+		synchronized(heap) {
+			long src=((Long)field.get(heap,base)).longValue();
+			long dst=value==null?0:value instanceof Accessor?((Accessor)value).base:writeObject(value);
+			if(dst!=0) incRefCount(dst);
+			field.set(heap,base,new Long(dst));
+			if(src!=0) decRefCount(src);
+		}
 	}
 
 	PersistentClass getClass(long base) {
@@ -426,6 +455,10 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 
 	void setLock(long base, Accessor accessor) {
 		Field.LOCK.set(heap,base,new Long(accessor==null?0:accessor.base));
+	}
+
+	Transaction transaction(Accessor accessor) {
+		return (Transaction)systemConnection.attach(accessor);
 	}
 
 	Object readObject(long base) {

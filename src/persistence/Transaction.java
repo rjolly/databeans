@@ -10,51 +10,52 @@ import persistence.util.RemoteCollection;
 public class Transaction extends PersistentObject implements RemoteTransaction {
 	public Transaction() throws RemoteException {}
 
-	public Transaction(Accessor accessor, Connection connection, String client) throws RemoteException {
+	public Transaction(Accessor accessor, Connection connection, String client, RemoteCollection transactions) throws RemoteException {
 		super(accessor,connection);
 		setClient(client);
+		setTransactions(transactions);
 		setMethodCalls((RemoteCollection)create(PersistentArrayList.class));
 		setObjects((RemoteCollection)create(PersistentArrayList.class));
-		this.connection.store.transactions.add(this);
+		PersistentCollections.localCollection(transactions).add(this);
 	}
 
-	void record(PersistentObject target) {
+	void lock(PersistentObject target) {
 		Collection o=PersistentCollections.localCollection(getObjects());
-		if(!o.contains(target)) o.add(target);
+		if(!o.contains(target)) {
+			target.lock(this);
+			o.add(target);
+		}
 	}
 
 	void record(PersistentObject target, String method, Class types[], Object args[]) {
-		Collection o=PersistentCollections.localCollection(getObjects());
 		Collection m=PersistentCollections.localCollection(getMethodCalls());
 		m.add(create(MethodCall.class,new Class[] {PersistentObject.class, String.class, Class[].class, Object[].class},new Object[] {target, method, types, args}));
-		if(!o.contains(target)) o.add(target);
 	}
 
 	void commit() {
-		Collection o=PersistentCollections.localCollection(getObjects());
-		for(Iterator it=o.iterator();it.hasNext();) {
-			PersistentObject obj=(PersistentObject)it.next();
-			obj.unlock();
-		}
+		unlock();
 		close();
 	}
 
 	void rollback() {
-		Collection o=PersistentCollections.localCollection(getObjects());
 		Collection m=PersistentCollections.localCollection(getMethodCalls());
-		for(Iterator it=m.iterator();it.hasNext();) {
-			MethodCall call=(MethodCall)it.next();
-			call.execute();
-		}
-		for(Iterator it=o.iterator();it.hasNext();) {
-			PersistentObject obj=(PersistentObject)it.next();
-			obj.unlock();
-		}
+		for(Iterator it=m.iterator();it.hasNext();) ((MethodCall)it.next()).execute();
+		unlock();
 		close();
 	}
 
+	void unlock() {
+		Collection o=PersistentCollections.localCollection(getObjects());
+		for(Iterator it=o.iterator();it.hasNext();) ((PersistentObject)it.next()).unlock();
+	}
+
+	void kick() {
+		Collection o=PersistentCollections.localCollection(getObjects());
+		for(Iterator it=o.iterator();it.hasNext();) ((PersistentObject)it.next()).kick();
+	}
+
 	void close() {
-		connection.store.transactions.remove(this);
+		PersistentCollections.localCollection(getTransactions()).remove(this);
 	}
 
 	public String getClient() {
@@ -63,6 +64,14 @@ public class Transaction extends PersistentObject implements RemoteTransaction {
 
 	public void setClient(String str) {
 		set("client",str);
+	}
+
+	public RemoteCollection getTransactions() {
+		return (RemoteCollection)get("transactions");
+	}
+
+	public void setTransactions(RemoteCollection collection) {
+		set("transactions",collection);
 	}
 
 	public RemoteCollection getMethodCalls() {

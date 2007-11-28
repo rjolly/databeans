@@ -46,31 +46,25 @@ public abstract class PersistentObject extends UnicastRemoteObject {
 	}
 
 	protected final Object get(String name) {
-		synchronized(connection) {
-			connection.begin(true);
-			Object obj=connection.call(this,"get",new Class[] {String.class},new Object[] {name});
-			connection.record(this);
-			connection.autoCommit();
-			return obj;
-		}
+		return connection.call(this,"get",new Class[] {String.class},new Object[] {name});
 	}
 
-	protected final Object set(String name, Object value) {
-		synchronized(connection) {
-			connection.begin(false);
-			Object obj=connection.call(this,"set",new Class[] {String.class,Object.class},new Object[] {name,value});
-			connection.record(this,"set",new Class[] {String.class,Object.class},new Object[] {name,obj});
-			connection.autoCommit();
-			return obj;
-		}
+	protected final void set(String name, Object value) {
+		connection.call(this,
+			"set",new Class[] {String.class,Object.class},new Object[] {name,value},
+			"set",new Class[] {String.class,Object.class},new Object[] {name,null},1);
 	}
 
-	void lock(PersistentObject transaction) {
+	void lock(Transaction transaction) {
 		accessor.lock(transaction.accessor);
 	}
 
 	void unlock() {
-		if(accessor.getLock()!=null) accessor.unlock();
+		accessor.unlock();
+	}
+
+	void kick() {
+		accessor.kick();
 	}
 
 	Object call(String method, Class types[], Object args[]) {

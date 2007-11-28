@@ -29,6 +29,8 @@ public interface Connection extends Remote {
 
 	void commit() throws RemoteException;
 	void rollback() throws RemoteException;
+	void close() throws RemoteException;
+	boolean isClosed() throws RemoteException;
 
 	XAResource getXAResource() throws RemoteException;
 }

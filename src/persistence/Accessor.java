@@ -29,7 +29,7 @@ public class Accessor {
 			}
 			t=getLock();
 			if(t==null);
-			else throw new PersistentException(this+" locked by "+store.systemConnection.attach(t));
+			else throw new PersistentException(this+" locked by "+store.transaction(t));
 		}
 		store.set(base,field,value);
 	}
@@ -46,13 +46,17 @@ public class Accessor {
 			}
 			t=getLock();
 			if(t==null) setLock(transaction);
-			else throw new PersistentException(this+" locked by "+store.systemConnection.attach(t));
+			else throw new PersistentException(this+" locked by "+store.transaction(t));
 		}
 	}
 
 	synchronized void unlock() {
 		setLock(null);
 		notify();
+	}
+
+	synchronized void kick() {
+		notifyAll();
 	}
 
 	Accessor getLock() {

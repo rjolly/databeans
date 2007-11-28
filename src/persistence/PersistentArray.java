@@ -1,6 +1,6 @@
 package persistence;
 
-import java.rmi.*;
+import java.rmi.RemoteException;
 
 public final class PersistentArray extends PersistentObject implements RemoteArray {
 	public PersistentArray() throws RemoteException {}
@@ -95,15 +95,13 @@ public final class PersistentArray extends PersistentObject implements RemoteArr
 	}
 
 	public Object get(int index) {
-		Object obj=connection.call(this,"get",new Class[] {Integer.class},new Object[] {new Integer(index)});
-		connection.autoCommit();
-		return obj;
+		return connection.call(this,"get",new Class[] {Integer.class},new Object[] {new Integer(index)});
 	}
 
 	public void set(int index, Object value) {
-		Object obj=connection.call(this,"set",new Class[] {Integer.class,Object.class},new Object[] {new Integer(index),value});
-		connection.record(this,"set",new Class[] {Integer.class,Object.class},new Object[] {new Integer(index),obj});
-		connection.autoCommit();
+		connection.call(this,
+			"set",new Class[] {Integer.class,Object.class},new Object[] {new Integer(index),value},
+			"set",new Class[] {Integer.class,Object.class},new Object[] {new Integer(index),null},1);
 	}
 
 	Object getImpl(Integer index) {
