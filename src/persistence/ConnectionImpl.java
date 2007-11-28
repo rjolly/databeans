@@ -185,8 +185,13 @@ public class ConnectionImpl extends UnicastRemoteObject implements Connection {
 		}
 	}
 
-	public synchronized void close() {
+	public void close() {
+		close(true);
+	}
+
+	synchronized void close(boolean rollback) {
 		if(closed) throw new PersistentException("connection closed");
+		if(rollback) rollback();
 		connections.remove(this);
 		closed=true;
 	}

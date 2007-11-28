@@ -241,7 +241,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		}
 		synchronized(connections) {
 			Iterator it=new ArrayList(connections).iterator();
-			while(it.hasNext()) ((ConnectionImpl)it.next()).close();
+			while(it.hasNext()) ((ConnectionImpl)it.next()).close(false);
 		}
 		systemConnection.close();
 		heap.mount(false);
