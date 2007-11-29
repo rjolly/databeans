@@ -10,33 +10,36 @@ import java.rmi.server.RemoteStub;
 import java.rmi.server.ServerNotActiveException;
 import java.rmi.server.UnicastRemoteObject;
 import java.security.Principal;
-import java.util.Collection;
 import java.util.Map;
 import java.util.WeakHashMap;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 
 public class ConnectionImpl extends UnicastRemoteObject implements Connection {
-	StoreImpl store;
-	Collection connections;
+	final StoreImpl store;
+	final Map cache=new WeakHashMap();
+	final Map refCache=new WeakHashMap();
 	Transaction transaction;
-	Map cache=new WeakHashMap();
-	Map refCache=new WeakHashMap();
 	boolean autoCommit;
 	boolean readOnly;
 	boolean closed;
 	String name;
 	int level;
 
-	ConnectionImpl(StoreImpl store, int level, Principal user, Collection connections) throws RemoteException {
+	ConnectionImpl(StoreImpl store, int level, Principal user) throws RemoteException {
 		this.store=store;
 		this.level=level;
 		name=user.getName();
 		try {
 			name+="@"+RemoteServer.getClientHost();
 		} catch (ServerNotActiveException e) {}
-		this.connections=connections;
-		connections.add(this);
+		if(level!=TRANSACTION_NONE) transaction=store.getTransaction(name);
+		open();
+	}
+
+	void open() {
+		if(transaction!=null) store.transactions.add(transaction);
+		store.connections.add(this);
 	}
 
 	public Remote create(String name) {
@@ -142,57 +145,46 @@ public class ConnectionImpl extends UnicastRemoteObject implements Connection {
 		this.readOnly=readOnly;
 	}
 
-	synchronized Object call(PersistentObject target, String method, Class types[], Object args[]) {
+	MethodCall methodCall(PersistentObject target, String method, Class types[], Object args[]) {
+		return store.methodCall(this,target,method,types,args);
+	}
+
+	synchronized Object execute(MethodCall call, MethodCall undo, int index, boolean read) {
 		if(closed) throw new PersistentException("connection closed");
-		if(transaction==null && level!=TRANSACTION_NONE) transaction=store.getTransaction(name);
-		target=(PersistentObject)store.attach(this,target);
-		args=store.attach(this,args);
-		if(level==TRANSACTION_SERIALIZABLE && !readOnly) transaction.lock(target);
-		Object obj=target.call(method,types,args);
+		if(!read && readOnly) throw new PersistentException("read only");
+		if(transaction!=null && level==TRANSACTION_SERIALIZABLE && !(read && readOnly)) transaction.lock((PersistentObject)call.getTarget());
+		Object obj=call.execute();
+		if(transaction!=null && !read) {
+			((PersistentArray)undo.getArgs()).set(index,obj);
+			transaction.record(undo);
+		}
 		if(autoCommit) commit();
 		return obj;
 	}
 
-	synchronized Object call(PersistentObject target,
-		String method, Class types[], Object args[],
-		String method0, Class types0[], Object args0[], int index) {
-		if(closed) throw new PersistentException("connection closed");
-		if(readOnly) throw new PersistentException("read only");
-		if(transaction==null && level!=TRANSACTION_NONE) transaction=store.getTransaction(name);
-		target=(PersistentObject)store.attach(this,target);
-		args=store.attach(this,args);
-		args0=store.attach(this,args0);
-		if(level==TRANSACTION_SERIALIZABLE) transaction.lock(target);
-		args0[index]=target.call(method,types,args);
-		if(level!=TRANSACTION_NONE) transaction.record(target,method0,types0,args0);
-		if(autoCommit) commit();
-		return args0[index];
-	}
-
 	public synchronized void commit() {
 		if(closed) throw new PersistentException("connection closed");
-		if(transaction!=null) {
-			transaction.commit();
-			transaction=null;
-		}
+		if(transaction!=null) transaction.commit();
 	}
 
 	public synchronized void rollback() {
 		if(closed) throw new PersistentException("connection closed");
-		if(transaction!=null) {
-			transaction.rollback();
-			transaction=null;
-		}
+		if(transaction!=null) transaction.rollback();
+	}
+
+	void kick() {
+		if(transaction!=null) transaction.kick();
 	}
 
 	public void close() {
-		close(true);
+		close(false);
 	}
 
-	synchronized void close(boolean rollback) {
+	synchronized void close(boolean force) {
 		if(closed) throw new PersistentException("connection closed");
-		if(rollback) rollback();
-		connections.remove(this);
+		if(!force) rollback();
+		store.connections.remove(this);
+		if(transaction!=null) store.transactions.remove(transaction);
 		closed=true;
 	}
 

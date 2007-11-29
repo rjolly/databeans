@@ -36,14 +36,15 @@ import persistence.util.RemoteCollection;
 public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	static final User none=new User("none","");
 	static final User anonymous=new User("anonymous","");
-	Heap heap;
+	final Heap heap;
 	Map users;
 	Map classes;
 	Collection transactions;
 	PersistentSystem system;
-	ConnectionImpl systemConnection;
-	Collection connections=Collections.synchronizedCollection(new ArrayList());
-	Map cache=new WeakHashMap();
+	final ConnectionImpl systemConnection;
+	final Collection connections=Collections.synchronizedCollection(new ArrayList());
+	final Map cache=new WeakHashMap();
+	boolean closing;
 	long boot;
 
 	public StoreImpl(String name) throws RemoteException {
@@ -52,7 +53,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		} catch (FileNotFoundException e) {
 			throw new RuntimeException(e);
 		}
-		systemConnection=new ConnectionImpl(this,Connection.TRANSACTION_NONE,none,new ArrayList());
+		systemConnection=new SystemConnection(this,none);
 		if((boot=heap.boot())==0) {
 			heap.mount(true);
 			create();
@@ -73,16 +74,11 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	}
 
 	void clear() {
-		Iterator it=new ArrayList(transactions).iterator();
-		while(it.hasNext()) ((Transaction)it.next()).rollback();
+		for(Iterator it=transactions.iterator();it.hasNext();it.remove()) ((Transaction)it.next()).rollback();
 	}
 
 	void updateClasses() {
-		Iterator it=classes.values().iterator();
-		while(it.hasNext()) {
-			long ptr=((PersistentClass)it.next()).base;
-			if(refCount(ptr)==1) it.remove();
-		}
+		for(Iterator it=classes.values().iterator();it.hasNext();) if(refCount(((PersistentClass)it.next()).base)==1) it.remove();
 	}
 
 	void create() {
@@ -97,9 +93,8 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 
 	void putAllClasses(Map map) {
 		Map classes=PersistentCollections.localMap(system.getClasses());
-		Iterator t=map.entrySet().iterator();
-		while(t.hasNext()) {
-			Map.Entry e=(Map.Entry)t.next();
+		for(Iterator it=map.entrySet().iterator();it.hasNext();) {
+			Map.Entry e=(Map.Entry)it.next();
 			classes.put(e.getKey(),e.getValue());
 		}
 	}
@@ -130,6 +125,10 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 
 	Transaction getTransaction(String client) {
 		return (Transaction)systemConnection.create(Transaction.class,new Class[] {String.class,RemoteCollection.class},new Object[] {client,system.getTransactions()});
+	}
+
+	MethodCall methodCall(ConnectionImpl connection, PersistentObject target, String method, Class types[], Object args[]) {
+		return (MethodCall)systemConnection.create(MethodCall.class,new Class[] {PersistentObject.class, String.class, Class[].class, Object[].class},new Object[] {attach(connection,target), method, types, attach(connection,args)});
 	}
 
 	Object attach(ConnectionImpl connection, Object obj) {
@@ -205,7 +204,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 
 	public Connection getConnection(String username, byte[] password) throws RemoteException {
 		User s=(User)users.get(username);
-		if(s!=null && !s.equals(none) && Arrays.equals(s.password,password)) return new ConnectionImpl(this,Connection.TRANSACTION_READ_UNCOMMITTED,s,connections);
+		if(s!=null && !s.equals(none) && Arrays.equals(s.password,password)) return new ConnectionImpl(this,Connection.TRANSACTION_READ_UNCOMMITTED,s);
 		else throw new PersistentException("permission denied");
 	}
 
@@ -235,13 +234,10 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	}
 
 	public void close() {
-		synchronized(((PersistentObject)system.getTransactions()).accessor) {
-			Iterator it=new ArrayList(transactions).iterator();
-			while(it.hasNext()) ((Transaction)it.next()).kick();
-		}
+		closing=true;
 		synchronized(connections) {
-			Iterator it=new ArrayList(connections).iterator();
-			while(it.hasNext()) ((ConnectionImpl)it.next()).close(false);
+			for(Iterator it=connections.iterator();it.hasNext();) ((ConnectionImpl)it.next()).kick();
+			for(Iterator it=new ArrayList(connections).iterator();it.hasNext();) ((ConnectionImpl)it.next()).close(true);
 		}
 		systemConnection.close();
 		heap.mount(false);

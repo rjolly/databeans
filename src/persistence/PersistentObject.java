@@ -46,13 +46,34 @@ public abstract class PersistentObject extends UnicastRemoteObject {
 	}
 
 	protected final Object get(String name) {
-		return connection.call(this,"get",new Class[] {String.class},new Object[] {name});
+		return execute(
+			methodCall("get",new Class[] {String.class},new Object[] {name}));
 	}
 
 	protected final void set(String name, Object value) {
-		connection.call(this,
-			"set",new Class[] {String.class,Object.class},new Object[] {name,value},
-			"set",new Class[] {String.class,Object.class},new Object[] {name,null},1);
+		execute(
+			methodCall("set",new Class[] {String.class,Object.class},new Object[] {name,value}),
+			methodCall("set",new Class[] {String.class,Object.class},new Object[] {name,null}),1);
+	}
+
+	protected final Object execute(MethodCall call) {
+		return connection.execute(call,null,0,true);
+	}
+
+	protected final Object execute(MethodCall call, MethodCall undo, int index) {
+		return connection.execute(call,undo,index,false);
+	}
+
+	protected final MethodCall methodCall(String method, Class types[], Object args[]) {
+		return connection.methodCall(this,method,types,args);
+	}
+
+	Object call(String method, Class types[], Object args[]) {
+		try {
+			return getClass().getMethod(method+"Impl",types).invoke(this,args);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	void lock(Transaction transaction) {
@@ -65,14 +86,6 @@ public abstract class PersistentObject extends UnicastRemoteObject {
 
 	void kick() {
 		accessor.kick();
-	}
-
-	Object call(String method, Class types[], Object args[]) {
-		try {
-			return getClass().getMethod(method+"Impl",types).invoke(this,args);
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
 	}
 
 	Object getImpl(String name) {

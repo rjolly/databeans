@@ -95,13 +95,14 @@ public final class PersistentArray extends PersistentObject implements RemoteArr
 	}
 
 	public Object get(int index) {
-		return connection.call(this,"get",new Class[] {Integer.class},new Object[] {new Integer(index)});
+		return execute(
+			methodCall("get",new Class[] {Integer.class},new Object[] {new Integer(index)}));
 	}
 
 	public void set(int index, Object value) {
-		connection.call(this,
-			"set",new Class[] {Integer.class,Object.class},new Object[] {new Integer(index),value},
-			"set",new Class[] {Integer.class,Object.class},new Object[] {new Integer(index),null},1);
+		execute(
+			methodCall("set",new Class[] {Integer.class,Object.class},new Object[] {new Integer(index),value}),
+			methodCall("set",new Class[] {Integer.class,Object.class},new Object[] {new Integer(index),null}),1);
 	}
 
 	Object getImpl(Integer index) {

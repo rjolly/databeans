@@ -7,8 +7,6 @@ import persistence.util.RemoteCollection;
 public interface RemoteTransaction extends Remote {
 	String getClient() throws RemoteException;
 	void setClient(String str) throws RemoteException;
-	RemoteCollection getTransactions() throws RemoteException;
-	void setTransactions(RemoteCollection collection) throws RemoteException;
 	RemoteCollection getMethodCalls() throws RemoteException;
 	void setMethodCalls(RemoteCollection collection) throws RemoteException;
 	RemoteCollection getObjects() throws RemoteException;

@@ -22,12 +22,7 @@ public class Accessor {
 		Accessor t=getLock();
 		if(t==null);
 		else {
-			try {
-				wait(TIMEOUT);
-			} catch (InterruptedException e) {
-				throw new RuntimeException(e);
-			}
-			t=getLock();
+			t=getLock(TIMEOUT);
 			if(t==null);
 			else throw new PersistentException(this+" locked by "+store.transaction(t));
 		}
@@ -39,12 +34,7 @@ public class Accessor {
 		if(t==null) setLock(transaction);
 		else if(t==transaction);
 		else {
-			try {
-				wait(TIMEOUT);
-			} catch (InterruptedException e) {
-				throw new RuntimeException(e);
-			}
-			t=getLock();
+			t=getLock(TIMEOUT);
 			if(t==null) setLock(transaction);
 			else throw new PersistentException(this+" locked by "+store.transaction(t));
 		}
@@ -60,6 +50,15 @@ public class Accessor {
 	}
 
 	Accessor getLock() {
+		return getLock(0);
+	}
+
+	Accessor getLock(int timeout) {
+		if(timeout>0 && !store.closing) try {
+			wait(timeout);
+		} catch (InterruptedException e) {
+			throw new RuntimeException(e);
+		}
 		return store.getLock(base);
 	}
 
