@@ -101,9 +101,11 @@ public abstract class PersistentObject extends UnicastRemoteObject {
 	}
 
 	Object set(Field field, Object value) {
-		Object obj=connection.attach(accessor.get(field));
-		accessor.set(field,connection.detach(value));
-		return obj;
+		synchronized(accessor) {
+			Object obj=connection.attach(accessor.get(field));
+			accessor.set(field,connection.detach(value));
+			return obj;
+		}
 	}
 
 	public final String toString() {

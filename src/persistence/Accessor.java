@@ -18,7 +18,7 @@ public class Accessor {
 		return store.get(base,field);
 	}
 
-	synchronized void set(Field field, Object value) {
+	void set(Field field, Object value) {
 		Accessor t=getLock();
 		if(t==null);
 		else {

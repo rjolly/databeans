@@ -195,25 +195,29 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		}
 	}
 
-	public void createUser(String username, byte[] password) {
+	public synchronized void createUser(String username, byte[] password) {
+		if(closing) throw new PersistentException("store closing");
 		synchronized(users) {
 			if(users.containsKey(username)) throw new PersistentException("the user "+username+" already exists");
 			else users.put(username, new User(username,password));
 		}
 	}
 
-	public Connection getConnection(String username, byte[] password) throws RemoteException {
+	public synchronized Connection getConnection(String username, byte[] password) throws RemoteException {
+		if(closing) throw new PersistentException("store closing");
 		User s=(User)users.get(username);
 		if(s!=null && !s.equals(none) && Arrays.equals(s.password,password)) return new ConnectionImpl(this,Connection.TRANSACTION_READ_UNCOMMITTED,s);
 		else throw new PersistentException("permission denied");
 	}
 
-	public char salt(String username) {
+	public synchronized char salt(String username) {
+		if(closing) throw new PersistentException("store closing");
 		User s=(User)users.get(username);
 		return s==null?0:(char)((s.password[0] << 8) | s.password[1]);
 	}
 
-	public void inport(String name) {
+	public synchronized void inport(String name) {
+		if(closing) throw new PersistentException("store closing");
 		try {
 			XMLDecoder d = new XMLDecoder(systemConnection,new BufferedInputStream(new FileInputStream(name)));
 			system.setRoot(d.readObject());
@@ -223,7 +227,8 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		}
 	}
 
-	public void export(String name) {
+	public synchronized void export(String name) {
+		if(closing) throw new PersistentException("store closing");
 		try {
 			XMLEncoder e = new XMLEncoder(systemConnection,new BufferedOutputStream(new FileOutputStream(name)));
 			e.writeObject(system.getRoot());
@@ -233,7 +238,8 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		}
 	}
 
-	public void close() {
+	public synchronized void close() {
+		if(closing) throw new PersistentException("store closing");
 		closing=true;
 		synchronized(connections) {
 			for(Iterator it=connections.iterator();it.hasNext();) ((ConnectionImpl)it.next()).kick();
@@ -243,8 +249,8 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		heap.mount(false);
 	}
 
-	public void gc() {
-		if(!heap.mounted()) throw new PersistentException("head unmounted");
+	public synchronized void gc() {
+		if(closing) throw new PersistentException("store closing");
 		System.runFinalization();
 		gc(true);
 	}
