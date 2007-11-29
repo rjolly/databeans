@@ -6,20 +6,21 @@
  */
 package persistence.util;
 
-import java.util.*;
-import java.rmi.*;
-import persistence.*;
+import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
+import java.util.ConcurrentModificationException;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.NoSuchElementException;
 
-public abstract class TransientAbstractList extends TransientAbstractCollection implements RemoteList {
-	protected TransientAbstractList() throws RemoteException {
-	}
-
+abstract class TransientAbstractList extends TransientAbstractCollection implements RemoteList {
 	protected TransientAbstractList(Object mutex) throws RemoteException {
 		super(mutex);
 	}
 
 	public boolean add(Object o) {
-	synchronized(mutex) {
+	synchronized(mutex()) {
 		add(size(), o);
 		return true;
 	}
@@ -40,7 +41,7 @@ public abstract class TransientAbstractList extends TransientAbstractCollection 
 	}
 
 	public int indexOf(Object o) {
-	synchronized(mutex) {
+	synchronized(mutex()) {
 		ListIterator e = PersistentCollections.localList(this).listIterator();
 		if (o==null) {
 			while (e.hasNext())
@@ -56,7 +57,7 @@ public abstract class TransientAbstractList extends TransientAbstractCollection 
 	}
 
 	public int lastIndexOf(Object o) {
-	synchronized(mutex) {
+	synchronized(mutex()) {
 		ListIterator e = PersistentCollections.localList(this).listIterator(size());
 		if (o==null) {
 			while (e.hasPrevious())
@@ -72,13 +73,13 @@ public abstract class TransientAbstractList extends TransientAbstractCollection 
 	}
 
 	public void clear() {
-	synchronized(mutex) {
+	synchronized(mutex()) {
 		removeRange(0, size());
 	}
 	}
 
 	public boolean addAll(int index, RemoteCollection c) {
-	synchronized(mutex) {
+	synchronized(mutex()) {
 		boolean modified = false;
 		Iterator e = PersistentCollections.localCollection(c).iterator();
 		while (e.hasNext()) {
@@ -104,7 +105,7 @@ public abstract class TransientAbstractList extends TransientAbstractCollection 
 		return new ListItr(index);
 	}
 
-	private class Itr extends TransientObject implements RemoteIterator {
+	private class Itr extends UnicastRemoteObject implements RemoteIterator {
 
 		int cursor = 0;
 
@@ -208,8 +209,8 @@ public abstract class TransientAbstractList extends TransientAbstractCollection 
 	}
 
 	public RemoteList subList(int fromIndex, int toIndex) throws RemoteException {
-	synchronized(mutex) {
-		return new SubList(this, fromIndex, toIndex, mutex);
+	synchronized(mutex()) {
+		return new SubList(this, fromIndex, toIndex, mutex());
 	}
 	}
 

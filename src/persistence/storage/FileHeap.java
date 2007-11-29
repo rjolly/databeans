@@ -26,7 +26,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 			long l=length();
 			if((maxSpace=l&-4)<l) setLength(maxSpace);
 		} catch (IOException e) {
-			throw new StorageException("i/o error");
+			throw new RuntimeException(e);
 		}
 		if(minSpace>maxSpace);
 		else {
@@ -108,7 +108,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 			seek(ptr);
 			return readBoolean();
 		} catch (IOException e) {
-			throw new StorageException("i/o error");
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -117,7 +117,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 			seek(ptr);
 			return readByte();
 		} catch (IOException e) {
-			throw new StorageException("i/o error");
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -126,7 +126,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 			seek(ptr);
 			return readShort();
 		} catch (IOException e) {
-			throw new StorageException("i/o error");
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -135,7 +135,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 			seek(ptr);
 			return readChar();
 		} catch (IOException e) {
-			throw new StorageException("i/o error");
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -144,7 +144,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 			seek(ptr);
 			return readInt();
 		} catch (IOException e) {
-			throw new StorageException("i/o error");
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -153,7 +153,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 			seek(ptr);
 			return readLong();
 		} catch (IOException e) {
-			throw new StorageException("i/o error");
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -162,7 +162,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 			seek(ptr);
 			return readFloat();
 		} catch (IOException e) {
-			throw new StorageException("i/o error");
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -171,7 +171,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 			seek(ptr);
 			return readDouble();
 		} catch (IOException e) {
-			throw new StorageException("i/o error");
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -181,7 +181,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 			seek(ptr);
 			read(b);
 		} catch (IOException e) {
-			throw new StorageException("i/o error");
+			throw new RuntimeException(e);
 		}
 		return b;
 	}
@@ -191,7 +191,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 			seek(ptr);
 			writeBoolean(v);
 		} catch (IOException e) {
-			throw new StorageException("i/o error");
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -200,7 +200,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 			seek(ptr);
 			writeByte(v);
 		} catch (IOException e) {
-			throw new StorageException("i/o error");
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -209,7 +209,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 			seek(ptr);
 			writeShort(v);
 		} catch (IOException e) {
-			throw new StorageException("i/o error");
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -218,7 +218,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 			seek(ptr);
 			writeChar(v);
 		} catch (IOException e) {
-			throw new StorageException("i/o error");
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -227,7 +227,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 			seek(ptr);
 			writeInt(v);
 		} catch (IOException e) {
-			throw new StorageException("i/o error");
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -236,7 +236,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 			seek(ptr);
 			writeLong(v);
 		} catch (IOException e) {
-			throw new StorageException("i/o error");
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -245,7 +245,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 			seek(ptr);
 			writeFloat(v);
 		} catch (IOException e) {
-			throw new StorageException("i/o error");
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -254,7 +254,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 			seek(ptr);
 			writeDouble(v);
 		} catch (IOException e) {
-			throw new StorageException("i/o error");
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -263,7 +263,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 			seek(ptr);
 			write(b);
 		} catch (IOException e) {
-			throw new StorageException("i/o error");
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -300,7 +300,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 			writeInt(s);
 			return new Chunk(pos);
 		} catch (IOException e) {
-			throw new StorageException("i/o error");
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -340,7 +340,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 				seek(this.pos=pos);
 				size=normalized(readInt()&-4);
 			} catch (IOException e) {
-				throw new StorageException("i/o error");
+				throw new RuntimeException(e);
 			}
 		}
 
@@ -391,7 +391,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 					seek(pos-Integer_SIZE);
 					return new Chunk(pos-normalized(readInt()));
 				} catch (IOException e) {
-					throw new StorageException("i/o error");
+					throw new RuntimeException(e);
 				}
 			} else return null;
 		}
@@ -415,7 +415,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 					seek(c.pos+Integer_SIZE+i);
 					writeInt(n);
 				} catch (IOException e) {
-					throw new StorageException("i/o error");
+					throw new RuntimeException(e);
 				}
 			}
 		}
@@ -425,7 +425,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 				seek(pos+Integer_SIZE-1);
 				return (readByte()&1)!=0;
 			} catch (IOException e) {
-				throw new StorageException("i/o error");
+				throw new RuntimeException(e);
 			}
 		}
 
@@ -436,7 +436,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 				seek(pos+Integer_SIZE-1);
 				writeByte((s?1:0)|(b&-2));
 			} catch (IOException e) {
-				throw new StorageException("i/o error");
+				throw new RuntimeException(e);
 			}
 		}
 
@@ -456,7 +456,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 				seek(pos+Integer_SIZE-1);
 				return (readByte()&2)!=0;
 			} catch (IOException e) {
-				throw new StorageException("i/o error");
+				throw new RuntimeException(e);
 			}
 		}
 
@@ -467,7 +467,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 				seek(pos+Integer_SIZE-1);
 				writeByte((s?2:0)|b&-3);
 			} catch (IOException e) {
-				throw new StorageException("i/o error");
+				throw new RuntimeException(e);
 			}
 		}
 

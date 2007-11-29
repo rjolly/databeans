@@ -1,8 +1,8 @@
 package persistence;
 
-import java.security.*;
+import java.security.Principal;
 
-public class User extends UnicastSerializedObject implements Principal {
+class User extends UnicastSerializedObject implements Principal {
 	String name;
 	byte[] password;
 

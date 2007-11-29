@@ -6,13 +6,11 @@
  */
 package persistence.util;
 
-import java.util.*;
-import java.rmi.*;
+import java.rmi.RemoteException;
+import java.util.Iterator;
+import java.util.Set;
 
-public abstract class TransientAbstractSet extends TransientAbstractCollection implements RemoteSet {
-	protected TransientAbstractSet() throws RemoteException {
-	}
-
+abstract class TransientAbstractSet extends TransientAbstractCollection implements RemoteSet {
 	protected TransientAbstractSet(Object mutex) throws RemoteException {
 		super(mutex);
 	}
@@ -41,7 +39,7 @@ public abstract class TransientAbstractSet extends TransientAbstractCollection i
 	}
 
 	public boolean removeAll(RemoteCollection c) {
-	synchronized(mutex) {
+	synchronized(mutex()) {
 		boolean modified = false;
 
 		if (size() > PersistentCollections.localCollection(c).size()) {

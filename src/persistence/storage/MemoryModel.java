@@ -1,6 +1,8 @@
 package persistence.storage;
 
-import java.io.*;
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 
 public class MemoryModel {
 	public static final MemoryModel model=new MemoryModel(64);
@@ -25,7 +27,7 @@ public class MemoryModel {
 		try {
 			return pointerSize==4?s.readInt():s.readLong();
 		} catch (IOException e) {
-			throw new StorageException("i/o error");
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -34,7 +36,7 @@ public class MemoryModel {
 			if(pointerSize==4) s.writeInt((int)v);
 			else s.writeLong(v);
 		} catch (IOException e) {
-			throw new StorageException("i/o error");
+			throw new RuntimeException(e);
 		}
 	}
 

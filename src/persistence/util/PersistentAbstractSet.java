@@ -6,20 +6,16 @@
  */
 package persistence.util;
 
-import java.util.*;
-import java.rmi.*;
-import persistence.*;
+import java.rmi.RemoteException;
+import java.util.Iterator;
+import persistence.Accessor;
+import persistence.Connection;
 
 public abstract class PersistentAbstractSet extends PersistentAbstractCollection implements RemoteSet {
 	public PersistentAbstractSet() throws RemoteException {}
 
-	public PersistentAbstractSet(Object mutex) throws RemoteException {
-		super(mutex);
-	}
-
 	public PersistentAbstractSet(Accessor accessor, Connection connection) throws RemoteException {
 		super(accessor,connection);
-		mutex=this;
 	}
 
 	public boolean equals(Object o) {
@@ -46,7 +42,7 @@ public abstract class PersistentAbstractSet extends PersistentAbstractCollection
 	}
 
 	public boolean removeAll(RemoteCollection c) {
-	synchronized(mutex) {
+	synchronized(mutex()) {
 		boolean modified = false;
 
 		if (size() > PersistentCollections.localCollection(c).size()) {

@@ -101,7 +101,7 @@ public abstract class PersistentObject extends UnicastRemoteObject {
 	}
 
 	Object set(Field field, Object value) {
-		synchronized(accessor) {
+		synchronized(mutex()) {
 			Object obj=connection.attach(accessor.get(field));
 			accessor.set(field,connection.detach(value));
 			return obj;
@@ -128,6 +128,10 @@ public abstract class PersistentObject extends UnicastRemoteObject {
 
 	public final String persistentClass() {
 		return accessor.clazz.toString();
+	}
+
+	protected final Object mutex() {
+		return accessor;
 	}
 }
 

@@ -1,6 +1,6 @@
 package persistence;
 
-import java.io.*;
+import java.io.Serializable;
 
 class UnicastSerializedObject implements Serializable {
 	transient long base;

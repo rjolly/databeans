@@ -1,6 +1,6 @@
 package persistence;
 
-import java.rmi.*;
+import java.rmi.RemoteException;
 
 public class PersistentArrays {
 	private PersistentArrays() {}
@@ -26,7 +26,7 @@ public class PersistentArrays {
 			try {
 				return a.length();
 			} catch (RemoteException e) {
-				throw new RuntimeException("remote error");
+				throw new RuntimeException(e);
 			}
 		}
 
@@ -34,7 +34,7 @@ public class PersistentArrays {
 			try {
 				return a.typeCode();
 			} catch (RemoteException e) {
-				throw new RuntimeException("remote error");
+				throw new RuntimeException(e);
 			}
 		}
 
@@ -42,7 +42,7 @@ public class PersistentArrays {
 			try {
 				return a.getBoolean(index);
 			} catch (RemoteException e) {
-				throw new RuntimeException("remote error");
+				throw new RuntimeException(e);
 			}
 		}
 
@@ -50,7 +50,7 @@ public class PersistentArrays {
 			try {
 				a.setBoolean(index,value);
 			} catch (RemoteException e) {
-				throw new RuntimeException("remote error");
+				throw new RuntimeException(e);
 			}
 		}
 
@@ -58,7 +58,7 @@ public class PersistentArrays {
 			try {
 				return a.getShort(index);
 			} catch (RemoteException e) {
-				throw new RuntimeException("remote error");
+				throw new RuntimeException(e);
 			}
 		}
 
@@ -66,7 +66,7 @@ public class PersistentArrays {
 			try {
 				a.setShort(index,value);
 			} catch (RemoteException e) {
-				throw new RuntimeException("remote error");
+				throw new RuntimeException(e);
 			}
 		}
 
@@ -74,7 +74,7 @@ public class PersistentArrays {
 			try {
 				return a.getChar(index);
 			} catch (RemoteException e) {
-				throw new RuntimeException("remote error");
+				throw new RuntimeException(e);
 			}
 		}
 
@@ -82,7 +82,7 @@ public class PersistentArrays {
 			try {
 				a.setChar(index,value);
 			} catch (RemoteException e) {
-				throw new RuntimeException("remote error");
+				throw new RuntimeException(e);
 			}
 		}
 
@@ -90,7 +90,7 @@ public class PersistentArrays {
 			try {
 				return a.getInt(index);
 			} catch (RemoteException e) {
-				throw new RuntimeException("remote error");
+				throw new RuntimeException(e);
 			}
 		}
 
@@ -98,7 +98,7 @@ public class PersistentArrays {
 			try {
 				a.setInt(index,value);
 			} catch (RemoteException e) {
-				throw new RuntimeException("remote error");
+				throw new RuntimeException(e);
 			}
 		}
 
@@ -106,7 +106,7 @@ public class PersistentArrays {
 			try {
 				return a.getLong(index);
 			} catch (RemoteException e) {
-				throw new RuntimeException("remote error");
+				throw new RuntimeException(e);
 			}
 		}
 
@@ -114,7 +114,7 @@ public class PersistentArrays {
 			try {
 				a.setLong(index,value);
 			} catch (RemoteException e) {
-				throw new RuntimeException("remote error");
+				throw new RuntimeException(e);
 			}
 		}
 
@@ -122,7 +122,7 @@ public class PersistentArrays {
 			try {
 				return a.getFloat(index);
 			} catch (RemoteException e) {
-				throw new RuntimeException("remote error");
+				throw new RuntimeException(e);
 			}
 		}
 
@@ -130,7 +130,7 @@ public class PersistentArrays {
 			try {
 				a.setFloat(index,value);
 			} catch (RemoteException e) {
-				throw new RuntimeException("remote error");
+				throw new RuntimeException(e);
 			}
 		}
 
@@ -138,7 +138,7 @@ public class PersistentArrays {
 			try {
 				return a.getDouble(index);
 			} catch (RemoteException e) {
-				throw new RuntimeException("remote error");
+				throw new RuntimeException(e);
 			}
 		}
 
@@ -146,7 +146,7 @@ public class PersistentArrays {
 			try {
 				a.setDouble(index,value);
 			} catch (RemoteException e) {
-				throw new RuntimeException("remote error");
+				throw new RuntimeException(e);
 			}
 		}
 
@@ -154,7 +154,7 @@ public class PersistentArrays {
 			try {
 				return a.get(index);
 			} catch (RemoteException e) {
-				throw new RuntimeException("remote error");
+				throw new RuntimeException(e);
 			}
 		}
 
@@ -162,7 +162,7 @@ public class PersistentArrays {
 			try {
 				a.set(index,value);
 			} catch (RemoteException e) {
-				throw new RuntimeException("remote error");
+				throw new RuntimeException(e);
 			}
 		}
 
@@ -170,7 +170,7 @@ public class PersistentArrays {
 			try {
 				return a.remoteToString();
 			} catch (RemoteException e) {
-				throw new RuntimeException("remote error");
+				throw new RuntimeException(e);
 			}
 		}
 	}

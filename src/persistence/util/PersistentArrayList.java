@@ -6,9 +6,12 @@
  */
 package persistence.util;
 
-import java.util.*;
-import java.rmi.*;
-import persistence.*;
+import java.rmi.RemoteException;
+import persistence.Accessor;
+import persistence.Array;
+import persistence.Connection;
+import persistence.PersistentArrays;
+import persistence.RemoteArray;
 
 public class PersistentArrayList extends PersistentAbstractList implements RemoteList {
 	public RemoteArray getElementData() {
@@ -40,7 +43,7 @@ public class PersistentArrayList extends PersistentAbstractList implements Remot
 	}
 
 	public void trimToSize() {
-	synchronized(mutex) {
+	synchronized(mutex()) {
 		setModCount(getModCount()+1);
 		int oldCapacity = PersistentArrays.localArray(getElementData()).length();
 		if (getSize() < oldCapacity) {
@@ -52,7 +55,7 @@ public class PersistentArrayList extends PersistentAbstractList implements Remot
 	}
 
 	public void ensureCapacity(int minCapacity) {
-	synchronized(mutex) {
+	synchronized(mutex()) {
 		setModCount(getModCount()+1);
 		int oldCapacity = PersistentArrays.localArray(getElementData()).length();
 		if (minCapacity > oldCapacity) {
@@ -67,25 +70,25 @@ public class PersistentArrayList extends PersistentAbstractList implements Remot
 	}
 
 	public int size() {
-	synchronized(mutex) {
+	synchronized(mutex()) {
 		return getSize();
 	}
 	}
 
 	public boolean isEmpty() {
-	synchronized(mutex) {
+	synchronized(mutex()) {
 		return getSize() == 0;
 	}
 	}
 
 	public boolean contains(Object elem) {
-	synchronized(mutex) {
+	synchronized(mutex()) {
 		return indexOf(elem) >= 0;
 	}
 	}
 
 	public int indexOf(Object elem) {
-	synchronized(mutex) {
+	synchronized(mutex()) {
 		if (elem == null) {
 			for (int i = 0; i < getSize(); i++)
 				if (PersistentArrays.localArray(getElementData()).get(i)==null)
@@ -100,7 +103,7 @@ public class PersistentArrayList extends PersistentAbstractList implements Remot
 	}
 
 	public int lastIndexOf(Object elem) {
-	synchronized(mutex) {
+	synchronized(mutex()) {
 		if (elem == null) {
 			for (int i = getSize()-1; i >= 0; i--)
 				if (PersistentArrays.localArray(getElementData()).get(i)==null)
@@ -115,7 +118,7 @@ public class PersistentArrayList extends PersistentAbstractList implements Remot
 	}
 
 	public Object[] toArray() {
-	synchronized(mutex) {
+	synchronized(mutex()) {
 		Object[] result = new Object[getSize()];
 		PersistentArrays.copy(PersistentArrays.localArray(getElementData()), 0, result, 0, getSize());
 		return result;
@@ -123,7 +126,7 @@ public class PersistentArrayList extends PersistentAbstractList implements Remot
 	}
 
 	public Object[] toArray(Object a[]) {
-	synchronized(mutex) {
+	synchronized(mutex()) {
 		if (a.length < getSize())
 			a = (Object[])java.lang.reflect.Array.newInstance(a.getClass().getComponentType(), getSize());
 
@@ -137,7 +140,7 @@ public class PersistentArrayList extends PersistentAbstractList implements Remot
 	}
 
 	public Object get(int index) {
-	synchronized(mutex) {
+	synchronized(mutex()) {
 		RangeCheck(index);
 
 		return PersistentArrays.localArray(getElementData()).get(index);
@@ -145,7 +148,7 @@ public class PersistentArrayList extends PersistentAbstractList implements Remot
 	}
 
 	public Object set(int index, Object element) {
-	synchronized(mutex) {
+	synchronized(mutex()) {
 		RangeCheck(index);
 
 		Object oldValue = PersistentArrays.localArray(getElementData()).get(index);
@@ -155,16 +158,28 @@ public class PersistentArrayList extends PersistentAbstractList implements Remot
 	}
 
 	public boolean add(Object o) {
-	synchronized(mutex) {
-		ensureCapacity(getSize() + 1);  // Increments modCount!!
-		PersistentArrays.localArray(getElementData()).set(getSize(),o);
-		setSize(getSize()+1);
+		add(getSize(),o);
 		return true;
 	}
-	}
+
+//	public boolean add(Object o) {
+//	synchronized(mutex()) {
+//		ensureCapacity(getSize() + 1);  // Increments modCount!!
+//		PersistentArrays.localArray(getElementData()).set(getSize(),o);
+//		setSize(getSize()+1);
+//		return true;
+//	}
+//	}
 
 	public void add(int index, Object element) {
-	synchronized(mutex) {
+		execute(
+			methodCall("add",new Class[] {Integer.class,Object.class},new Object[] {new Integer(index),element}),
+			methodCall("remove",new Class[] {Integer.class},new Object[] {null}),0);
+	}
+
+	Integer addImpl(Integer i, Object element) {
+		int index=i.intValue();
+	synchronized(mutex()) {
 		if (index > getSize() || index < 0)
 			throw new IndexOutOfBoundsException(
 				"Index: "+index+", Size: "+getSize());
@@ -175,10 +190,18 @@ public class PersistentArrayList extends PersistentAbstractList implements Remot
 		PersistentArrays.localArray(getElementData()).set(index,element);
 		setSize(getSize()+1);
 	}
+		return i;
 	}
 
 	public Object remove(int index) {
-	synchronized(mutex) {
+		return execute(
+			methodCall("remove",new Class[] {Integer.class},new Object[] {new Integer(index)}),
+			methodCall("add",new Class[] {Integer.class,Object.class},new Object[] {new Integer(index),null}),1);
+	}
+
+	Object removeImpl(Integer i) {
+		int index=i.intValue();
+	synchronized(mutex()) {
 		RangeCheck(index);
 
 		setModCount(getModCount()+1);
@@ -195,68 +218,68 @@ public class PersistentArrayList extends PersistentAbstractList implements Remot
 	}
 	}
 
-	public void clear() {
-	synchronized(mutex) {
-		setModCount(getModCount()+1);
+//	public void clear() {
+//	synchronized(mutex()) {
+//		setModCount(getModCount()+1);
+//
+//		for (int i = 0; i < getSize(); i++)
+//			PersistentArrays.localArray(getElementData()).set(i,null);
+//
+//		setSize(0);
+//	}
+//	}
 
-		for (int i = 0; i < getSize(); i++)
-			PersistentArrays.localArray(getElementData()).set(i,null);
+//	public boolean addAll(RemoteCollection c) {
+//	synchronized(mutex()) {
+//		setModCount(getModCount()+1);
+//		int numNew = PersistentCollections.localCollection(c).size();
+//		ensureCapacity(getSize() + numNew);
+//
+//		Iterator e = PersistentCollections.localCollection(c).iterator();
+//		for (int i=0; i<numNew; i++) {
+//			PersistentArrays.localArray(getElementData()).set(getSize(),e.next());
+//			setSize(getSize()+1);
+//		}
+//		return numNew != 0;
+//	}
+//	}
 
-		setSize(0);
-	}
-	}
+//	public boolean addAll(int index, RemoteCollection c) {
+//	synchronized(mutex()) {
+//		if (index > getSize() || index < 0)
+//			throw new IndexOutOfBoundsException(
+//				"Index: "+index+", Size: "+getSize());
+//
+//		int numNew = PersistentCollections.localCollection(c).size();
+//		ensureCapacity(getSize() + numNew);  // Increments modCount!!
+//
+//		int numMoved = getSize() - index;
+//		if (numMoved > 0)
+//			PersistentArrays.copy(PersistentArrays.localArray(getElementData()), index, PersistentArrays.localArray(getElementData()), index + numNew,
+//							 numMoved);
+//
+//		Iterator e = PersistentCollections.localCollection(c).iterator();
+//		for (int i=0; i<numNew; i++)
+//			PersistentArrays.localArray(getElementData()).set(index++,e.next());
+//
+//		setSize(getSize()+numNew);
+//		return numNew != 0;
+//	}
+//	}
 
-	public boolean addAll(RemoteCollection c) {
-	synchronized(mutex) {
-		setModCount(getModCount()+1);
-		int numNew = PersistentCollections.localCollection(c).size();
-		ensureCapacity(getSize() + numNew);
-
-		Iterator e = PersistentCollections.localCollection(c).iterator();
-		for (int i=0; i<numNew; i++) {
-			PersistentArrays.localArray(getElementData()).set(getSize(),e.next());
-			setSize(getSize()+1);
-		}
-		return numNew != 0;
-	}
-	}
-
-	public boolean addAll(int index, RemoteCollection c) {
-	synchronized(mutex) {
-		if (index > getSize() || index < 0)
-			throw new IndexOutOfBoundsException(
-				"Index: "+index+", Size: "+getSize());
-
-		int numNew = PersistentCollections.localCollection(c).size();
-		ensureCapacity(getSize() + numNew);  // Increments modCount!!
-
-		int numMoved = getSize() - index;
-		if (numMoved > 0)
-			PersistentArrays.copy(PersistentArrays.localArray(getElementData()), index, PersistentArrays.localArray(getElementData()), index + numNew,
-							 numMoved);
-
-		Iterator e = PersistentCollections.localCollection(c).iterator();
-		for (int i=0; i<numNew; i++)
-			PersistentArrays.localArray(getElementData()).set(index++,e.next());
-
-		setSize(getSize()+numNew);
-		return numNew != 0;
-	}
-	}
-
-	protected void removeRange(int fromIndex, int toIndex) {
-		setModCount(getModCount()+1);
-		int numMoved = getSize() - toIndex;
-		PersistentArrays.copy(PersistentArrays.localArray(getElementData()), toIndex, PersistentArrays.localArray(getElementData()), fromIndex,
-						 numMoved);
-
-		// Let gc do its work
-		int newSize = getSize() - (toIndex-fromIndex);
-		while (getSize() != newSize) {
-			setSize(getSize()-1);
-			PersistentArrays.localArray(getElementData()).set(getSize(),null);
-		}
-	}
+//	protected void removeRange(int fromIndex, int toIndex) {
+//		setModCount(getModCount()+1);
+//		int numMoved = getSize() - toIndex;
+//		PersistentArrays.copy(PersistentArrays.localArray(getElementData()), toIndex, PersistentArrays.localArray(getElementData()), fromIndex,
+//						 numMoved);
+//
+//		// Let gc do its work
+//		int newSize = getSize() - (toIndex-fromIndex);
+//		while (getSize() != newSize) {
+//			setSize(getSize()-1);
+//			PersistentArrays.localArray(getElementData()).set(getSize(),null);
+//		}
+//	}
 
 	private void RangeCheck(int index) {
 		if (index >= getSize() || index < 0)

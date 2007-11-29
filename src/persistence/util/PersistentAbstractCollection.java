@@ -6,24 +6,17 @@
  */
 package persistence.util;
 
-import java.util.*;
-import java.rmi.*;
-import persistence.*;
+import java.rmi.RemoteException;
+import java.util.Iterator;
+import persistence.Accessor;
+import persistence.Connection;
+import persistence.PersistentObject;
 
 public abstract class PersistentAbstractCollection extends PersistentObject implements RemoteCollection {
-	Object mutex;
-
-	public PersistentAbstractCollection() throws RemoteException {
-		mutex=this;
-	}
-
-	public PersistentAbstractCollection(Object mutex) throws RemoteException {
-		this.mutex=mutex;
-	}
+	public PersistentAbstractCollection() throws RemoteException {}
 
 	public PersistentAbstractCollection(Accessor accessor, Connection connection) throws RemoteException {
 		super(accessor,connection);
-		mutex=this;
 	}
 
 	public abstract RemoteIterator iterator() throws RemoteException;
@@ -31,13 +24,13 @@ public abstract class PersistentAbstractCollection extends PersistentObject impl
 	public abstract int size();
 
 	public boolean isEmpty() {
-	synchronized(mutex) {
+	synchronized(mutex()) {
 		return size() == 0;
 	}
 	}
 
 	public boolean contains(Object o) {
-	synchronized(mutex) {
+	synchronized(mutex()) {
 		Iterator e = PersistentCollections.localCollection(this).iterator();
 		if (o==null) {
 			while (e.hasNext())
@@ -53,7 +46,7 @@ public abstract class PersistentAbstractCollection extends PersistentObject impl
 	}
 
 	public Object[] toArray() {
-	synchronized(mutex) {
+	synchronized(mutex()) {
 		Object[] result = new Object[size()];
 		Iterator e = PersistentCollections.localCollection(this).iterator();
 		for (int i=0; e.hasNext(); i++)
@@ -63,7 +56,7 @@ public abstract class PersistentAbstractCollection extends PersistentObject impl
 	}
 
 	public Object[] toArray(Object a[]) {
-	synchronized(mutex) {
+	synchronized(mutex()) {
 		int size = size();
 		if (a.length < size)
 			a = (Object[])java.lang.reflect.Array.newInstance(a.getClass().getComponentType(), size);
@@ -84,7 +77,7 @@ public abstract class PersistentAbstractCollection extends PersistentObject impl
 	}
 
 	public boolean remove(Object o) {
-	synchronized(mutex) {
+	synchronized(mutex()) {
 		Iterator e = PersistentCollections.localCollection(this).iterator();
 		if (o==null) {
 			while (e.hasNext()) {
@@ -106,7 +99,7 @@ public abstract class PersistentAbstractCollection extends PersistentObject impl
 	}
 
 	public boolean containsAll(RemoteCollection c) {
-	synchronized(mutex) {
+	synchronized(mutex()) {
 		Iterator e = PersistentCollections.localCollection(c).iterator();
 		while (e.hasNext())
 			if(!contains(e.next()))
@@ -117,7 +110,7 @@ public abstract class PersistentAbstractCollection extends PersistentObject impl
 	}
 
 	public boolean addAll(RemoteCollection c) {
-	synchronized(mutex) {
+	synchronized(mutex()) {
 		boolean modified = false;
 		Iterator e = PersistentCollections.localCollection(c).iterator();
 		while (e.hasNext()) {
@@ -129,7 +122,7 @@ public abstract class PersistentAbstractCollection extends PersistentObject impl
 	}
 
 	public boolean removeAll(RemoteCollection c) {
-	synchronized(mutex) {
+	synchronized(mutex()) {
 		boolean modified = false;
 		Iterator e = PersistentCollections.localCollection(this).iterator();
 		while (e.hasNext()) {
@@ -143,7 +136,7 @@ public abstract class PersistentAbstractCollection extends PersistentObject impl
 	}
 
 	public boolean retainAll(RemoteCollection c) {
-	synchronized(mutex) {
+	synchronized(mutex()) {
 		boolean modified = false;
 		Iterator e = PersistentCollections.localCollection(this).iterator();
 		while (e.hasNext()) {
@@ -157,7 +150,7 @@ public abstract class PersistentAbstractCollection extends PersistentObject impl
 	}
 
 	public void clear() {
-	synchronized(mutex) {
+	synchronized(mutex()) {
 		Iterator e = PersistentCollections.localCollection(this).iterator();
 		while (e.hasNext()) {
 			e.next();
@@ -167,7 +160,7 @@ public abstract class PersistentAbstractCollection extends PersistentObject impl
 	}
 
 	public String remoteToString() {
-	synchronized(mutex) {
+	synchronized(mutex()) {
 		StringBuffer buf = new StringBuffer();
 		Iterator e = PersistentCollections.localCollection(this).iterator();
 		buf.append("[");

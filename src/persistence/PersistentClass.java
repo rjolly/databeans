@@ -1,11 +1,21 @@
 package persistence;
 
-import java.io.*;
-import java.util.*;
-import java.beans.*;
-import java.lang.reflect.*;
+import java.beans.BeanInfo;
+import java.beans.IndexedPropertyDescriptor;
+import java.beans.IntrospectionException;
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
-public class PersistentClass extends UnicastSerializedObject {
+class PersistentClass extends UnicastSerializedObject {
 	String name;
 	Field fields[];
 	transient Map map;
@@ -74,13 +84,13 @@ public class PersistentClass extends UnicastSerializedObject {
 			return (PersistentObject)clazz.getConstructor(t).newInstance(a);
 		} catch (NoSuchMethodException e) {
 			if(types.length==0 && args.length==0) return newInstance(accessor, connection);
-			else throw new PersistentException("instantiation error");
+			else throw new RuntimeException(e);
 		} catch (InstantiationException e) {
-			throw new PersistentException("instantiation error");
+			throw new RuntimeException(e);
 		} catch (IllegalAccessException e) {
-			throw new PersistentException("instantiation error");
+			throw new RuntimeException(e);
 		} catch (InvocationTargetException e) {
-			throw new PersistentException("instantiation error");
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -90,9 +100,9 @@ public class PersistentClass extends UnicastSerializedObject {
 		try {
 			obj=(PersistentObject)clazz.newInstance();
 		} catch (InstantiationException e) {
-			throw new PersistentException("instantiation error");
+			throw new RuntimeException(e);
 		} catch (IllegalAccessException e) {
-			throw new PersistentException("instantiation error");
+			throw new RuntimeException(e);
 		}
 		obj.init(accessor,connection);
 		return obj;
