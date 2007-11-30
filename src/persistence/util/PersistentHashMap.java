@@ -597,6 +597,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements RemoteMa
 
 			if(!removeEntry(lastReturned)) throw new ConcurrentModificationException();
 			expectedModCount++;
+			lastReturned = null;
 		}
 	}
 
