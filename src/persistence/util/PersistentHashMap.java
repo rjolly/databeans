@@ -140,7 +140,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements RemoteMa
 	}
 	}
 
-	Object getImpl(Object key) {
+	public Object getImpl(Object key) {
 	synchronized(mutex()) {
 		Array tab = PersistentArrays.localArray(getTable());
 
@@ -382,7 +382,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements RemoteMa
 			methodCall("containsEntry",new Class[] {Object.class},new Object[] {o}))).booleanValue();
 	}
 
-	Boolean containsEntryImpl(Object key) {
+	public Boolean containsEntryImpl(Object key) {
 		return new Boolean(containsEntry0(key));
 	}
 
@@ -409,7 +409,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements RemoteMa
 		return obj!=NULL;
 	}
 
-	Object removeEntryImpl(Object o) {
+	public Object removeEntryImpl(Object o) {
 	synchronized(mutex()) {
 		if (!(o instanceof RemoteMap.Entry))
 			return NULL;
@@ -421,7 +421,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements RemoteMa
 	}
 	}
 
-	Object addEntryImpl(Object o) {
+	public Object addEntryImpl(Object o) {
 		if (!(o instanceof RemoteMap.Entry))
 			return NULL;
 		Map.Entry entry = PersistentCollections.localEntry((RemoteMap.Entry)o);

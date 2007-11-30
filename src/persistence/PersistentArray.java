@@ -105,11 +105,11 @@ public final class PersistentArray extends PersistentObject implements RemoteArr
 			methodCall("set",new Class[] {Integer.class,Object.class},new Object[] {new Integer(index),null}),1);
 	}
 
-	Object getImpl(Integer index) {
+	public Object getImpl(Integer index) {
 		return get(((ArrayClass)accessor.clazz).getField(index.intValue()));
 	}
 
-	Object setImpl(Integer index, Object value) {
+	public Object setImpl(Integer index, Object value) {
 		return set(((ArrayClass)accessor.clazz).getField(index.intValue()),value);
 	}
 

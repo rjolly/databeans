@@ -34,7 +34,7 @@ public abstract class PersistentAbstractList extends PersistentAbstractCollectio
 			methodCall("get",new Class[] {Integer.class},new Object[] {new Integer(index)}));
 	}
 
-	Object getImpl(Integer index) {
+	public Object getImpl(Integer index) {
 		return get0(index.intValue());
 	}
 
@@ -46,7 +46,7 @@ public abstract class PersistentAbstractList extends PersistentAbstractCollectio
 			methodCall("set",new Class[] {Integer.class,Object.class},new Object[] {new Integer(index),null}),1);
 	}
 
-	Object setImpl(Integer index, Object element) {
+	public Object setImpl(Integer index, Object element) {
 		return set0(index.intValue(),element);
 	}
 
@@ -60,7 +60,7 @@ public abstract class PersistentAbstractList extends PersistentAbstractCollectio
 			methodCall("remove",new Class[] {Integer.class},new Object[] {null}),0);
 	}
 
-	Integer addImpl(Integer index, Object element) {
+	public Integer addImpl(Integer index, Object element) {
 		return new Integer(add0(index.intValue(),element));
 	}
 
@@ -74,7 +74,7 @@ public abstract class PersistentAbstractList extends PersistentAbstractCollectio
 			methodCall("add",new Class[] {Integer.class,Object.class},new Object[] {new Integer(index),null}),1);
 	}
 
-	Object removeImpl(Integer index) {
+	public Object removeImpl(Integer index) {
 		return remove0(index.intValue());
 	}
 
@@ -87,7 +87,7 @@ public abstract class PersistentAbstractList extends PersistentAbstractCollectio
 			methodCall("indexOf",new Class[] {Object.class},new Object[] {elem}))).intValue();
 	}
 
-	Integer indexOfImpl(Object elem) {
+	public Integer indexOfImpl(Object elem) {
 		return new Integer(indexOf0(elem));
 	}
 
@@ -112,7 +112,7 @@ public abstract class PersistentAbstractList extends PersistentAbstractCollectio
 			methodCall("lastIndexOf",new Class[] {Object.class},new Object[] {elem}))).intValue();
 	}
 
-	Integer lastIndexOfImpl(Object elem) {
+	public Integer lastIndexOfImpl(Object elem) {
 		return new Integer(lastIndexOf0(elem));
 	}
 

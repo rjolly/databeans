@@ -38,7 +38,7 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 			methodCall("containsValue",new Class[] {Object.class},new Object[] {value}))).booleanValue();
 	}
 
-	Boolean containsValueImpl(Object value) {
+	public Boolean containsValueImpl(Object value) {
 		return new Boolean(containsValue0(value));
 	}
 
@@ -67,7 +67,7 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 			methodCall("containsKey",new Class[] {Object.class},new Object[] {key}))).booleanValue();
 	}
 
-	Boolean containsKeyImpl(Object key) {
+	public Boolean containsKeyImpl(Object key) {
 		return new Boolean(containsKey0(key));
 	}
 
@@ -96,7 +96,7 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 			methodCall("get",new Class[] {Object.class},new Object[] {key}));
 	}
 
-	Object getImpl(Object key) {
+	public Object getImpl(Object key) {
 	synchronized(mutex()) {
 		Iterator i = PersistentCollections.localMap(this).entrySet().iterator();
 		if (key==null) {
@@ -132,7 +132,7 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 
 	static Object NULL=new Object();
 
-	Object putImpl(Object key, Object value) {
+	public Object putImpl(Object key, Object value) {
 		return value==NULL?remove0(key):put0(key,value);
 	}
 

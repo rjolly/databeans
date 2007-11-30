@@ -34,7 +34,7 @@ public abstract class PersistentAbstractCollection extends PersistentObject impl
 			methodCall("contains",new Class[] {Object.class},new Object[] {o}))).booleanValue();
 	}
 
-	Boolean containsImpl(Object key) {
+	public Boolean containsImpl(Object key) {
 		return new Boolean(contains0(key));
 	}
 
@@ -87,7 +87,7 @@ public abstract class PersistentAbstractCollection extends PersistentObject impl
 			methodCall("remove",new Class[] {Object.class,Boolean.class},new Object[] {o,null}),1)).booleanValue();
 	}
 
-	Boolean addImpl(Object o) {
+	public Boolean addImpl(Object o) {
 		return new Boolean(add0(o));
 	}
 
@@ -101,7 +101,7 @@ public abstract class PersistentAbstractCollection extends PersistentObject impl
 			methodCall("remove",new Class[] {Object.class,Boolean.class},new Object[] {o,null}),1)).booleanValue();
 	}
 
-	Boolean remove(Object o, Boolean b) {
+	public Boolean removeImpl(Object o, Boolean b) {
 		return new Boolean(b.booleanValue()?remove0(o):false);
 	}
 

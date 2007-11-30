@@ -88,11 +88,11 @@ public abstract class PersistentObject extends UnicastRemoteObject {
 		accessor.kick();
 	}
 
-	Object getImpl(String name) {
+	public Object getImpl(String name) {
 		return get(accessor.clazz.getField(name));
 	}
 
-	Object setImpl(String name, Object value) {
+	public Object setImpl(String name, Object value) {
 		return set(accessor.clazz.getField(name),value);
 	}
 
