@@ -43,7 +43,17 @@
   </target>
 
   <target name="debug" depends="compile-debug">
-    <antcall target="run"/>
+    <nbjpdastart name="server" addressproperty="jpda.address" transport="dt_socket">
+      <classpath path="classes"/>
+    </nbjpdastart>
+    <java fork="true" classpath="classes" classname="persistence.server.Server">
+      <sysproperty key="java.rmi.server.codebase" value="http://localhost:2001/"/>
+      <sysproperty key="java.security.policy" value="policy"/>
+      <jvmarg value="-Xdebug"/>
+      <jvmarg value="-Xnoagent"/>
+      <jvmarg value="-Djava.compiler=none"/>
+      <jvmarg value="-Xrunjdwp:transport=dt_socket,address=${jpda.address}"/>
+    </java>
   </target>
 
   <target name="clean">

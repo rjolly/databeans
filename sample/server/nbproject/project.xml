@@ -27,7 +27,15 @@
                     <target>clean</target>
                     <target>compile</target>
                 </action>
+                <action name="debug">
+                    <target>debug</target>
+                </action>
             </ide-actions>
+            <export>
+                <type>folder</type>
+                <location>classes</location>
+                <build-target>compile</build-target>
+            </export>
             <view>
                 <items>
                     <source-folder style="packages">
@@ -43,6 +51,7 @@
                     <ide-action name="clean"/>
                     <ide-action name="run"/>
                     <ide-action name="rebuild"/>
+                    <ide-action name="debug"/>
                 </context-menu>
             </view>
         </general-data>
@@ -50,6 +59,7 @@
             <compilation-unit>
                 <package-root>src</package-root>
                 <classpath mode="compile">databeans.jar</classpath>
+                <built-to>classes</built-to>
                 <source-level>1.4</source-level>
             </compilation-unit>
         </java-data>

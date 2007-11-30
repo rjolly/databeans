@@ -1,4 +1,4 @@
-<project name="databeans" default="jars" basedir=".">
+<project name="databeans" default="run" basedir=".">
 
   <target name="compile">
     <mkdir dir="classes"/>
@@ -93,7 +93,33 @@
     <antcall target="jars"/>
   </target>
 
-  <target name="debug" depends="jars-debug"/>
+
+  <target name="run" depends="compile">
+    <java fork="true" classpath="classes" classname="persistence.server.Server">
+      <sysproperty key="java.rmi.server.codebase" value="http://localhost:2001/"/>
+      <sysproperty key="java.security.policy" value="policy"/>
+    </java>
+  </target>
+
+  <target name="debug" depends="compile-debug">
+    <nbjpdastart name="server" addressproperty="jpda.address" transport="dt_socket">
+      <classpath path="classes"/>
+    </nbjpdastart>
+    <java fork="true" classpath="classes" classname="persistence.server.Server">
+      <sysproperty key="java.rmi.server.codebase" value="http://localhost:2001/"/>
+      <sysproperty key="java.security.policy" value="policy"/>
+      <jvmarg value="-Xdebug"/>
+      <jvmarg value="-Xnoagent"/>
+      <jvmarg value="-Djava.compiler=none"/>
+      <jvmarg value="-Xrunjdwp:transport=dt_socket,address=${jpda.address}"/>
+    </java>
+  </target>
+
+  <target name="mkheapspace">
+    <java fork="true" classpath="databeans.jar" classname="persistence.server.MakeHeapSpace">
+      <arg value="262144"/>
+    </java>
+  </target>
 
   <target name="setup_sample">
     <copy file="databeans.jar" todir="sample/server"/>
