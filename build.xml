@@ -1,4 +1,29 @@
 <project name="databeans" default="run" basedir=".">
+<!--
+  <target name="mkheapspace">
+    <exec executable="dd">
+      <arg value="if=/dev/zero"/>
+      <arg value="of=heapspace"/>
+      <arg value="count=512"/>
+    </exec>
+  </target>
+-->
+  <target name="mkheapspace">
+    <delete file="heapspace" quiet="true"/>
+    <java fork="true" classpath="databeans.jar" classname="persistence.server.MakeHeapSpace">
+      <arg value="262144"/>
+    </java>
+  </target>
+
+  <target name="registry">
+    <java fork="true" classname="sun.rmi.registry.RegistryImpl"/>
+  </target>
+
+  <target name="admin_registry">
+    <java fork="true" classname="sun.rmi.registry.RegistryImpl">
+      <arg value="2000"/>
+    </java>
+  </target>
 
   <target name="compile">
     <mkdir dir="classes"/>
@@ -35,17 +60,33 @@
     />
   </target>
 
-  <target name="jars" depends="jar, client_jar, admin_jar"/>
+  <target name="run" depends="compile">
+    <java fork="true" classpath="classes" classname="persistence.server.Server">
+      <sysproperty key="java.rmi.server.codebase" value="http://localhost:2001/"/>
+      <sysproperty key="java.security.policy" value="policy"/>
+    </java>
+  </target>
 
-  <target name="jar" depends="compile">
+  <target name="debug" depends="compile-debug">
+    <nbjpdastart name="server" addressproperty="jpda.address" transport="dt_socket">
+      <classpath path="classes"/>
+    </nbjpdastart>
+    <java fork="true" classpath="classes" classname="persistence.server.Server">
+      <sysproperty key="java.rmi.server.codebase" value="http://localhost:2001/"/>
+      <sysproperty key="java.security.policy" value="policy"/>
+      <jvmarg value="-Xdebug"/>
+      <jvmarg value="-Xnoagent"/>
+      <jvmarg value="-Djava.compiler=none"/>
+      <jvmarg value="-Xrunjdwp:transport=dt_socket,address=${jpda.address}"/>
+    </java>
+  </target>
+
+  <target name="jars" depends="compile">
     <zip destfile="databeans.jar"
          basedir="classes"
          compress="false"
          includes="**/*.class"
     />
-  </target>
-
-  <target name="client_jar" depends="compile">
     <zip destfile="databeans_client.jar"
          basedir="classes"
          compress="false"
@@ -63,9 +104,6 @@
                    persistence/Connection.class
                    persistence/Store.class"
     />
-  </target>
-
-  <target name="admin_jar" depends="compile">
     <zip destfile="databeans_admin.jar"
          basedir="classes"
          compress="false"
@@ -93,44 +131,13 @@
     <antcall target="jars"/>
   </target>
 
-
-  <target name="run" depends="compile">
-    <java fork="true" classpath="classes" classname="persistence.server.Server">
-      <sysproperty key="java.rmi.server.codebase" value="http://localhost:2001/"/>
-      <sysproperty key="java.security.policy" value="policy"/>
-    </java>
-  </target>
-
-  <target name="debug" depends="compile-debug">
-    <nbjpdastart name="server" addressproperty="jpda.address" transport="dt_socket">
-      <classpath path="classes"/>
-    </nbjpdastart>
-    <java fork="true" classpath="classes" classname="persistence.server.Server">
-      <sysproperty key="java.rmi.server.codebase" value="http://localhost:2001/"/>
-      <sysproperty key="java.security.policy" value="policy"/>
-      <jvmarg value="-Xdebug"/>
-      <jvmarg value="-Xnoagent"/>
-      <jvmarg value="-Djava.compiler=none"/>
-      <jvmarg value="-Xrunjdwp:transport=dt_socket,address=${jpda.address}"/>
-    </java>
-  </target>
-
-  <target name="mkheapspace">
-    <delete file="heapspace" quiet="true"/>
-    <java fork="true" classpath="databeans.jar" classname="persistence.server.MakeHeapSpace">
-      <arg value="262144"/>
-    </java>
-  </target>
-
-  <target name="setup_sample">
+  <target name="setup_sample" depends="jars">
     <copy file="databeans.jar" todir="sample/server"/>
     <copy file="databeans_client.jar" todir="sample/client"/>
     <copy file="lib/bsh-2.0b4.jar" todir="sample/client"/>
-    <ant dir="sample/server" target="mkheapspace"/>
   </target>
 
   <target name="clean_sample">
-    <delete file="sample/server/heapspace" quiet="true"/>
     <delete file="sample/server/databeans.jar" quiet="true"/>
     <delete file="sample/client/databeans_client.jar" quiet="true"/>
     <delete file="sample/client/bsh-2.0b4.jar" quiet="true"/>

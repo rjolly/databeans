@@ -1,13 +1,5 @@
 <project name="server" default="run" basedir=".">
-<!--
-  <target name="mkheapspace">
-    <exec executable="dd">
-      <arg value="if=/dev/zero"/>
-      <arg value="of=heapspace"/>
-      <arg value="count=512"/>
-    </exec>
-  </target>
--->
+
   <target name="mkheapspace">
     <delete file="heapspace" quiet="true"/>
     <java fork="true" classpath="databeans.jar" classname="persistence.server.MakeHeapSpace">

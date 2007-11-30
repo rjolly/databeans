@@ -20,18 +20,18 @@
                 <action name="clean">
                     <target>clean</target>
                 </action>
-                <action name="javadoc">
-                    <target>javadoc</target>
+                <action name="run">
+                    <target>run</target>
                 </action>
                 <action name="rebuild">
                     <target>clean</target>
                     <target>jars</target>
                 </action>
-                <action name="run">
-                    <target>run</target>
-                </action>
                 <action name="debug">
                     <target>debug</target>
+                </action>
+                <action name="javadoc">
+                    <target>javadoc</target>
                 </action>
             </ide-actions>
             <export>
@@ -52,10 +52,10 @@
                 <context-menu>
                     <ide-action name="build"/>
                     <ide-action name="clean"/>
-                    <ide-action name="javadoc"/>
-                    <ide-action name="rebuild"/>
                     <ide-action name="run"/>
+                    <ide-action name="rebuild"/>
                     <ide-action name="debug"/>
+                    <ide-action name="javadoc"/>
                 </context-menu>
             </view>
             <subprojects/>
