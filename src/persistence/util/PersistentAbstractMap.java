@@ -34,6 +34,15 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 	}
 
 	public boolean containsValue(Object value) {
+		return ((Boolean)execute(
+			methodCall("containsValue",new Class[] {Object.class},new Object[] {value}))).booleanValue();
+	}
+
+	Boolean containsValueImpl(Object value) {
+		return new Boolean(containsValue0(value));
+	}
+
+	boolean containsValue0(Object value) {
 	synchronized(mutex()) {
 		Iterator i = PersistentCollections.localMap(this).entrySet().iterator();
 		if (value==null) {
@@ -54,6 +63,15 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 	}
 
 	public boolean containsKey(Object key) {
+		return ((Boolean)execute(
+			methodCall("containsKey",new Class[] {Object.class},new Object[] {key}))).booleanValue();
+	}
+
+	Boolean containsKeyImpl(Object key) {
+		return new Boolean(containsKey0(key));
+	}
+
+	boolean containsKey0(Object key) {
 	synchronized(mutex()) {
 		Iterator i = PersistentCollections.localMap(this).entrySet().iterator();
 		if (key==null) {
@@ -74,6 +92,11 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 	}
 
 	public Object get(Object key) {
+		return execute(
+			methodCall("get",new Class[] {Object.class},new Object[] {key}));
+	}
+
+	Object getImpl(Object key) {
 	synchronized(mutex()) {
 		Iterator i = PersistentCollections.localMap(this).entrySet().iterator();
 		if (key==null) {
@@ -94,10 +117,30 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 	}
 
 	public Object put(Object key, Object value) {
-		throw new UnsupportedOperationException();
+		Object obj=execute(
+			methodCall("put",new Class[] {Object.class,Object.class},new Object[] {key,value}),
+			methodCall("put",new Class[] {Object.class,Object.class},new Object[] {key,null}),1);
+		return obj==NULL?null:obj;
 	}
 
 	public Object remove(Object key) {
+		Object obj=execute(
+			methodCall("put",new Class[] {Object.class,Object.class},new Object[] {key,NULL}),
+			methodCall("put",new Class[] {Object.class,Object.class},new Object[] {key,null}),1);
+		return obj==NULL?null:obj;
+	}
+
+	static Object NULL=new Object();
+
+	Object putImpl(Object key, Object value) {
+		return value==NULL?remove0(key):put0(key,value);
+	}
+
+	Object put0(Object key, Object value) {
+		throw new UnsupportedOperationException();
+	}
+
+	Object remove0(Object key) {
 	synchronized(mutex()) {
 		Iterator i = PersistentCollections.localMap(this).entrySet().iterator();
 		Map.Entry correctEntry = null;

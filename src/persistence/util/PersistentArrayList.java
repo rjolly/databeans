@@ -87,7 +87,7 @@ public class PersistentArrayList extends PersistentAbstractList implements Remot
 	}
 	}
 
-	public int indexOf(Object elem) {
+	int indexOf0(Object elem) {
 	synchronized(mutex()) {
 		if (elem == null) {
 			for (int i = 0; i < getSize(); i++)
@@ -102,7 +102,7 @@ public class PersistentArrayList extends PersistentAbstractList implements Remot
 	}
 	}
 
-	public int lastIndexOf(Object elem) {
+	int lastIndexOf0(Object elem) {
 	synchronized(mutex()) {
 		if (elem == null) {
 			for (int i = getSize()-1; i >= 0; i--)
@@ -139,7 +139,7 @@ public class PersistentArrayList extends PersistentAbstractList implements Remot
 	}
 	}
 
-	public Object get(int index) {
+	Object get0(int index) {
 	synchronized(mutex()) {
 		RangeCheck(index);
 
@@ -147,7 +147,7 @@ public class PersistentArrayList extends PersistentAbstractList implements Remot
 	}
 	}
 
-	public Object set(int index, Object element) {
+	Object set0(int index, Object element) {
 	synchronized(mutex()) {
 		RangeCheck(index);
 
@@ -157,28 +157,7 @@ public class PersistentArrayList extends PersistentAbstractList implements Remot
 	}
 	}
 
-	public boolean add(Object o) {
-		add(getSize(),o);
-		return true;
-	}
-
-//	public boolean add(Object o) {
-//	synchronized(mutex()) {
-//		ensureCapacity(getSize() + 1);  // Increments modCount!!
-//		PersistentArrays.localArray(getElementData()).set(getSize(),o);
-//		setSize(getSize()+1);
-//		return true;
-//	}
-//	}
-
-	public void add(int index, Object element) {
-		execute(
-			methodCall("add",new Class[] {Integer.class,Object.class},new Object[] {new Integer(index),element}),
-			methodCall("remove",new Class[] {Integer.class},new Object[] {null}),0);
-	}
-
-	Integer addImpl(Integer i, Object element) {
-		int index=i.intValue();
+	int add0(int index, Object element) {
 	synchronized(mutex()) {
 		if (index > getSize() || index < 0)
 			throw new IndexOutOfBoundsException(
@@ -189,18 +168,11 @@ public class PersistentArrayList extends PersistentAbstractList implements Remot
 						 getSize() - index);
 		PersistentArrays.localArray(getElementData()).set(index,element);
 		setSize(getSize()+1);
+		return index;
 	}
-		return i;
-	}
-
-	public Object remove(int index) {
-		return execute(
-			methodCall("remove",new Class[] {Integer.class},new Object[] {new Integer(index)}),
-			methodCall("add",new Class[] {Integer.class,Object.class},new Object[] {new Integer(index),null}),1);
 	}
 
-	Object removeImpl(Integer i) {
-		int index=i.intValue();
+	Object remove0(int index) {
 	synchronized(mutex()) {
 		RangeCheck(index);
 
@@ -217,69 +189,6 @@ public class PersistentArrayList extends PersistentAbstractList implements Remot
 		return oldValue;
 	}
 	}
-
-//	public void clear() {
-//	synchronized(mutex()) {
-//		setModCount(getModCount()+1);
-//
-//		for (int i = 0; i < getSize(); i++)
-//			PersistentArrays.localArray(getElementData()).set(i,null);
-//
-//		setSize(0);
-//	}
-//	}
-
-//	public boolean addAll(RemoteCollection c) {
-//	synchronized(mutex()) {
-//		setModCount(getModCount()+1);
-//		int numNew = PersistentCollections.localCollection(c).size();
-//		ensureCapacity(getSize() + numNew);
-//
-//		Iterator e = PersistentCollections.localCollection(c).iterator();
-//		for (int i=0; i<numNew; i++) {
-//			PersistentArrays.localArray(getElementData()).set(getSize(),e.next());
-//			setSize(getSize()+1);
-//		}
-//		return numNew != 0;
-//	}
-//	}
-
-//	public boolean addAll(int index, RemoteCollection c) {
-//	synchronized(mutex()) {
-//		if (index > getSize() || index < 0)
-//			throw new IndexOutOfBoundsException(
-//				"Index: "+index+", Size: "+getSize());
-//
-//		int numNew = PersistentCollections.localCollection(c).size();
-//		ensureCapacity(getSize() + numNew);  // Increments modCount!!
-//
-//		int numMoved = getSize() - index;
-//		if (numMoved > 0)
-//			PersistentArrays.copy(PersistentArrays.localArray(getElementData()), index, PersistentArrays.localArray(getElementData()), index + numNew,
-//							 numMoved);
-//
-//		Iterator e = PersistentCollections.localCollection(c).iterator();
-//		for (int i=0; i<numNew; i++)
-//			PersistentArrays.localArray(getElementData()).set(index++,e.next());
-//
-//		setSize(getSize()+numNew);
-//		return numNew != 0;
-//	}
-//	}
-
-//	protected void removeRange(int fromIndex, int toIndex) {
-//		setModCount(getModCount()+1);
-//		int numMoved = getSize() - toIndex;
-//		PersistentArrays.copy(PersistentArrays.localArray(getElementData()), toIndex, PersistentArrays.localArray(getElementData()), fromIndex,
-//						 numMoved);
-//
-//		// Let gc do its work
-//		int newSize = getSize() - (toIndex-fromIndex);
-//		while (getSize() != newSize) {
-//			setSize(getSize()-1);
-//			PersistentArrays.localArray(getElementData()).set(getSize(),null);
-//		}
-//	}
 
 	private void RangeCheck(int index) {
 		if (index >= getSize() || index < 0)

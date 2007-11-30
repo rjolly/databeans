@@ -30,6 +30,15 @@ public abstract class PersistentAbstractCollection extends PersistentObject impl
 	}
 
 	public boolean contains(Object o) {
+		return ((Boolean)execute(
+			methodCall("contains",new Class[] {Object.class},new Object[] {o}))).booleanValue();
+	}
+
+	Boolean containsImpl(Object key) {
+		return new Boolean(contains0(key));
+	}
+
+	boolean contains0(Object o) {
 	synchronized(mutex()) {
 		Iterator e = PersistentCollections.localCollection(this).iterator();
 		if (o==null) {
@@ -73,10 +82,30 @@ public abstract class PersistentAbstractCollection extends PersistentObject impl
 	}
 
 	public boolean add(Object o) {
+		return ((Boolean)execute(
+			methodCall("add",new Class[] {Object.class},new Object[] {o}),
+			methodCall("remove",new Class[] {Object.class,Boolean.class},new Object[] {o,null}),1)).booleanValue();
+	}
+
+	Boolean addImpl(Object o) {
+		return new Boolean(add0(o));
+	}
+
+	boolean add0(Object o) {
 		throw new UnsupportedOperationException();
 	}
 
 	public boolean remove(Object o) {
+		return ((Boolean)execute(
+			methodCall("add",new Class[] {Object.class},new Object[] {o}),
+			methodCall("remove",new Class[] {Object.class,Boolean.class},new Object[] {o,null}),1)).booleanValue();
+	}
+
+	Boolean remove(Object o, Boolean b) {
+		return new Boolean(b.booleanValue()?remove0(o):false);
+	}
+
+	boolean remove0(Object o) {
 	synchronized(mutex()) {
 		Iterator e = PersistentCollections.localCollection(this).iterator();
 		if (o==null) {
