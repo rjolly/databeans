@@ -334,15 +334,16 @@ public class PersistentCollections {
 	}
 
 	static class LocalListIterator extends LocalIterator implements ListIterator {
-		RemoteListIterator i;
+		RemoteListIterator li;
 
 		LocalListIterator(RemoteListIterator i) {
 			super(i);
+			li=i;
 		}
 
 		public boolean hasPrevious() {
 			try {
-				return i.hasPrevious();
+				return li.hasPrevious();
 			} catch (RemoteException e) {
 				throw new RuntimeException(e);
 			}
@@ -350,7 +351,7 @@ public class PersistentCollections {
 
 		public Object previous() {
 			try {
-				return i.previous();
+				return li.previous();
 			} catch (RemoteException e) {
 				throw new RuntimeException(e);
 			}
@@ -358,7 +359,7 @@ public class PersistentCollections {
 
 		public int nextIndex() {
 			try {
-				return i.nextIndex();
+				return li.nextIndex();
 			} catch (RemoteException e) {
 				throw new RuntimeException(e);
 			}
@@ -366,7 +367,7 @@ public class PersistentCollections {
 
 		public int previousIndex() {
 			try {
-				return i.previousIndex();
+				return li.previousIndex();
 			} catch (RemoteException e) {
 				throw new RuntimeException(e);
 			}
@@ -374,7 +375,7 @@ public class PersistentCollections {
 
 		public void set(Object o) {
 			try {
-				i.set(o);
+				li.set(o);
 			} catch (RemoteException e) {
 				throw new RuntimeException(e);
 			}
@@ -382,7 +383,7 @@ public class PersistentCollections {
 
 		public void add(Object o) {
 			try {
-				i.add(o);
+				li.add(o);
 			} catch (RemoteException e) {
 				throw new RuntimeException(e);
 			}

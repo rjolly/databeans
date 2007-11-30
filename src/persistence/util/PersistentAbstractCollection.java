@@ -83,12 +83,12 @@ public abstract class PersistentAbstractCollection extends PersistentObject impl
 
 	public boolean add(Object o) {
 		return ((Boolean)execute(
-			methodCall("add",new Class[] {Object.class},new Object[] {o}),
+			methodCall("add",new Class[] {Object.class,Boolean.class},new Object[] {o,new Boolean(true)}),
 			methodCall("remove",new Class[] {Object.class,Boolean.class},new Object[] {o,null}),1)).booleanValue();
 	}
 
-	public Boolean addImpl(Object o) {
-		return new Boolean(add0(o));
+	public Boolean addImpl(Object o, Boolean b) {
+		return new Boolean(b.booleanValue()?add0(o):false);
 	}
 
 	boolean add0(Object o) {
@@ -97,8 +97,8 @@ public abstract class PersistentAbstractCollection extends PersistentObject impl
 
 	public boolean remove(Object o) {
 		return ((Boolean)execute(
-			methodCall("add",new Class[] {Object.class},new Object[] {o}),
-			methodCall("remove",new Class[] {Object.class,Boolean.class},new Object[] {o,null}),1)).booleanValue();
+			methodCall("remove",new Class[] {Object.class,Boolean.class},new Object[] {o,new Boolean(true)}),
+			methodCall("add",new Class[] {Object.class,Boolean.class},new Object[] {o,null}),1)).booleanValue();
 	}
 
 	public Boolean removeImpl(Object o, Boolean b) {

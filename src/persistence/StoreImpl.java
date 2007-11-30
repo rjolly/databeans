@@ -31,7 +31,6 @@ import persistence.storage.FileHeap;
 import persistence.storage.Heap;
 import persistence.storage.MemoryModel;
 import persistence.util.PersistentCollections;
-import persistence.util.RemoteCollection;
 
 public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	static final User none=new User("none","");
@@ -124,7 +123,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	}
 
 	Transaction getTransaction(String client) {
-		return (Transaction)systemConnection.create(Transaction.class,new Class[] {String.class,RemoteCollection.class},new Object[] {client,system.getTransactions()});
+		return (Transaction)systemConnection.create(Transaction.class,new Class[] {String.class},new Object[] {client});
 	}
 
 	MethodCall methodCall(ConnectionImpl connection, PersistentObject target, String method, Class types[], Object args[]) {
