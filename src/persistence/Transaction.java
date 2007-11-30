@@ -29,7 +29,7 @@ public class Transaction extends PersistentObject implements RemoteTransaction {
 	}
 
 	void record(MethodCall call) {
-		PersistentCollections.localList(getMethodCalls()).add(call);
+		PersistentCollections.localList(getMethodCalls()).add(create(PersistentMethodCall.class,new Class[] {MethodCall.class},new Object[] {call}));
 	}
 
 	void commit() {
@@ -38,7 +38,7 @@ public class Transaction extends PersistentObject implements RemoteTransaction {
 
 	void rollback() {
 		List l=PersistentCollections.localList(getMethodCalls());
-		for(ListIterator it=l.listIterator(l.size());it.hasPrevious();it.remove()) ((MethodCall)it.previous()).execute();
+		for(ListIterator it=l.listIterator(l.size());it.hasPrevious();it.remove()) ((PersistentMethodCall)it.previous()).execute();
 		unlock();
 	}
 

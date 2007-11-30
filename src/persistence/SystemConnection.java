@@ -10,10 +10,6 @@ public class SystemConnection extends ConnectionImpl {
 
 	void open() {}
 
-	MethodCall methodCall(PersistentObject target, String method, Class types[], Object args[]) {
-		return store.methodCall(this,target,method,types,args);
-	}
-
 	synchronized Object execute(MethodCall call, MethodCall undo, int index, boolean read) {
 		if(closed) throw new PersistentException("connection closed");
 		if(!read && readOnly) throw new PersistentException("read only");

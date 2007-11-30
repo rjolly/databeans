@@ -9,6 +9,7 @@
   </target>
 -->
   <target name="mkheapspace">
+    <delete file="heapspace" quiet="true"/>
     <java fork="true" classpath="databeans.jar" classname="persistence.server.MakeHeapSpace">
       <arg value="262144"/>
     </java>

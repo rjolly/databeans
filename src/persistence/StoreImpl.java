@@ -128,7 +128,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	}
 
 	MethodCall methodCall(ConnectionImpl connection, PersistentObject target, String method, Class types[], Object args[]) {
-		return (MethodCall)systemConnection.create(MethodCall.class,new Class[] {PersistentObject.class, String.class, Class[].class, Object[].class},new Object[] {attach(connection,target), method, types, attach(connection,args)});
+		return new MethodCall((PersistentObject)attach(connection,target), method, types, attach(connection,args));
 	}
 
 	Object attach(ConnectionImpl connection, Object obj) {
