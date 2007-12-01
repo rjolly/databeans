@@ -43,6 +43,11 @@ public class PersistentArrayList extends PersistentAbstractList implements Remot
 	}
 
 	public void trimToSize() {
+		execute(
+			methodCall("trimToSize",new Class[] {},new Object[] {}));
+	}
+
+	public void trimToSizeImpl() {
 	synchronized(mutex()) {
 		setModCount(getModCount()+1);
 		int oldCapacity = PersistentArrays.localArray(getElementData()).length();
@@ -55,6 +60,15 @@ public class PersistentArrayList extends PersistentAbstractList implements Remot
 	}
 
 	public void ensureCapacity(int minCapacity) {
+		execute(
+			methodCall("ensureCapacity",new Class[] {Integer.class},new Object[] {new Integer(minCapacity)}));
+	}
+
+	public void ensureCapacityImpl(Integer minCapacity) {
+		ensureCapacity0(minCapacity.intValue());
+	}
+
+	void ensureCapacity0(int minCapacity) {
 	synchronized(mutex()) {
 		setModCount(getModCount()+1);
 		int oldCapacity = PersistentArrays.localArray(getElementData()).length();
@@ -118,6 +132,11 @@ public class PersistentArrayList extends PersistentAbstractList implements Remot
 	}
 
 	public Object[] toArray() {
+		return (Object[])execute(
+			methodCall("toArray",new Class[] {},new Object[] {}));
+	}
+
+	public Object[] toArrayImpl() {
 	synchronized(mutex()) {
 		Object[] result = new Object[getSize()];
 		PersistentArrays.copy(PersistentArrays.localArray(getElementData()), 0, result, 0, getSize());
@@ -126,6 +145,11 @@ public class PersistentArrayList extends PersistentAbstractList implements Remot
 	}
 
 	public Object[] toArray(Object a[]) {
+		return (Object[])execute(
+			methodCall("toArray",new Class[] {Object[].class},new Object[] {a}));
+	}
+
+	public Object[] toArrayImpl(Object a[]) {
 	synchronized(mutex()) {
 		if (a.length < getSize())
 			a = (Object[])java.lang.reflect.Array.newInstance(a.getClass().getComponentType(), getSize());
