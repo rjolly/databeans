@@ -1,7 +1,6 @@
-import java.rmi.*;
-import persistence.*;
-
+import java.rmi.RemoteException;
 import java.text.NumberFormat;
+import persistence.PersistentObject;
 
 public class EmployeeImpl extends PersistentObject implements Employee {
 	public EmployeeImpl() throws RemoteException {}

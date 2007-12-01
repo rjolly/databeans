@@ -7,10 +7,10 @@
 package persistence.util;
 
 import java.rmi.RemoteException;
-import java.rmi.server.UnicastRemoteObject;
 import java.util.ConcurrentModificationException;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
+import persistence.TransientObject;
 
 class SubList extends TransientAbstractList implements RemoteList {
 	private RemoteList l;
@@ -130,7 +130,7 @@ class SubList extends TransientAbstractList implements RemoteList {
 		return new ListItr(index);
 	}
 
-	private class ListItr extends UnicastRemoteObject implements RemoteListIterator {
+	private class ListItr extends TransientObject implements RemoteListIterator {
 		private ListIterator i;
 
 		ListItr(int index) throws RemoteException {

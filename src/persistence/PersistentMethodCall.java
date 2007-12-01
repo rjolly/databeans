@@ -1,6 +1,5 @@
 package persistence;
 
-import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 public class PersistentMethodCall extends PersistentObject implements RemoteMethodCall {
@@ -15,20 +14,20 @@ public class PersistentMethodCall extends PersistentObject implements RemoteMeth
 	}
 
 	Object execute() {
-		Array t=PersistentArrays.localArray(getTypes());
-		Array a=PersistentArrays.localArray(getArgs());
+		Array t=getTypes();
+		Array a=getArgs();
 		Class types[]=new Class[t.length()];
 		Object args[]=new Object[a.length()];
-		PersistentArrays.copy(t,0,types,0,types.length);
-		PersistentArrays.copy(a,0,args,0,args.length);
-		return new MethodCall((PersistentObject)getTarget(),getMethod(),types,args).execute();
+		Arrays.copy(t,0,types,0,types.length);
+		Arrays.copy(a,0,args,0,args.length);
+		return new MethodCall((PersistentObject)remote(getTarget()),getMethod(),types,args).execute();
 	}
 
-	public Remote getTarget() {
-		return (Remote)get("target");
+	public Object getTarget() {
+		return get("target");
 	}
 
-	public void setTarget(Remote obj) {
+	public void setTarget(Object obj) {
 		set("target",obj);
 	}
 
@@ -40,19 +39,19 @@ public class PersistentMethodCall extends PersistentObject implements RemoteMeth
 		set("method",str);
 	}
 
-	public RemoteArray getTypes() {
-		return (RemoteArray)get("types");
+	public Array getTypes() {
+		return (Array)get("types");
 	}
 
-	public void setTypes(RemoteArray array) {
+	public void setTypes(Array array) {
 		set("types",array);
 	}
 
-	public RemoteArray getArgs() {
-		return (RemoteArray)get("args");
+	public Array getArgs() {
+		return (Array)get("args");
 	}
 
-	public void setArgs(RemoteArray array) {
+	public void setArgs(Array array) {
 		set("args",array);
 	}
 

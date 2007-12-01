@@ -6,9 +6,10 @@
  */
 package persistence.util;
 
-import java.rmi.*;
+import java.rmi.RemoteException;
+import persistence.Persistent;
 
-public interface RemoteMap extends Remote {
+public interface RemoteMap extends Persistent {
 	int size() throws RemoteException;
 	boolean isEmpty() throws RemoteException;
 	boolean containsKey(Object key) throws RemoteException;
@@ -22,16 +23,14 @@ public interface RemoteMap extends Remote {
 	public RemoteCollection values() throws RemoteException;
 	public RemoteSet entrySet() throws RemoteException;
 
-	public interface Entry extends Remote {
+	public interface Entry extends Persistent {
 		Object getKey() throws RemoteException;
 		Object getValue() throws RemoteException;
 		Object setValue(Object value) throws RemoteException;
 //		boolean equals(Object o);
 //		int hashCode();
-		String remoteToString() throws RemoteException;
 	}
 
 //	boolean equals(Object o);
 //	int hashCode();
-	String remoteToString() throws RemoteException;
 }

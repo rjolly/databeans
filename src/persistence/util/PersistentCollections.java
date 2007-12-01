@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
+import persistence.LocalWrapper;
 
 public class PersistentCollections {
 	private PersistentCollections() {
@@ -25,12 +26,11 @@ public class PersistentCollections {
 		return new LocalCollection(c);
 	}
 
-	static class LocalCollection implements Collection {
+	static class LocalCollection extends LocalWrapper implements Collection {
 		RemoteCollection c;		   // Backing Collection
 
 		LocalCollection(RemoteCollection c) {
-			if (c==null)
-				throw new NullPointerException();
+			super(c);
 			this.c = c;
 		}
 
@@ -128,19 +128,13 @@ public class PersistentCollections {
 				throw new RuntimeException(e);
 			}
 		}
-		public String toString() {
-			try {
-				return c.remoteToString();
-			} catch (RemoteException e) {
-				throw new RuntimeException(e);
-			}
-		}
 	}
 
-	static class LocalIterator implements Iterator {
+	static class LocalIterator extends LocalWrapper implements Iterator {
 		RemoteIterator i;
 
 		LocalIterator(RemoteIterator i) {
+			super(i);
 			this.i=i;
 		}
 
@@ -173,8 +167,7 @@ public class PersistentCollections {
 		return new LocalSet(s);
 	}
 
-	static class LocalSet extends LocalCollection
-								 implements Set {
+	static class LocalSet extends LocalCollection implements Set {
 		RemoteSet s;
 
 		LocalSet(RemoteSet s) {
@@ -187,9 +180,7 @@ public class PersistentCollections {
 		return new LocalSortedSet(s);
 	}
 
-	static class LocalSortedSet extends LocalSet
-								 implements SortedSet
-	{
+	static class LocalSortedSet extends LocalSet implements SortedSet {
 		RemoteSortedSet ss;
 
 		LocalSortedSet(RemoteSortedSet s) {
@@ -247,8 +238,7 @@ public class PersistentCollections {
 		return new LocalList(list);
 	}
 
-	static class LocalList extends LocalCollection
-									  implements List {
+	static class LocalList extends LocalCollection implements List {
 		RemoteList list;
 
 		LocalList(RemoteList list) {
@@ -394,12 +384,11 @@ public class PersistentCollections {
 		return new LocalMap(m);
 	}
 
-	static class LocalMap implements Map {
+	static class LocalMap extends LocalWrapper implements Map {
 		RemoteMap m;				// Backing Map
 
 		LocalMap(RemoteMap m) {
-			if (m==null)
-				throw new NullPointerException();
+			super(m);
 			this.m = m;
 		}
 
@@ -501,26 +490,17 @@ public class PersistentCollections {
 				throw new RuntimeException(e);
 			}
 		}
-
-		public String toString() {
-			try {
-				return m.remoteToString();
-			} catch (RemoteException e) {
-				throw new RuntimeException(e);
-			}
-		}
 	}
 
 	public static Map.Entry localEntry(RemoteMap.Entry e) {
 		return new LocalEntry(e);
 	}
 
-	static class LocalEntry implements Map.Entry {
+	static class LocalEntry extends LocalWrapper implements Map.Entry {
 		RemoteMap.Entry e;
 
 		LocalEntry(RemoteMap.Entry e) {
-			if (e==null)
-				throw new NullPointerException();
+			super(e);
 			this.e = e;
 		}
 
@@ -547,23 +527,13 @@ public class PersistentCollections {
 				throw new RuntimeException(e);
 			}
 		}
-
-		public String toString() {
-			try {
-				return e.remoteToString();
-			} catch (RemoteException e) {
-				throw new RuntimeException(e);
-			}
-		}
 	}
 
 	public static SortedMap localSortedMap(RemoteSortedMap m) {
 		return new LocalSortedMap(m);
 	}
 
-	static class LocalSortedMap extends LocalMap
-								 implements SortedMap
-	{
+	static class LocalSortedMap extends LocalMap implements SortedMap {
 		RemoteSortedMap sm;
 
 		LocalSortedMap(RemoteSortedMap m) {

@@ -11,11 +11,11 @@ public interface Connection extends Remote {
 //	static final int TRANSACTION_REPEATABLE_READ = 3;
 	static final int TRANSACTION_SERIALIZABLE = 4;
 
-	Remote create(String name) throws RemoteException;
-	Remote create(Class clazz) throws RemoteException;
-	Remote create(Class clazz, Class types[], Object args[]) throws RemoteException;
-	RemoteArray create(Class componentType, int length) throws RemoteException;
-	RemoteArray create(Object component[]) throws RemoteException;
+	Object create(String name) throws RemoteException;
+	Object create(Class clazz) throws RemoteException;
+	Object create(Class clazz, Class types[], Object args[]) throws RemoteException;
+	Array create(Class componentType, int length) throws RemoteException;
+	Array create(Object component[]) throws RemoteException;
 
 	Object getRoot() throws RemoteException;
 	void setRoot(Object obj) throws RemoteException;

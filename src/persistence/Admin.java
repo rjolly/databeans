@@ -1,6 +1,7 @@
 package persistence;
 
-import java.rmi.*;
+import java.rmi.Remote;
+import java.rmi.RemoteException;
 
 public interface Admin extends Remote {
 	RemoteSystem getSystem() throws RemoteException;

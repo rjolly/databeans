@@ -1,5 +1,5 @@
-import java.rmi.*;
-import persistence.*;
+import java.rmi.RemoteException;
+import persistence.PersistentObject;
 
 public class DepartmentImpl extends PersistentObject implements Department {
 	public DepartmentImpl() throws RemoteException {}

@@ -6,7 +6,7 @@
  */
 package persistence.util;
 
-import java.rmi.*;
+import java.rmi.RemoteException;
 
 public interface RemoteSet extends RemoteCollection {
 	int size() throws RemoteException;

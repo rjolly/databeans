@@ -1,8 +1,7 @@
-import java.rmi.*;
+import java.rmi.RemoteException;
+import persistence.Persistent;
 
-public interface Department extends Remote {
+public interface Department extends Persistent {
 	String getName() throws RemoteException;
 	void setName(String s) throws RemoteException;
-	String remoteToString() throws RemoteException;
-	String persistentClass() throws RemoteException;
 }

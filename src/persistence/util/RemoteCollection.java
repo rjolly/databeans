@@ -6,9 +6,10 @@
  */
 package persistence.util;
 
-import java.rmi.*;
+import java.rmi.RemoteException;
+import persistence.Persistent;
 
-public interface RemoteCollection extends Remote {
+public interface RemoteCollection extends Persistent {
 	int size() throws RemoteException;
 	boolean isEmpty() throws RemoteException;
 	boolean contains(Object o) throws RemoteException;
@@ -24,5 +25,4 @@ public interface RemoteCollection extends Remote {
 	void clear() throws RemoteException;
 //	boolean equals(Object o);
 //	int hashCode();
-	String remoteToString() throws RemoteException;
 }

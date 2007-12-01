@@ -1,8 +1,8 @@
 package persistence;
 
-import java.rmi.*;
+import java.rmi.RemoteException;
 
-public interface RemoteArray extends Remote {
+public interface RemoteArray extends Persistent {
 	int length() throws RemoteException;
 	char typeCode() throws RemoteException;
 	boolean getBoolean(int index) throws RemoteException;
@@ -21,6 +21,4 @@ public interface RemoteArray extends Remote {
 	void setDouble(int index, double value) throws RemoteException;
 	Object get(int index) throws RemoteException;
 	void set(int index, Object value) throws RemoteException;
-	String remoteToString() throws RemoteException;
-	String persistentClass() throws RemoteException;
 }

@@ -1,8 +1,7 @@
 package persistence;
 
-import java.util.*;
-import java.rmi.*;
-import java.rmi.server.*;
+import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
 
 public class AdminImpl extends UnicastRemoteObject implements Admin {
 	StoreImpl store;

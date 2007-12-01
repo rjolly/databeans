@@ -6,8 +6,8 @@
  */
 package persistence.util;
 
+import java.rmi.RemoteException;
 import java.util.Comparator;
-import java.rmi.*;
 
 public interface RemoteSortedSet extends RemoteSet {
 	Comparator comparator() throws RemoteException;

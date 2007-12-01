@@ -3,7 +3,6 @@ package persistence;
 import java.io.Serializable;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
-import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.server.RemoteServer;
 import java.rmi.server.RemoteStub;
@@ -42,7 +41,7 @@ public class ConnectionImpl extends UnicastRemoteObject implements Connection {
 		store.connections.add(this);
 	}
 
-	public Remote create(String name) {
+	public Object create(String name) {
 		try {
 			return create(Class.forName(name));
 		} catch (ClassNotFoundException e) {
@@ -50,27 +49,27 @@ public class ConnectionImpl extends UnicastRemoteObject implements Connection {
 		}
 	}
 
-	public Remote create(Class clazz) {
+	public Object create(Class clazz) {
 		return create(clazz,new Class[] {},new Object[] {});
 	}
 
-	public Remote create(Class clazz, Class types[], Object args[]) {
+	public Object create(Class clazz, Class types[], Object args[]) {
 		return create(new PersistentClass(clazz),types,args);
 	}
 
-	public RemoteArray create(Class componentType, int length) {
-		return (RemoteArray)create(new ArrayClass(componentType,length),new Class[] {},new Object[] {});
+	public Array create(Class componentType, int length) {
+		return (Array)create(new ArrayClass(componentType,length),new Class[] {},new Object[] {});
 	}
 
-	public RemoteArray create(Object component[]) {
+	public Array create(Object component[]) {
 		Class componentType=component.getClass().getComponentType();
 		int length=component.length;
-		return (RemoteArray)create(new ArrayClass(componentType,length),new Class[] {Object[].class},new Object[] {component});
+		return (Array)create(new ArrayClass(componentType,length),new Class[] {Object[].class},new Object[] {component});
 	}
 
-	synchronized PersistentObject create(PersistentClass c, Class types[], Object args[]) {
+	synchronized Object create(PersistentClass c, Class types[], Object args[]) {
 		if(closed) throw new PersistentException("connection closed");
-		return cache(c.newInstance(store.create(c),this,types,args));
+		return cache(c.newInstance(store.create(c),this,types,args)).local();
 	}
 
 	PersistentObject cache(PersistentObject obj) {
@@ -95,7 +94,7 @@ public class ConnectionImpl extends UnicastRemoteObject implements Connection {
 	}
 
 	Object attach(Object obj) {
-		return obj instanceof Accessor?instantiate((Accessor)obj):obj;
+		return obj instanceof Accessor?instantiate((Accessor)obj).local():obj;
 	}
 
 	Object attach(ConnectionImpl connection, Object obj) {
@@ -103,6 +102,7 @@ public class ConnectionImpl extends UnicastRemoteObject implements Connection {
 	}
 
 	Object detach(Object obj) {
+		obj=PersistentObject.remote(obj);
 		if(obj instanceof PersistentObject) {
 			PersistentObject b;
 			if((b=(PersistentObject)obj).connection==this) return b.accessor;

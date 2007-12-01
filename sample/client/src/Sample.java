@@ -1,6 +1,7 @@
-import java.util.*;
-import persistence.*;
-import persistence.util.*;
+import persistence.Connection;
+import persistence.Connections;
+import persistence.util.PersistentCollections;
+import persistence.util.RemoteCollection;
 
 public class Sample {
 	public static void main(String args[]) throws Exception {

@@ -1,12 +1,11 @@
 package persistence;
 
-import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.server.RemoteObject;
 import java.rmi.server.RemoteRef;
 import java.rmi.server.UnicastRemoteObject;
 
-public abstract class PersistentObject extends UnicastRemoteObject {
+public abstract class PersistentObject extends UnicastRemoteObject implements Persistent {
 	Accessor accessor;
 	ConnectionImpl connection;
 	Peer peer;
@@ -25,23 +24,23 @@ public abstract class PersistentObject extends UnicastRemoteObject {
 		base=new Long(accessor.base);
 	}
 
-	protected final Remote create(String name) {
+	protected final Object create(String name) {
 		return connection.create(name);
 	}
 
-	protected final Remote create(Class clazz) {
+	protected final Object create(Class clazz) {
 		return connection.create(clazz);
 	}
 
-	protected final Remote create(Class clazz, Class types[], Object args[]) {
+	protected final Object create(Class clazz, Class types[], Object args[]) {
 		return connection.create(clazz,types,args);
 	}
 
-	protected final RemoteArray create(Class componentType, int length) {
+	protected final Array create(Class componentType, int length) {
 		return connection.create(componentType,length);
 	}
 
-	protected final RemoteArray create(Object component[]) {
+	protected final Array create(Object component[]) {
 		return connection.create(component);
 	}
 
@@ -112,7 +111,7 @@ public abstract class PersistentObject extends UnicastRemoteObject {
 		try {
 			return remoteToString();
 		} catch (RemoteException e) {
-			throw new RuntimeException();
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -132,6 +131,14 @@ public abstract class PersistentObject extends UnicastRemoteObject {
 
 	protected final Object mutex() {
 		return accessor;
+	}
+
+	protected Object local() {
+		return this;
+	}
+
+	protected static Object remote(Object obj) {
+		return obj instanceof LocalWrapper?((LocalWrapper)obj).content():obj;
 	}
 }
 

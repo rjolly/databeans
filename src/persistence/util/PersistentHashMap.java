@@ -8,7 +8,6 @@ package persistence.util;
 
 import java.io.Serializable;
 import java.rmi.RemoteException;
-import java.rmi.server.UnicastRemoteObject;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.Map;
@@ -16,16 +15,15 @@ import java.util.NoSuchElementException;
 import persistence.Accessor;
 import persistence.Array;
 import persistence.Connection;
-import persistence.PersistentArrays;
 import persistence.PersistentObject;
-import persistence.RemoteArray;
+import persistence.TransientObject;
 
 public class PersistentHashMap extends PersistentAbstractMap implements RemoteMap {
-	public RemoteArray getTable() {
-		return (RemoteArray)get("table");
+	public Array getTable() {
+		return (Array)get("table");
 	}
 
-	public void setTable(RemoteArray array) {
+	public void setTable(Array array) {
 		set("table",array);
 	}
 
@@ -103,7 +101,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements RemoteMa
 
 	boolean containsValue0(Object value) {
 	synchronized(mutex()) {
-		Array tab = PersistentArrays.localArray(getTable());
+		Array tab = getTable();
 
 		if (value==null) {
 			for (int i = tab.length() ; i-- > 0 ;)
@@ -123,7 +121,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements RemoteMa
 
 	boolean containsKey0(Object key) {
 	synchronized(mutex()) {
-		Array tab = PersistentArrays.localArray(getTable());
+		Array tab = getTable();
 		if (key != null) {
 			int hash = key.hashCode();
 			int index = (hash & 0x7FFFFFFF) % tab.length();
@@ -142,7 +140,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements RemoteMa
 
 	public Object getImpl(Object key) {
 	synchronized(mutex()) {
-		Array tab = PersistentArrays.localArray(getTable());
+		Array tab = getTable();
 
 		if (key != null) {
 			int hash = key.hashCode();
@@ -161,15 +159,15 @@ public class PersistentHashMap extends PersistentAbstractMap implements RemoteMa
 	}
 
 	private void rehash() {
-		int oldCapacity = PersistentArrays.localArray(getTable()).length();
-		Array oldMap = PersistentArrays.localArray(getTable());
+		int oldCapacity = getTable().length();
+		Array oldMap = getTable();
 
 		int newCapacity = oldCapacity * 2 + 1;
-		Array newMap = PersistentArrays.localArray(create(Entry.class,newCapacity));
+		Array newMap = create(Entry.class,newCapacity);
 
 		setModCount(getModCount()+1);
 		setThreshold((int)(newCapacity * getLoadFactor()));
-		setTable(PersistentArrays.remoteArray(newMap));
+		setTable(newMap);
 
 		for (int i = oldCapacity ; i-- > 0 ;) {
 			for (Entry old = (Entry)oldMap.get(i) ; old != null ; ) {
@@ -185,7 +183,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements RemoteMa
 
 	Object put0(Object key, Object value) {
 	synchronized(mutex()) {
-		Array tab = PersistentArrays.localArray(getTable());
+		Array tab = getTable();
 		int hash = 0;
 		int index = 0;
 
@@ -213,7 +211,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements RemoteMa
 		if (getCount() >= getThreshold()) {
 			rehash();
 
-			tab = PersistentArrays.localArray(getTable());
+			tab = getTable();
 			index = (hash & 0x7FFFFFFF) % tab.length();
 		}
 
@@ -226,7 +224,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements RemoteMa
 
 	Object remove0(Object key) {
 	synchronized(mutex()) {
-		Array tab = PersistentArrays.localArray(getTable());
+		Array tab = getTable();
 
 		if (key != null) {
 			int hash = key.hashCode();
@@ -392,7 +390,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements RemoteMa
 			return false;
 		Map.Entry entry = PersistentCollections.localEntry((RemoteMap.Entry)o);
 		Object key = entry.getKey();
-		Array tab = PersistentArrays.localArray(getTable());
+		Array tab = getTable();
 		int hash = (key==null ? 0 : key.hashCode());
 		int index = (hash & 0x7FFFFFFF) % tab.length();
 		for (Entry e = (Entry)tab.get(index); e != null; e = e.getNext())
@@ -432,7 +430,8 @@ public class PersistentHashMap extends PersistentAbstractMap implements RemoteMa
 
 	private RemoteIterator getHashIterator(int type) throws RemoteException {
 		if (getCount() == 0) {
-			return emptyHashIterator;
+//			return emptyHashIterator;
+			return new EmptyHashIterator();
 		} else {
 			return new HashIterator(type);
 		}
@@ -521,12 +520,11 @@ public class PersistentHashMap extends PersistentAbstractMap implements RemoteMa
 	private static final int VALUES = 1;
 	private static final int ENTRIES = 2;
 
-	private static EmptyHashIterator emptyHashIterator = new EmptyHashIterator();
+//	private static EmptyHashIterator emptyHashIterator = new EmptyHashIterator();
 											 
-	private static class EmptyHashIterator implements RemoteIterator, Serializable {
+	private static class EmptyHashIterator extends TransientObject implements RemoteIterator, Serializable {
 		
-		EmptyHashIterator() {
-		}
+		EmptyHashIterator() throws RemoteException {}
 
 		public boolean hasNext() {
 			return false;
@@ -542,9 +540,9 @@ public class PersistentHashMap extends PersistentAbstractMap implements RemoteMa
 
 	}						
 					
-	private class HashIterator extends UnicastRemoteObject implements RemoteIterator {
+	private class HashIterator extends TransientObject implements RemoteIterator {
 
-		Array table = PersistentArrays.localArray(getTable());
+		Array table = getTable();
 		int index = table.length();
 		Entry entry = null;
 		Entry lastReturned = null;
@@ -590,7 +588,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements RemoteMa
 	synchronized(mutex()) {
 		Map.Entry entry = PersistentCollections.localEntry((RemoteMap.Entry)o);
 		Object key = entry.getKey();
-		Array tab = PersistentArrays.localArray(getTable());
+		Array tab = getTable();
 		int hash = (key==null ? 0 : key.hashCode());
 		int index = (hash & 0x7FFFFFFF) % tab.length();
 		Entry e;
@@ -606,7 +604,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements RemoteMa
 	}
 
 	int capacity() {
-		return PersistentArrays.localArray(getTable()).length();
+		return getTable().length();
 	}
 
 	float loadFactor() {

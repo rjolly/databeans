@@ -21,7 +21,6 @@ import java.beans.EventHandler;
 import java.beans.Introspector;
 
 import persistence.PersistentArray;
-import persistence.PersistentArrays;
 import persistence.util.PersistentCollections;
 import persistence.Connection;
 
@@ -110,19 +109,19 @@ class persistence_PersistentArray_PersistenceDelegate extends DefaultPersistence
 	}
 
 	protected boolean mutatesTo(Object oldInstance, Object newInstance) {
-		persistence.Array oldO = PersistentArrays.localArray((persistence.RemoteArray)oldInstance);
-		persistence.Array newO = newInstance==null?null:PersistentArrays.localArray((persistence.RemoteArray)newInstance);
+		persistence.Array oldO = (persistence.Array)oldInstance;
+		persistence.Array newO = newInstance==null?null:(persistence.Array)newInstance;
 		return (newO != null && oldO.typeCode() == newO.typeCode() && oldO.length() == newO.length());
 	}
 
 	protected Expression instantiate(Object oldInstance, Encoder out) {
-		persistence.Array oldO = PersistentArrays.localArray((persistence.RemoteArray)oldInstance);
+		persistence.Array oldO = (persistence.Array)oldInstance;
 		return new Expression(connection, oldInstance, PersistentArray.class, "newInstance", new Object[]{new Character(oldO.typeCode()), new Integer(oldO.length())});
 	}
 
 	protected void initialize(Class type, Object oldInstance, Object newInstance, Encoder out) {
-		persistence.Array oldO = PersistentArrays.localArray((persistence.RemoteArray)oldInstance);
-		persistence.Array newO = PersistentArrays.localArray((persistence.RemoteArray)newInstance);
+		persistence.Array oldO = (persistence.Array)oldInstance;
+		persistence.Array newO = (persistence.Array)newInstance;
 		int n = oldO.length();
 		for (int i = 0; i < n; i++) {
 			Object index = new Integer(i);

@@ -7,12 +7,12 @@
 package persistence.util;
 
 import java.rmi.RemoteException;
-import java.rmi.server.UnicastRemoteObject;
 import java.util.Iterator;
 import java.util.Map;
 import persistence.Accessor;
 import persistence.Connection;
 import persistence.PersistentObject;
+import persistence.TransientObject;
 
 public abstract class PersistentAbstractMap extends PersistentObject implements RemoteMap {
 	public PersistentAbstractMap() throws RemoteException {}
@@ -194,7 +194,7 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 			super(mutex);
 		}
 
-		class Itr extends UnicastRemoteObject implements RemoteIterator {
+		class Itr extends TransientObject implements RemoteIterator {
 			private Iterator i;
 
 			Itr(Iterator i) throws RemoteException {
@@ -242,7 +242,7 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 			super(mutex);
 		}
 
-		class Itr extends UnicastRemoteObject implements RemoteIterator {
+		class Itr extends TransientObject implements RemoteIterator {
 			private Iterator i;
 
 			Itr(Iterator i) throws RemoteException {

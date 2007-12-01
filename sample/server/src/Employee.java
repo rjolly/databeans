@@ -1,6 +1,7 @@
-import java.rmi.*;
+import java.rmi.RemoteException;
+import persistence.Persistent;
 
-public interface Employee extends Remote {
+public interface Employee extends Persistent {
 	public String getName() throws RemoteException;
 	public void setName(String s) throws RemoteException;
 	public Department getDepartment() throws RemoteException;
@@ -13,6 +14,4 @@ public interface Employee extends Remote {
 	public void setManager(Employee e) throws RemoteException;
 	public String getJob() throws RemoteException;
 	public void setJob(String s) throws RemoteException;
-	String remoteToString() throws RemoteException;
-	String persistentClass() throws RemoteException;
 }

@@ -1,9 +1,10 @@
 package persistence;
 
-import java.rmi.*;
-import persistence.beans.*;
+import java.rmi.RemoteException;
+import persistence.beans.RemotePropertyChangeListener;
+import persistence.beans.RemoteVetoableChangeListener;
 
-public interface Notified extends Remote {
+public interface Notified extends Persistent {
 	void addPropertyChangeListener(RemotePropertyChangeListener listener) throws RemoteException;
 	void removePropertyChangeListener(RemotePropertyChangeListener listener) throws RemoteException;
 	void addPropertyChangeListener(String propertyName, RemotePropertyChangeListener listener) throws RemoteException;

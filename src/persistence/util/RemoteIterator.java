@@ -6,9 +6,10 @@
  */
 package persistence.util;
 
-import java.rmi.*;
+import java.rmi.RemoteException;
+import persistence.Persistent;
 
-public interface RemoteIterator extends Remote {
+public interface RemoteIterator extends Persistent {
 	boolean hasNext() throws RemoteException;
 	Object next() throws RemoteException;
 	void remove() throws RemoteException;
