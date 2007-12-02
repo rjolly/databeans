@@ -7,8 +7,10 @@
 package persistence.util;
 
 import java.rmi.RemoteException;
+import java.util.Collection;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
+import java.util.List;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
 import persistence.Accessor;
@@ -93,7 +95,7 @@ public abstract class PersistentAbstractList extends PersistentAbstractCollectio
 
 	int indexOf0(Object o) {
 	synchronized(mutex()) {
-		ListIterator e = PersistentCollections.localList(this).listIterator();
+		ListIterator e = ((List)local()).listIterator();
 		if (o==null) {
 			while (e.hasNext())
 				if (e.next()==null)
@@ -118,7 +120,7 @@ public abstract class PersistentAbstractList extends PersistentAbstractCollectio
 
 	int lastIndexOf0(Object o) {
 	synchronized(mutex()) {
-		ListIterator e = PersistentCollections.localList(this).listIterator(size());
+		ListIterator e = ((List)local()).listIterator(size());
 		if (o==null) {
 			while (e.hasPrevious())
 				if (e.previous()==null)
@@ -138,10 +140,10 @@ public abstract class PersistentAbstractList extends PersistentAbstractCollectio
 	}
 	}
 
-	public boolean addAll(int index, RemoteCollection c) {
+	public boolean addAll(int index, Collection c) {
 	synchronized(mutex()) {
 		boolean modified = false;
-		Iterator e = PersistentCollections.localCollection(c).iterator();
+		Iterator e = c.iterator();
 		while (e.hasNext()) {
 			add(index++, e.next());
 			modified = true;
@@ -150,19 +152,19 @@ public abstract class PersistentAbstractList extends PersistentAbstractCollectio
 	}
 	}
 
-	public RemoteIterator iterator() throws RemoteException {
-		return new Itr();
+	public Iterator iterator() throws RemoteException {
+		return (Iterator)new Itr().local();
 	}
 
-	public RemoteListIterator listIterator() throws RemoteException {
+	public ListIterator listIterator() throws RemoteException {
 		return listIterator(0);
 	}
 
-	public RemoteListIterator listIterator(final int index) throws RemoteException {
+	public ListIterator listIterator(final int index) throws RemoteException {
 		if (index<0 || index>size())
 		  throw new IndexOutOfBoundsException("Index: "+index);
 
-		return new ListItr(index);
+		return (ListIterator)new ListItr(index).local();
 	}
 
 	private class Itr extends TransientObject implements RemoteIterator {
@@ -209,6 +211,10 @@ public abstract class PersistentAbstractList extends PersistentAbstractCollectio
 		final void checkForComodification() {
 			if (getModCount() != expectedModCount)
 				throw new ConcurrentModificationException();
+		}
+
+		public Object local() {
+			return new LocalIterator(this);
 		}
 	}
 
@@ -265,11 +271,15 @@ public abstract class PersistentAbstractList extends PersistentAbstractCollectio
 				throw new ConcurrentModificationException();
 			}
 		}
+
+		public Object local() {
+			return new LocalListIterator(this);
+		}
 	}
 
-	public RemoteList subList(int fromIndex, int toIndex) throws RemoteException {
+	public List subList(int fromIndex, int toIndex) throws RemoteException {
 	synchronized(mutex()) {
-		return new SubList(this, fromIndex, toIndex, mutex());
+		return (List)new SubList(this, fromIndex, toIndex, mutex()).local();
 	}
 	}
 
@@ -279,8 +289,8 @@ public abstract class PersistentAbstractList extends PersistentAbstractCollectio
 		if (!(o instanceof RemoteList))
 			return false;
 
-		ListIterator e1 = PersistentCollections.localList(this).listIterator();
-		ListIterator e2 = PersistentCollections.localList((RemoteList) o).listIterator();
+		ListIterator e1 = ((List)local()).listIterator();
+		ListIterator e2 = ((List) o).listIterator();
 		while(e1.hasNext() && e2.hasNext()) {
 			Object o1 = e1.next();
 			Object o2 = e2.next();
@@ -292,7 +302,7 @@ public abstract class PersistentAbstractList extends PersistentAbstractCollectio
 
 	public int hashCode() {
 		int hashCode = 1;
-		Iterator i = PersistentCollections.localList(this).iterator();
+		Iterator i = ((List)local()).iterator();
 			 while (i.hasNext()) {
 			Object obj = i.next();
 			hashCode = 31*hashCode + (obj==null ? 0 : obj.hashCode());
@@ -301,7 +311,7 @@ public abstract class PersistentAbstractList extends PersistentAbstractCollectio
 	}
 
 	protected void removeRange(int fromIndex, int toIndex) {
-		ListIterator it = PersistentCollections.localList(this).listIterator(fromIndex);
+		ListIterator it = ((List)local()).listIterator(fromIndex);
 		for (int i=0, n=toIndex-fromIndex; i<n; i++) {
 			it.next();
 			it.remove();
@@ -314,5 +324,9 @@ public abstract class PersistentAbstractList extends PersistentAbstractCollectio
 
 	public void setModCount(int n) {
 		set("modCount",new Integer(n));
+	}
+
+	public Object local() {
+		return new LocalList(this);
 	}
 }

@@ -7,6 +7,9 @@
 package persistence.util;
 
 import java.rmi.RemoteException;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
 import persistence.Persistent;
 
 public interface RemoteMap extends Persistent {
@@ -17,11 +20,11 @@ public interface RemoteMap extends Persistent {
 	Object get(Object key) throws RemoteException;
 	Object put(Object key, Object value) throws RemoteException;
 	Object remove(Object key) throws RemoteException;
-	void putAll(RemoteMap t) throws RemoteException;
+	void putAll(Map t) throws RemoteException;
 	void clear() throws RemoteException;
-	public RemoteSet keySet() throws RemoteException;
-	public RemoteCollection values() throws RemoteException;
-	public RemoteSet entrySet() throws RemoteException;
+	public Set keySet() throws RemoteException;
+	public Collection values() throws RemoteException;
+	public Set entrySet() throws RemoteException;
 
 	public interface Entry extends Persistent {
 		Object getKey() throws RemoteException;

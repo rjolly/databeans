@@ -7,6 +7,7 @@
 package persistence.util;
 
 import java.rmi.RemoteException;
+import java.util.Collection;
 import java.util.Iterator;
 import persistence.TransientObject;
 
@@ -15,7 +16,7 @@ abstract class TransientAbstractCollection extends TransientObject implements Re
 		super(mutex);
 	}
 
-	public abstract RemoteIterator iterator() throws RemoteException;
+	public abstract Iterator iterator() throws RemoteException;
 
 	public abstract int size();
 
@@ -25,7 +26,7 @@ abstract class TransientAbstractCollection extends TransientObject implements Re
 
 	public boolean contains(Object o) {
 	synchronized(mutex()) {
-		Iterator e = PersistentCollections.localCollection(this).iterator();
+		Iterator e = ((Collection)local()).iterator();
 		if (o==null) {
 			while (e.hasNext())
 				if (e.next()==null)
@@ -42,7 +43,7 @@ abstract class TransientAbstractCollection extends TransientObject implements Re
 	public Object[] toArray() {
 	synchronized(mutex()) {
 		Object[] result = new Object[size()];
-		Iterator e = PersistentCollections.localCollection(this).iterator();
+		Iterator e = ((Collection)local()).iterator();
 		for (int i=0; e.hasNext(); i++)
 			result[i] = e.next();
 		return result;
@@ -56,7 +57,7 @@ abstract class TransientAbstractCollection extends TransientObject implements Re
 			a = (Object[])java.lang.reflect.Array.newInstance(
 								  a.getClass().getComponentType(), size);
 
-		Iterator it=PersistentCollections.localCollection(this).iterator();
+		Iterator it=((Collection)local()).iterator();
 		for (int i=0; i<size; i++)
 			a[i] = it.next();
 
@@ -73,7 +74,7 @@ abstract class TransientAbstractCollection extends TransientObject implements Re
 
 	public boolean remove(Object o) {
 	synchronized(mutex()) {
-		Iterator e = PersistentCollections.localCollection(this).iterator();
+		Iterator e = ((Collection)local()).iterator();
 		if (o==null) {
 			while (e.hasNext()) {
 				if (e.next()==null) {
@@ -93,9 +94,9 @@ abstract class TransientAbstractCollection extends TransientObject implements Re
 	}
 	}
 
-	public boolean containsAll(RemoteCollection c) {
+	public boolean containsAll(Collection c) {
 	synchronized(mutex()) {
-		Iterator e = PersistentCollections.localCollection(c).iterator();
+		Iterator e = c.iterator();
 		while (e.hasNext())
 			if(!contains(e.next()))
 				return false;
@@ -104,10 +105,10 @@ abstract class TransientAbstractCollection extends TransientObject implements Re
 	}
 	}
 
-	public boolean addAll(RemoteCollection c) {
+	public boolean addAll(Collection c) {
 	synchronized(mutex()) {
 		boolean modified = false;
-		Iterator e = PersistentCollections.localCollection(c).iterator();
+		Iterator e = c.iterator();
 		while (e.hasNext()) {
 			if(add(e.next()))
 				modified = true;
@@ -116,12 +117,12 @@ abstract class TransientAbstractCollection extends TransientObject implements Re
 	}
 	}
 
-	public boolean removeAll(RemoteCollection c) {
+	public boolean removeAll(Collection c) {
 	synchronized(mutex()) {
 		boolean modified = false;
-		Iterator e = PersistentCollections.localCollection(this).iterator();
+		Iterator e = ((Collection)local()).iterator();
 		while (e.hasNext()) {
-			if(PersistentCollections.localCollection(c).contains(e.next())) {
+			if(c.contains(e.next())) {
 				e.remove();
 				modified = true;
 			}
@@ -130,12 +131,12 @@ abstract class TransientAbstractCollection extends TransientObject implements Re
 	}
 	}
 
-	public boolean retainAll(RemoteCollection c) {
+	public boolean retainAll(Collection c) {
 	synchronized(mutex()) {
 		boolean modified = false;
-		Iterator e = PersistentCollections.localCollection(this).iterator();
+		Iterator e = ((Collection)local()).iterator();
 		while (e.hasNext()) {
-			if(!PersistentCollections.localCollection(c).contains(e.next())) {
+			if(!c.contains(e.next())) {
 				e.remove();
 				modified = true;
 			}
@@ -146,7 +147,7 @@ abstract class TransientAbstractCollection extends TransientObject implements Re
 
 	public void clear() {
 	synchronized(mutex()) {
-		Iterator e = PersistentCollections.localCollection(this).iterator();
+		Iterator e = ((Collection)local()).iterator();
 		while (e.hasNext()) {
 			e.next();
 			e.remove();
@@ -157,7 +158,7 @@ abstract class TransientAbstractCollection extends TransientObject implements Re
 	public String remoteToString() {
 	synchronized(mutex()) {
 		StringBuffer buf = new StringBuffer();
-		Iterator e = PersistentCollections.localCollection(this).iterator();
+		Iterator e = ((Collection)local()).iterator();
 		buf.append("[");
 		int maxIndex = size() - 1;
 		for (int i = 0; i <= maxIndex; i++) {
@@ -168,5 +169,9 @@ abstract class TransientAbstractCollection extends TransientObject implements Re
 		buf.append("]");
 		return buf.toString();
 	}
+	}
+
+	public Object local() {
+		return new LocalCollection(this);
 	}
 }

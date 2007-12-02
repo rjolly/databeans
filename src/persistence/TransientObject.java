@@ -22,11 +22,11 @@ public abstract class TransientObject extends UnicastRemoteObject implements Per
 		return "";
 	}
 
-	protected final Object mutex() {
-		return mutex;
+	public Object local() {
+		return new LocalWrapper(this);
 	}
 
-	protected LocalWrapper local() {
-		return new LocalWrapper(this);
+	protected final Object mutex() {
+		return mutex;
 	}
 }

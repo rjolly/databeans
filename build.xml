@@ -30,15 +30,14 @@
     <javac srcdir="src" destdir="classes"/>
     <rmic base="classes"
           includes="persistence/*Impl.class
-                    persistence/util/*.class
+                    persistence/util/Persistent*.class
                     persistence/beans/Persistent*.class
-                    persistence/PersistentArray.class
-                    persistence/PersistentSystem.class
-                    persistence/PersistentMethodCall.class
+                    persistence/Persistent*.class
                     persistence/Transaction.class"
-          excludes="persistence/util/PersistentCollections$*.class
-                    persistence/util/PersistentCollections.class
-                    persistence/util/Remote*.class"
+          excludes="persistence/Persistent.class
+                    persistence/PersistentClass.class
+                    persistence/PersistentException.class
+                    persistence/util/PersistentHashMap$EmptyHashIterator.class"
     />
   </target>
 
@@ -48,15 +47,14 @@
     <rmic debug="on"
           base="classes"
           includes="persistence/*Impl.class
-                    persistence/util/*.class
+                    persistence/util/Persistent*.class
                     persistence/beans/Persistent*.class
-                    persistence/PersistentArray.class
-                    persistence/PersistentSystem.class
-                    persistence/PersistentMethodCall.class
+                    persistence/Persistent*.class
                     persistence/Transaction.class"
-          excludes="persistence/util/PersistentCollections$*.class
-                    persistence/util/PersistentCollections.class
-                    persistence/util/Remote*.class"
+          excludes="persistence/Persistent.class
+                    persistence/PersistentClass.class
+                    persistence/PersistentException.class
+                    persistence/util/PersistentHashMap$EmptyHashIterator.class"
     />
   </target>
 
@@ -90,18 +88,16 @@
     <zip destfile="databeans_client.jar"
          basedir="classes"
          compress="false"
-         includes="persistence/util/Remote*.class
-                   persistence/util/PersistentCollections$*.class
-                   persistence/util/PersistentCollections.class
+         includes="persistence/RemoteArray.class
                    persistence/beans/Remote*.class
+                   persistence/util/Remote*.class
+                   persistence/util/Local*.class
+                   persistence/Local*.class
                    persistence/Persistent.class
+                   persistence/PersistentException.class
                    persistence/Notified.class
                    persistence/Array.class
                    persistence/Arrays.class
-                   persistence/LocalWrapper.class
-                   persistence/LocalArray.class
-                   persistence/RemoteArray.class
-                   persistence/PersistentException.class
                    persistence/Connections.class
                    persistence/Connection.class
                    persistence/Store.class"
@@ -113,18 +109,16 @@
                    persistence/RemoteMethodCall.class
                    persistence/RemoteTransaction.class
                    persistence/RemoteSystem.class
-                   persistence/util/Remote*.class
-                   persistence/util/PersistentCollections$*.class
-                   persistence/util/PersistentCollections.class
+                   persistence/RemoteArray.class
                    persistence/beans/Remote*.class
+                   persistence/util/Remote*.class
+                   persistence/util/Local*.class
+                   persistence/Local*.class
                    persistence/Persistent.class
+                   persistence/PersistentException.class
                    persistence/Notified.class
                    persistence/Array.class
                    persistence/Arrays.class
-                   persistence/LocalWrapper.class
-                   persistence/LocalArray.class
-                   persistence/RemoteArray.class
-                   persistence/PersistentException.class
                    persistence/Connections.class
                    persistence/Connection.class
                    persistence/Store.class"

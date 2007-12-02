@@ -129,16 +129,16 @@ public abstract class PersistentObject extends UnicastRemoteObject implements Pe
 		return accessor.clazz.toString();
 	}
 
-	protected final Object mutex() {
-		return accessor;
-	}
-
-	protected Object local() {
+	public Object local() {
 		return this;
 	}
 
-	protected static Object remote(Object obj) {
+	public static Object remote(Object obj) {
 		return obj instanceof LocalWrapper?((LocalWrapper)obj).content():obj;
+	}
+
+	protected final Object mutex() {
+		return accessor;
 	}
 }
 

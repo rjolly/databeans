@@ -9,10 +9,12 @@
  */
 package persistence.beans;
 
-import java.beans.*;
-import java.rmi.*;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyVetoException;
+import java.rmi.RemoteException;
+import persistence.Persistent;
 
-public interface RemoteVetoableChangeListener extends java.util.EventListener, Remote {
+public interface RemoteVetoableChangeListener extends java.util.EventListener, Persistent {
 
 	void vetoableChange(PropertyChangeEvent evt) throws PropertyVetoException, RemoteException;
 }

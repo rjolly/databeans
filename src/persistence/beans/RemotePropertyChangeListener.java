@@ -9,10 +9,11 @@
  */
 package persistence.beans;
 
-import java.beans.*;
-import java.rmi.*;
+import java.beans.PropertyChangeEvent;
+import java.rmi.RemoteException;
+import persistence.Persistent;
 
-public interface RemotePropertyChangeListener extends java.util.EventListener, Remote {
+public interface RemotePropertyChangeListener extends java.util.EventListener, Persistent {
 
 	void propertyChange(PropertyChangeEvent evt) throws RemoteException;
 

@@ -7,21 +7,25 @@
 package persistence.util;
 
 import java.rmi.RemoteException;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
 
 public interface RemoteList extends RemoteCollection {
 	int size() throws RemoteException;
 	boolean isEmpty() throws RemoteException;
 	boolean contains(Object o) throws RemoteException;
-	RemoteIterator iterator() throws RemoteException;
+	Iterator iterator() throws RemoteException;
 	Object[] toArray() throws RemoteException;
 	Object[] toArray(Object a[]) throws RemoteException;
 	boolean add(Object o) throws RemoteException;
 	boolean remove(Object o) throws RemoteException;
-	boolean containsAll(RemoteCollection c) throws RemoteException;
-	boolean addAll(RemoteCollection c) throws RemoteException;
-	boolean addAll(int index, RemoteCollection c) throws RemoteException;
-	boolean removeAll(RemoteCollection c) throws RemoteException;
-	boolean retainAll(RemoteCollection c) throws RemoteException;
+	boolean containsAll(Collection c) throws RemoteException;
+	boolean addAll(Collection c) throws RemoteException;
+	boolean addAll(int index, Collection c) throws RemoteException;
+	boolean removeAll(Collection c) throws RemoteException;
+	boolean retainAll(Collection c) throws RemoteException;
 	void clear() throws RemoteException;
 //	boolean equals(Object o);
 //	int hashCode();
@@ -31,7 +35,7 @@ public interface RemoteList extends RemoteCollection {
 	Object remove(int index) throws RemoteException;
 	int indexOf(Object o) throws RemoteException;
 	int lastIndexOf(Object o) throws RemoteException;
-	RemoteListIterator listIterator() throws RemoteException;
-	RemoteListIterator listIterator(int index) throws RemoteException;
-	RemoteList subList(int fromIndex, int toIndex) throws RemoteException;
+	ListIterator listIterator() throws RemoteException;
+	ListIterator listIterator(int index) throws RemoteException;
+	List subList(int fromIndex, int toIndex) throws RemoteException;
 }

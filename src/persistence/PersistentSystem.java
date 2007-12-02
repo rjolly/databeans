@@ -1,42 +1,42 @@
 package persistence;
 
 import java.rmi.RemoteException;
+import java.util.Collection;
+import java.util.Map;
 import persistence.util.PersistentArrayList;
 import persistence.util.PersistentHashMap;
-import persistence.util.RemoteCollection;
-import persistence.util.RemoteMap;
 
 public class PersistentSystem extends PersistentObject implements RemoteSystem {
 	public PersistentSystem() throws RemoteException {}
 
 	public PersistentSystem(Accessor accessor, Connection connection) throws RemoteException {
 		super(accessor,connection);
-		setUsers((RemoteMap)create(PersistentHashMap.class));
-		setClasses((RemoteMap)create(PersistentHashMap.class));
-		setTransactions((RemoteCollection)create(PersistentArrayList.class));
+		setUsers((Map)create(PersistentHashMap.class));
+		setClasses((Map)create(PersistentHashMap.class));
+		setTransactions((Collection)create(PersistentArrayList.class));
 	}
 
-	public RemoteMap getUsers() {
-		return (RemoteMap)get("users");
+	public Map getUsers() {
+		return (Map)get("users");
 	}
 
-	public void setUsers(RemoteMap map) {
+	public void setUsers(Map map) {
 		set("users",map);
 	}
 
-	public RemoteMap getClasses() {
-		return (RemoteMap)get("classes");
+	public Map getClasses() {
+		return (Map)get("classes");
 	}
 
-	public void setClasses(RemoteMap map) {
+	public void setClasses(Map map) {
 		set("classes",map);
 	}
 
-	public RemoteCollection getTransactions() {
-		return (RemoteCollection)get("transactions");
+	public Collection getTransactions() {
+		return (Collection)get("transactions");
 	}
 
-	public void setTransactions(RemoteCollection collection) {
+	public void setTransactions(Collection collection) {
 		set("transactions",collection);
 	}
 

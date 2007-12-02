@@ -7,7 +7,10 @@
 package persistence.util;
 
 import java.rmi.RemoteException;
+import java.util.Collection;
 import java.util.ConcurrentModificationException;
+import java.util.Iterator;
+import java.util.List;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
 import persistence.TransientObject;
@@ -40,7 +43,7 @@ class SubList extends TransientAbstractList implements RemoteList {
 	synchronized(mutex()) {
 		rangeCheck(index);
 		checkForComodification();
-		return PersistentCollections.localList(l).set(index+offset, element);
+		return local(l).set(index+offset, element);
 	}
 	}
 
@@ -48,7 +51,7 @@ class SubList extends TransientAbstractList implements RemoteList {
 	synchronized(mutex()) {
 		rangeCheck(index);
 		checkForComodification();
-		return PersistentCollections.localList(l).get(index+offset);
+		return local(l).get(index+offset);
 	}
 	}
 
@@ -63,7 +66,7 @@ class SubList extends TransientAbstractList implements RemoteList {
 	synchronized(mutex()) {
 		if (index<0 || index>size) throw new IndexOutOfBoundsException();
 		checkForComodification();
-		PersistentCollections.localList(l).add(index+offset, element);
+		local(l).add(index+offset, element);
 		expectedModCount = modCount(l);
 		size++;
 		modCount++;
@@ -74,7 +77,7 @@ class SubList extends TransientAbstractList implements RemoteList {
 	synchronized(mutex()) {
 		rangeCheck(index);
 		checkForComodification();
-		Object result = PersistentCollections.localList(l).remove(index+offset);
+		Object result = local(l).remove(index+offset);
 		expectedModCount = modCount(l);
 		size--;
 		modCount++;
@@ -82,7 +85,11 @@ class SubList extends TransientAbstractList implements RemoteList {
 	}
 	}
 
-	void removeRange(RemoteList l, int fromIndex, int toIndex) {
+	static List local(RemoteList l) {
+		return (List)(l instanceof PersistentAbstractList?((PersistentAbstractList)l).local():((TransientAbstractList)l).local());
+	}
+
+	static void removeRange(RemoteList l, int fromIndex, int toIndex) {
 		if(l instanceof PersistentAbstractList) ((PersistentAbstractList)l).removeRange(fromIndex,toIndex);
 		else ((TransientAbstractList)l).removeRange(fromIndex,toIndex);
 	}
@@ -95,21 +102,21 @@ class SubList extends TransientAbstractList implements RemoteList {
 		modCount++;
 	}
 
-	public boolean addAll(RemoteCollection c) {
+	public boolean addAll(Collection c) {
 	synchronized(mutex()) {
 		return addAll(size, c);
 	}
 	}
 
-	public boolean addAll(int index, RemoteCollection c) {
+	public boolean addAll(int index, Collection c) {
 	synchronized(mutex()) {
 		if (index<0 || index>size) throw new IndexOutOfBoundsException("Index: "+index+", Size: "+size);
-		int cSize = PersistentCollections.localCollection(c).size();
+		int cSize = c.size();
 		if (cSize==0)
 			return false;
 
 		checkForComodification();
-		PersistentCollections.localList(l).addAll(offset+index, PersistentCollections.localCollection(c));
+		local(l).addAll(offset+index, c);
 		expectedModCount = modCount(l);
 		size += cSize;
 		modCount++;
@@ -117,24 +124,24 @@ class SubList extends TransientAbstractList implements RemoteList {
 	}
 	}
 
-	public RemoteIterator iterator() throws RemoteException {
+	public Iterator iterator() throws RemoteException {
 		return listIterator();
 	}
 
-	public RemoteListIterator listIterator(final int index) throws RemoteException {
+	public ListIterator listIterator(final int index) throws RemoteException {
 		checkForComodification();
 		if (index<0 || index>size)
 			throw new IndexOutOfBoundsException(
 				"Index: "+index+", Size: "+size);
 
-		return new ListItr(index);
+		return (ListIterator)new ListItr(index).local();
 	}
 
 	private class ListItr extends TransientObject implements RemoteListIterator {
 		private ListIterator i;
 
 		ListItr(int index) throws RemoteException {
-			i = PersistentCollections.localList(l).listIterator(index+offset);
+			i = SubList.this.local(l).listIterator(index+offset);
 		}
 
 		public boolean hasNext() {
@@ -186,9 +193,9 @@ class SubList extends TransientAbstractList implements RemoteList {
 		};
 	}
 
-	public RemoteList subList(int fromIndex, int toIndex) throws RemoteException {
+	public List subList(int fromIndex, int toIndex) throws RemoteException {
 	synchronized(mutex()) {
-		return new SubList(this, fromIndex, toIndex, mutex());
+		return (List)new SubList(this, fromIndex, toIndex, mutex()).local();
 	}
 	}
 

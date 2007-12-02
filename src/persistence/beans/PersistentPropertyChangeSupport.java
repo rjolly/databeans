@@ -9,26 +9,34 @@
  */
 package persistence.beans;
 
-import java.beans.*;
-import java.util.*;
-import java.rmi.*;
-import persistence.*;
-import persistence.util.*;
+import java.beans.PropertyChangeEvent;
+import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import persistence.Accessor;
+import persistence.Connection;
+import persistence.Persistent;
+import persistence.PersistentObject;
+import persistence.util.PersistentArrayList;
+import persistence.util.PersistentHashMap;
 
-public class PersistentPropertyChangeSupport extends PersistentObject implements Remote {
-	public RemoteCollection getListeners() {
-		return (RemoteCollection)get("listeners");
+public class PersistentPropertyChangeSupport extends PersistentObject implements Persistent {
+	public Collection getListeners() {
+		return (Collection)get("listeners");
 	}
 
-	public void setListeners(RemoteCollection collection) {
+	public void setListeners(Collection collection) {
 		set("listeners",collection);
 	}
 
-	public RemoteMap getChildren() {
-		return (RemoteMap)get("children");
+	public Map getChildren() {
+		return (Map)get("children");
 	}
 
-	public void setChildren(RemoteMap map) {
+	public void setChildren(Map map) {
 		set("children",map);
 	}
 
@@ -52,26 +60,26 @@ public class PersistentPropertyChangeSupport extends PersistentObject implements
 
 	public synchronized void addPropertyChangeListener(RemotePropertyChangeListener listener) {
 		if (getListeners() == null) {
-			setListeners((PersistentArrayList)create(PersistentArrayList.class));
+			setListeners((List)create(PersistentArrayList.class));
 		}
-		PersistentCollections.localCollection(getListeners()).add(listener);
+		getListeners().add(listener);
 	}
 
 	public synchronized void removePropertyChangeListener(RemotePropertyChangeListener listener) {
 		if (getListeners() == null) {
 			return;
 		}
-		PersistentCollections.localCollection(getListeners()).remove(listener);
+		getListeners().remove(listener);
 	}
 
 	public synchronized void addPropertyChangeListener(String propertyName, RemotePropertyChangeListener listener) {
 		if (getChildren() == null) {
-			setChildren((PersistentHashMap)create(PersistentHashMap.class));
+			setChildren((Map)create(PersistentHashMap.class));
 		}
-		PersistentPropertyChangeSupport child = (PersistentPropertyChangeSupport)PersistentCollections.localMap(getChildren()).get(propertyName);
+		PersistentPropertyChangeSupport child = (PersistentPropertyChangeSupport)getChildren().get(propertyName);
 		if (child == null) {
 			child = (PersistentPropertyChangeSupport)create(PersistentPropertyChangeSupport.class, new Class[] {Object.class}, new Object[] {getSource()});
-			PersistentCollections.localMap(getChildren()).put(propertyName, child);
+			getChildren().put(propertyName, child);
 		}
 		child.addPropertyChangeListener(listener);
 	}
@@ -80,7 +88,7 @@ public class PersistentPropertyChangeSupport extends PersistentObject implements
 		if (getChildren() == null) {
 			return;
 		}
-		PersistentPropertyChangeSupport child = (PersistentPropertyChangeSupport)PersistentCollections.localMap(getChildren()).get(propertyName);
+		PersistentPropertyChangeSupport child = (PersistentPropertyChangeSupport)getChildren().get(propertyName);
 		if (child == null) {
 			return;
 		}
@@ -123,10 +131,10 @@ public class PersistentPropertyChangeSupport extends PersistentObject implements
 		PersistentPropertyChangeSupport child = null;
 		synchronized (this) {
 			if (getListeners() != null) {
-				targets = new ArrayList(PersistentCollections.localCollection(getListeners()));
+				targets = new ArrayList(getListeners());
 			}
 			if (getChildren() != null && propertyName != null) {
-				child = (PersistentPropertyChangeSupport)PersistentCollections.localMap(getChildren()).get(propertyName);
+				child = (PersistentPropertyChangeSupport)getChildren().get(propertyName);
 			}
 		}
 
@@ -137,7 +145,7 @@ public class PersistentPropertyChangeSupport extends PersistentObject implements
 				try {
 					target.propertyChange(evt);
 				} catch (RemoteException e) {
-					PersistentCollections.localCollection(getListeners()).remove(target);
+					getListeners().remove(target);
 				}
 			}
 		}
@@ -148,14 +156,14 @@ public class PersistentPropertyChangeSupport extends PersistentObject implements
 	}
 
 	public synchronized boolean hasListeners(String propertyName) {
-		if (getListeners() != null && !PersistentCollections.localCollection(getListeners()).isEmpty()) {
+		if (getListeners() != null && !getListeners().isEmpty()) {
 			// there is a generic listener
 			return true;
 		}
 		if (getChildren() != null) {
-			PersistentPropertyChangeSupport child = (PersistentPropertyChangeSupport)PersistentCollections.localMap(getChildren()).get(propertyName);
+			PersistentPropertyChangeSupport child = (PersistentPropertyChangeSupport)getChildren().get(propertyName);
 			if (child != null && child.getListeners() != null) {
-				return !PersistentCollections.localCollection(child.getListeners()).isEmpty();
+				return !child.getListeners().isEmpty();
 			}
 		}
 		return false;

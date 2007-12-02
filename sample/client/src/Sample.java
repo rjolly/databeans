@@ -1,7 +1,6 @@
+import java.util.Collection;
 import persistence.Connection;
 import persistence.Connections;
-import persistence.util.PersistentCollections;
-import persistence.util.RemoteCollection;
 
 public class Sample {
 	public static void main(String args[]) throws Exception {
@@ -16,7 +15,7 @@ public class Sample {
 		e.setSalary(2000.);
 		e.setManager(e);
 		e.setJob("Manager");
-		RemoteCollection employees=(RemoteCollection)conn.create("persistence.util.PersistentArrayList");
+		Collection employees=(Collection)conn.create("persistence.util.PersistentArrayList");
 		employees.add(e);
 		conn.setRoot(employees);
 		Employee m=(Employee)employees.iterator().next();
@@ -28,7 +27,7 @@ public class Sample {
 		e.setManager(m);
 		e.setJob("Clerk");
 		employees.add(e);
-		System.out.println(PersistentCollections.localCollection((RemoteCollection)conn.getRoot()));
+		System.out.println(conn.getRoot());
 		conn.commit();
 	}
 }

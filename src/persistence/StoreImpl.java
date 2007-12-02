@@ -30,7 +30,6 @@ import persistence.storage.Collector;
 import persistence.storage.FileHeap;
 import persistence.storage.Heap;
 import persistence.storage.MemoryModel;
-import persistence.util.PersistentCollections;
 
 public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	static final User none=new User("none","");
@@ -91,7 +90,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	}
 
 	void putAllClasses(Map map) {
-		Map classes=PersistentCollections.localMap(system.getClasses());
+		Map classes=system.getClasses();
 		for(Iterator it=map.entrySet().iterator();it.hasNext();) {
 			Map.Entry e=(Map.Entry)it.next();
 			classes.put(e.getKey(),e.getValue());
@@ -109,9 +108,9 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	}
 
 	void init() {
-		users=PersistentCollections.localMap(system.getUsers());
-		classes=PersistentCollections.localMap(system.getClasses());
-		transactions=PersistentCollections.localCollection(system.getTransactions());
+		users=system.getUsers();
+		classes=system.getClasses();
+		transactions=system.getTransactions();
 	}
 
 	PersistentSystem getSystem() {
@@ -127,7 +126,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	}
 
 	MethodCall methodCall(ConnectionImpl connection, PersistentObject target, String method, Class types[], Object args[]) {
-		return new MethodCall((PersistentObject)attach(connection,target), method, types, attach(connection,args));
+		return new MethodCall(attach(connection,target), method, types, attach(connection,args));
 	}
 
 	Object attach(ConnectionImpl connection, Object obj) {

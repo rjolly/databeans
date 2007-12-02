@@ -7,8 +7,10 @@
 package persistence.util;
 
 import java.rmi.RemoteException;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import persistence.Accessor;
 import persistence.Connection;
 import persistence.PersistentObject;
@@ -23,7 +25,7 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 
 	public int size() {
 	synchronized(mutex()) {
-		return PersistentCollections.localMap(this).entrySet().size();
+		return ((Map)local()).entrySet().size();
 	}
 	}
 
@@ -44,16 +46,16 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 
 	boolean containsValue0(Object value) {
 	synchronized(mutex()) {
-		Iterator i = PersistentCollections.localMap(this).entrySet().iterator();
+		Iterator i = ((Map)local()).entrySet().iterator();
 		if (value==null) {
 			while (i.hasNext()) {
-				Map.Entry e = PersistentCollections.localEntry((RemoteMap.Entry) i.next());
+				Map.Entry e = (Map.Entry) i.next();
 				if (e.getValue()==null)
 					return true;
 			}
 		} else {
 			while (i.hasNext()) {
-				Map.Entry e = PersistentCollections.localEntry((RemoteMap.Entry) i.next());
+				Map.Entry e = (Map.Entry) i.next();
 				if (value.equals(e.getValue()))
 					return true;
 			}
@@ -73,16 +75,16 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 
 	boolean containsKey0(Object key) {
 	synchronized(mutex()) {
-		Iterator i = PersistentCollections.localMap(this).entrySet().iterator();
+		Iterator i = ((Map)local()).entrySet().iterator();
 		if (key==null) {
 			while (i.hasNext()) {
-				Map.Entry e = PersistentCollections.localEntry((RemoteMap.Entry) i.next());
+				Map.Entry e = (Map.Entry) i.next();
 				if (e.getKey()==null)
 					return true;
 			}
 		} else {
 			while (i.hasNext()) {
-				Map.Entry e = PersistentCollections.localEntry((RemoteMap.Entry) i.next());
+				Map.Entry e = (Map.Entry) i.next();
 				if (key.equals(e.getKey()))
 					return true;
 			}
@@ -98,16 +100,16 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 
 	public Object getImpl(Object key) {
 	synchronized(mutex()) {
-		Iterator i = PersistentCollections.localMap(this).entrySet().iterator();
+		Iterator i = ((Map)local()).entrySet().iterator();
 		if (key==null) {
 			while (i.hasNext()) {
-				Map.Entry e = PersistentCollections.localEntry((RemoteMap.Entry) i.next());
+				Map.Entry e = (Map.Entry) i.next();
 				if (e.getKey()==null)
 					return e.getValue();
 			}
 		} else {
 			while (i.hasNext()) {
-				Map.Entry e = PersistentCollections.localEntry((RemoteMap.Entry) i.next());
+				Map.Entry e = (Map.Entry) i.next();
 				if (key.equals(e.getKey()))
 					return e.getValue();
 			}
@@ -142,17 +144,17 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 
 	Object remove0(Object key) {
 	synchronized(mutex()) {
-		Iterator i = PersistentCollections.localMap(this).entrySet().iterator();
+		Iterator i = ((Map)local()).entrySet().iterator();
 		Map.Entry correctEntry = null;
 		if (key==null) {
 			while (correctEntry==null && i.hasNext()) {
-				Map.Entry e = PersistentCollections.localEntry((RemoteMap.Entry) i.next());
+				Map.Entry e = (Map.Entry) i.next();
 				if (e.getKey()==null)
 					correctEntry = e;
 			}
 		} else {
 			while (correctEntry==null && i.hasNext()) {
-				Map.Entry e = PersistentCollections.localEntry((RemoteMap.Entry) i.next());
+				Map.Entry e = (Map.Entry) i.next();
 				if (key.equals(e.getKey()))
 					correctEntry = e;
 			}
@@ -167,11 +169,11 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 	}
 	}
 
-	public void putAll(RemoteMap t) {
+	public void putAll(Map t) {
 	synchronized(mutex()) {
-		Iterator i = PersistentCollections.localMap(t).entrySet().iterator();
+		Iterator i = t.entrySet().iterator();
 		while (i.hasNext()) {
-			Map.Entry e = PersistentCollections.localEntry((RemoteMap.Entry) i.next());
+			Map.Entry e = (Map.Entry) i.next();
 			put(e.getKey(), e.getValue());
 		}
 	}
@@ -179,13 +181,13 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 
 	public void clear() {
 	synchronized(mutex()) {
-		PersistentCollections.localMap(this).entrySet().clear();
+		((Map)local()).entrySet().clear();
 	}
 	}
 
-	public RemoteSet keySet() throws RemoteException {
+	public Set keySet() throws RemoteException {
 	synchronized(mutex()) {
-		return new KeySet(mutex());
+		return (Set)new KeySet(mutex()).local();
 	}
 	}
 
@@ -206,16 +208,20 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 			}
 
 			public Object next() {
-				return PersistentCollections.localEntry((RemoteMap.Entry)i.next()).getKey();
+				return ((Map.Entry)i.next()).getKey();
 			}
 
 			public void remove() {
 				i.remove();
 			}
+
+			public Object local() {
+				return new LocalIterator(this);
+			}
 		}
 
-		public RemoteIterator iterator() throws RemoteException {
-			return new Itr(PersistentCollections.localMap(PersistentAbstractMap.this).entrySet().iterator());
+		public Iterator iterator() throws RemoteException {
+			return (Iterator)new Itr(((Map)PersistentAbstractMap.this.local()).entrySet().iterator()).local();
 		}
 
 		public int size() {
@@ -231,9 +237,9 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 		}
 	}
 
-	public RemoteCollection values() throws RemoteException {
+	public Collection values() throws RemoteException {
 	synchronized(mutex()) {
-		return new Values(mutex());
+		return (Collection)new Values(mutex()).local();
 	}
 	}
 
@@ -254,16 +260,20 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 			}
 
 			public Object next() {
-				return PersistentCollections.localEntry((RemoteMap.Entry)i.next()).getKey();
+				return ((Map.Entry)i.next()).getKey();
 			}
 
 			public void remove() {
 				i.remove();
 			}
+
+			public Object local() {
+				return new LocalIterator(this);
+			}
 		}
 
-		public RemoteIterator iterator() throws RemoteException {
-			return new Itr(PersistentCollections.localMap(PersistentAbstractMap.this).entrySet().iterator());
+		public Iterator iterator() throws RemoteException {
+			return (Iterator)new Itr(((Map)PersistentAbstractMap.this.local()).entrySet().iterator()).local();
 		}
 
 		public int size() {
@@ -279,21 +289,21 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 		}
 	}
 
-	public abstract RemoteSet entrySet() throws RemoteException;
+	public abstract Set entrySet() throws RemoteException;
 
 	public boolean equals(Object o) {
 		if (o == this)
 			return true;
 
-		if (!(o instanceof RemoteMap))
+		if (!(o instanceof Map))
 			return false;
-		Map t = PersistentCollections.localMap((RemoteMap) o);
+		Map t = (Map) o;
 		if (t.size() != size())
 			return false;
 
-		Iterator i = PersistentCollections.localMap(this).entrySet().iterator();
+		Iterator i = ((Map)local()).entrySet().iterator();
 		while (i.hasNext()) {
-			Map.Entry e = PersistentCollections.localEntry((RemoteMap.Entry) i.next());
+			Map.Entry e = (Map.Entry) i.next();
 			Object key = e.getKey();
 			Object value = e.getValue();
 			if (value == null) {
@@ -309,7 +319,7 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 
 	public int hashCode() {
 		int h = 0;
-		Iterator i = PersistentCollections.localMap(this).entrySet().iterator();
+		Iterator i = ((Map)local()).entrySet().iterator();
 		while (i.hasNext())
 			h += i.next().hashCode();
 		return h;
@@ -319,11 +329,11 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 	synchronized(mutex()) {
 		int max = size() - 1;
 		StringBuffer buf = new StringBuffer();
-		Iterator i = PersistentCollections.localMap(this).entrySet().iterator();
+		Iterator i = ((Map)local()).entrySet().iterator();
 
 		buf.append("{");
 		for (int j = 0; j <= max; j++) {
-			Map.Entry e = PersistentCollections.localEntry((RemoteMap.Entry) (i.next()));
+			Map.Entry e = (Map.Entry) i.next();
 			buf.append(e.getKey() + "=" + e.getValue());
 			if (j < max)
 				buf.append(", ");
@@ -331,5 +341,9 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 		buf.append("}");
 		return buf.toString();
 	}
+	}
+
+	public Object local() {
+		return new LocalMap(this);
 	}
 }

@@ -20,7 +20,7 @@ public class PersistentMethodCall extends PersistentObject implements RemoteMeth
 		Object args[]=new Object[a.length()];
 		Arrays.copy(t,0,types,0,types.length);
 		Arrays.copy(a,0,args,0,args.length);
-		return new MethodCall((PersistentObject)remote(getTarget()),getMethod(),types,args).execute();
+		return new MethodCall(getTarget(),getMethod(),types,args).execute();
 	}
 
 	public Object getTarget() {

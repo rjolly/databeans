@@ -7,7 +7,9 @@
 package persistence.util;
 
 import java.rmi.RemoteException;
+import java.util.Collection;
 import java.util.Iterator;
+import java.util.Set;
 import persistence.Accessor;
 import persistence.Connection;
 
@@ -22,17 +24,17 @@ public abstract class PersistentAbstractSet extends PersistentAbstractCollection
 		if (o == this)
 			return true;
 
-		if (!(o instanceof RemoteSet))
+		if (!(o instanceof Set))
 			return false;
-		RemoteCollection c = (RemoteCollection) o;
-		if (PersistentCollections.localCollection(c).size() != size())
+		Collection c = (Collection) o;
+		if (c.size() != size())
 			return false;
 		return containsAll(c);
 	}
 
 	public int hashCode() {
 		int h = 0;
-		Iterator i = PersistentCollections.localSet(this).iterator();
+		Iterator i = ((Set)local()).iterator();
 		while (i.hasNext()) {
 			Object obj = i.next();
 			if (obj != null)
@@ -41,16 +43,16 @@ public abstract class PersistentAbstractSet extends PersistentAbstractCollection
 		return h;
 	}
 
-	public boolean removeAll(RemoteCollection c) {
+	public boolean removeAll(Collection c) {
 	synchronized(mutex()) {
 		boolean modified = false;
 
-		if (size() > PersistentCollections.localCollection(c).size()) {
-			for (Iterator i = PersistentCollections.localCollection(c).iterator(); i.hasNext(); )
+		if (size() > c.size()) {
+			for (Iterator i = c.iterator(); i.hasNext(); )
 				modified |= remove(i.next());
 		} else {
-			for (Iterator i = PersistentCollections.localSet(this).iterator(); i.hasNext(); ) {
-				if(PersistentCollections.localCollection(c).contains(i.next())) {
+			for (Iterator i = ((Set)local()).iterator(); i.hasNext(); ) {
+				if(c.contains(i.next())) {
 					i.remove();
 					modified = true;
 				}
@@ -58,5 +60,9 @@ public abstract class PersistentAbstractSet extends PersistentAbstractCollection
 		}
 		return modified;
 	}
+	}
+
+	public Object local() {
+		return new LocalSet(this);
 	}
 }

@@ -1,8 +1,9 @@
 package persistence;
 
+import java.io.Serializable;
 import java.rmi.RemoteException;
 
-public class LocalWrapper {
+public class LocalWrapper implements Serializable {
 	Persistent content;
 
 	public LocalWrapper(Persistent content) {

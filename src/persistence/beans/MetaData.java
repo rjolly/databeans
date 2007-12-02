@@ -14,6 +14,9 @@ import java.util.Vector;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Enumeration;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 import java.beans.BeanInfo;
 import java.beans.PropertyDescriptor;
@@ -21,7 +24,6 @@ import java.beans.EventHandler;
 import java.beans.Introspector;
 
 import persistence.PersistentArray;
-import persistence.util.PersistentCollections;
 import persistence.Connection;
 
 class NullPersistenceDelegate extends PersistenceDelegate {
@@ -296,8 +298,8 @@ class persistence_util_RemoteCollection_PersistenceDelegate extends DefaultPersi
 	}
 
 	protected void initialize(Class type, Object oldInstance, Object newInstance, Encoder out) {
-		java.util.Collection oldO = PersistentCollections.localCollection((persistence.util.RemoteCollection)oldInstance);
-		java.util.Collection newO = PersistentCollections.localCollection((persistence.util.RemoteCollection)newInstance);
+		Collection oldO = (Collection)oldInstance;
+		Collection newO = (Collection)newInstance;
 
 		if (newO.size() != 0) {
 			invokeStatement(oldInstance, "clear", new Object[]{}, out);
@@ -352,8 +354,8 @@ class persistence_util_RemoteList_PersistenceDelegate extends DefaultPersistence
 	}
 
 	protected void initialize(Class type, Object oldInstance, Object newInstance, Encoder out) {
-		java.util.List oldO = PersistentCollections.localList((persistence.util.RemoteList)oldInstance);
-		java.util.List newO = PersistentCollections.localList((persistence.util.RemoteList)newInstance);
+		List oldO = (List)oldInstance;
+		List newO = (List)newInstance;
 		int oldSize = oldO.size();
 		int newSize = (newO == null) ? 0 : newO.size();
 		if (oldSize < newSize) {
@@ -435,8 +437,8 @@ class persistence_util_RemoteMap_PersistenceDelegate extends DefaultPersistenceD
 
 	protected void initialize(Class type, Object oldInstance, Object newInstance, Encoder out) {
 		// System.out.println("Initializing: " + newInstance);
-		java.util.Map oldMap = PersistentCollections.localMap((persistence.util.RemoteMap)oldInstance);
-		java.util.Map newMap = PersistentCollections.localMap((persistence.util.RemoteMap)newInstance);
+		Map oldMap = (Map)oldInstance;
+		Map newMap = (Map)newInstance;
 		// Remove the new elements.
 		// Do this first otherwise we undo the adding work.
 		if (newMap != null) {

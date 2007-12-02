@@ -8,10 +8,12 @@ package persistence.util;
 
 import java.io.Serializable;
 import java.rmi.RemoteException;
+import java.util.Collection;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Set;
 import persistence.Accessor;
 import persistence.Array;
 import persistence.Connection;
@@ -82,7 +84,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements RemoteMa
 		this(accessor,connection,new Integer(11), new Float(0.75f));
 	}
 
-	public PersistentHashMap(Accessor accessor, Connection connection, RemoteMap t) throws RemoteException {
+	public PersistentHashMap(Accessor accessor, Connection connection, Map t) throws RemoteException {
 		this(accessor,connection,new Integer(Math.max(2*t.size(), 11)), new Float(0.75f));
 		putAll(t);
 	}
@@ -105,12 +107,12 @@ public class PersistentHashMap extends PersistentAbstractMap implements RemoteMa
 
 		if (value==null) {
 			for (int i = tab.length() ; i-- > 0 ;)
-				for (Entry e = (Entry)tab.get(i) ; e != null ; e = e.getNext())
+				for (Entry e = (Entry)remote(tab.get(i)) ; e != null ; e = e.getNext())
 					if (e.getValue()==null)
 						return true;
 		} else {
 			for (int i = tab.length() ; i-- > 0 ;)
-				for (Entry e = (Entry)tab.get(i) ; e != null ; e = e.getNext())
+				for (Entry e = (Entry)remote(tab.get(i)) ; e != null ; e = e.getNext())
 					if (value.equals(e.getValue()))
 						return true;
 		}
@@ -125,11 +127,11 @@ public class PersistentHashMap extends PersistentAbstractMap implements RemoteMa
 		if (key != null) {
 			int hash = key.hashCode();
 			int index = (hash & 0x7FFFFFFF) % tab.length();
-			for (Entry e = (Entry)tab.get(index); e != null; e = e.getNext())
+			for (Entry e = (Entry)remote(tab.get(index)); e != null; e = e.getNext())
 				if (e.getHash()==hash && key.equals(e.getKey()))
 					return true;
 		} else {
-			for (Entry e = (Entry)tab.get(0); e != null; e = e.getNext())
+			for (Entry e = (Entry)remote(tab.get(0)); e != null; e = e.getNext())
 				if (e.getKey()==null)
 					return true;
 		}
@@ -145,11 +147,11 @@ public class PersistentHashMap extends PersistentAbstractMap implements RemoteMa
 		if (key != null) {
 			int hash = key.hashCode();
 			int index = (hash & 0x7FFFFFFF) % tab.length();
-			for (Entry e = (Entry)tab.get(index); e != null; e = e.getNext())
+			for (Entry e = (Entry)remote(tab.get(index)); e != null; e = e.getNext())
 				if ((e.getHash() == hash) && key.equals(e.getKey()))
 					return e.getValue();
 		} else {
-			for (Entry e = (Entry)tab.get(0); e != null; e = e.getNext())
+			for (Entry e = (Entry)remote(tab.get(0)); e != null; e = e.getNext())
 				if (e.getKey()==null)
 					return e.getValue();
 		}
@@ -170,12 +172,12 @@ public class PersistentHashMap extends PersistentAbstractMap implements RemoteMa
 		setTable(newMap);
 
 		for (int i = oldCapacity ; i-- > 0 ;) {
-			for (Entry old = (Entry)oldMap.get(i) ; old != null ; ) {
+			for (Entry old = (Entry)remote(oldMap.get(i)) ; old != null ; ) {
 				Entry e = old;
 				old = old.getNext();
 
 				int index = (e.getHash() & 0x7FFFFFFF) % newCapacity;
-				e.setNext((Entry)newMap.get(index));
+				e.setNext((Entry)remote(newMap.get(index)));
 				newMap.set(index,e);
 			}
 		}
@@ -190,7 +192,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements RemoteMa
 		if (key != null) {
 			hash = key.hashCode();
 			index = (hash & 0x7FFFFFFF) % tab.length();
-			for (Entry e = (Entry)tab.get(index) ; e != null ; e = e.getNext()) {
+			for (Entry e = (Entry)remote(tab.get(index)) ; e != null ; e = e.getNext()) {
 				if ((e.getHash() == hash) && key.equals(e.getKey())) {
 					Object old = e.getValue();
 					e.setValue(value);
@@ -198,7 +200,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements RemoteMa
 				}
 			}
 		} else {
-			for (Entry e = (Entry)tab.get(0); e != null ; e = e.getNext()) {
+			for (Entry e = (Entry)remote(tab.get(0)); e != null ; e = e.getNext()) {
 				if (e.getKey() == null) {
 					Object old = e.getValue();
 					e.setValue(value);
@@ -215,7 +217,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements RemoteMa
 			index = (hash & 0x7FFFFFFF) % tab.length();
 		}
 
-		Entry e = (Entry)create(Entry.class, new Class[] {Integer.class, Object.class, Object.class, Entry.class}, new Object[] {new Integer(hash), key, value, tab.get(index)});
+		Map.Entry e = (Map.Entry)create(Entry.class, new Class[] {Integer.class, Object.class, Object.class, Map.Entry.class}, new Object[] {new Integer(hash), key, value, tab.get(index)});
 		tab.set(index,e);
 		setCount(getCount()+1);
 		return NULL;
@@ -230,7 +232,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements RemoteMa
 			int hash = key.hashCode();
 			int index = (hash & 0x7FFFFFFF) % tab.length();
 
-			for (Entry e = (Entry)tab.get(index), prev = null; e != null;
+			for (Entry e = (Entry)remote(tab.get(index)), prev = null; e != null;
 				 prev = e, e = e.getNext()) {
 				if ((e.getHash() == hash) && key.equals(e.getKey())) {
 					setModCount(getModCount()+1);
@@ -246,14 +248,14 @@ public class PersistentHashMap extends PersistentAbstractMap implements RemoteMa
 				}
 			}
 		} else {
-			for (Entry e = (Entry)tab.get(0), prev = null; e != null;
+			for (Entry e = (Entry)remote(tab.get(0)), prev = null; e != null;
 				 prev = e, e = e.getNext()) {
 				if (e.getKey() == null) {
 					setModCount(getModCount()+1);
 					if (prev != null)
 						prev.setNext(e.getNext());
 					else
-						((Entry)tab.get(0)).setNext(e.getNext());
+						((Entry)remote(tab.get(0))).setNext(e.getNext());
 
 					setCount(getCount()-1);
 					Object oldValue = e.getValue();
@@ -269,13 +271,13 @@ public class PersistentHashMap extends PersistentAbstractMap implements RemoteMa
 
 	public void clear() {
 	synchronized(mutex()) {
-		for(Iterator i = PersistentCollections.localMap(this).entrySet().iterator();i.hasNext();i.remove()) i.next();
+		for(Iterator i = ((Map)local()).entrySet().iterator();i.hasNext();i.remove()) i.next();
 	}
 	}
 
-	public RemoteSet keySet() throws RemoteException {
+	public Set keySet() throws RemoteException {
 	synchronized(mutex()) {
-		return new KeySet(mutex());
+		return (Set)new KeySet(mutex()).local();
 	}
 	}
 
@@ -283,7 +285,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements RemoteMa
 		KeySet(Object mutex) throws RemoteException {
 			super(mutex);
 		}
-		public RemoteIterator iterator() throws RemoteException {
+		public Iterator iterator() throws RemoteException {
 			return getHashIterator(KEYS);
 		}
 		public int size() {
@@ -310,9 +312,9 @@ public class PersistentHashMap extends PersistentAbstractMap implements RemoteMa
 		}
 	}
 
-	public RemoteCollection values() throws RemoteException {
+	public Collection values() throws RemoteException {
 	synchronized(mutex()) {
-		return new Values(mutex());
+		return (Collection)new Values(mutex()).local();
 	}
 	}
 
@@ -320,7 +322,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements RemoteMa
 		Values(Object mutex) throws RemoteException {
 			super(mutex);
 		}
-		public RemoteIterator iterator() throws RemoteException {
+		public Iterator iterator() throws RemoteException {
 			return getHashIterator(VALUES);
 		}
 		public int size() {
@@ -340,9 +342,9 @@ public class PersistentHashMap extends PersistentAbstractMap implements RemoteMa
 		}
 	}
 
-	public RemoteSet entrySet() throws RemoteException {
+	public Set entrySet() throws RemoteException {
 	synchronized(mutex()) {
-		return new EntrySet(mutex());
+		return (Set)new EntrySet(mutex()).local();
 	}
 	}
 
@@ -350,7 +352,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements RemoteMa
 		EntrySet(Object mutex) throws RemoteException {
 			super(mutex);
 		}
-		public RemoteIterator iterator() throws RemoteException {
+		public Iterator iterator() throws RemoteException {
 			return getHashIterator(ENTRIES);
 		}
 
@@ -386,14 +388,14 @@ public class PersistentHashMap extends PersistentAbstractMap implements RemoteMa
 
 	boolean containsEntry0(Object o) {
 	synchronized(mutex()) {
-		if (!(o instanceof RemoteMap.Entry))
+		if (!(o instanceof Map.Entry))
 			return false;
-		Map.Entry entry = PersistentCollections.localEntry((RemoteMap.Entry)o);
+		Map.Entry entry = (Map.Entry)o;
 		Object key = entry.getKey();
 		Array tab = getTable();
 		int hash = (key==null ? 0 : key.hashCode());
 		int index = (hash & 0x7FFFFFFF) % tab.length();
-		for (Entry e = (Entry)tab.get(index); e != null; e = e.getNext())
+		for (Entry e = (Entry)remote(tab.get(index)); e != null; e = e.getNext())
 			if (e.getHash()==hash && e.equals(o))
 				return true;
 		return false;
@@ -409,9 +411,9 @@ public class PersistentHashMap extends PersistentAbstractMap implements RemoteMa
 
 	public Object removeEntryImpl(Object o) {
 	synchronized(mutex()) {
-		if (!(o instanceof RemoteMap.Entry))
+		if (!(o instanceof Map.Entry))
 			return NULL;
-		Map.Entry entry = PersistentCollections.localEntry((RemoteMap.Entry)o);
+		Map.Entry entry = (Map.Entry)o;
 		Object key = entry.getKey();
 		Object value = entry.getValue();
 		Object oldValue = getImpl(key);
@@ -420,20 +422,19 @@ public class PersistentHashMap extends PersistentAbstractMap implements RemoteMa
 	}
 
 	public Object addEntryImpl(Object o) {
-		if (!(o instanceof RemoteMap.Entry))
+		if (!(o instanceof Map.Entry))
 			return NULL;
-		Map.Entry entry = PersistentCollections.localEntry((RemoteMap.Entry)o);
+		Map.Entry entry = (Map.Entry)o;
 		Object key = entry.getKey();
 		Object value = entry.getValue();
 		return put0(key,value);
 	}
 
-	private RemoteIterator getHashIterator(int type) throws RemoteException {
+	private Iterator getHashIterator(int type) throws RemoteException {
 		if (getCount() == 0) {
-//			return emptyHashIterator;
-			return new EmptyHashIterator();
+			return emptyHashIterator;
 		} else {
-			return new HashIterator(type);
+			return (Iterator)new HashIterator(type).local();
 		}
 	}
 
@@ -465,7 +466,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements RemoteMa
 		}
 
 		public Entry getNext() {
-			return (Entry)get("next");
+			return (Entry)remote(get("next"));
 		}
 
 		public void setNext(Entry entry) {
@@ -474,16 +475,16 @@ public class PersistentHashMap extends PersistentAbstractMap implements RemoteMa
 
 		public Entry() throws RemoteException {}
 
-		public Entry(Accessor accessor, Connection connection, Integer hash, Object key, Object value, Entry next) throws RemoteException {
+		public Entry(Accessor accessor, Connection connection, Integer hash, Object key, Object value, Map.Entry next) throws RemoteException {
 			super(accessor,connection);
 			setHash(hash.intValue());
 			setKey(key);
 			setValue(value);
-			setNext(next);
+			setNext((Entry)remote(next));
 		}
 
 		public Object clone() {
-			return create(Entry.class, new Class[] {Integer.class, Object.class, Object.class, Entry.class}, new Object[] {new Integer(getHash()), getKey(), getValue(), (getNext()==null ? null : (Entry)getNext().clone())});
+			return (Map.Entry)create(Entry.class, new Class[] {Integer.class, Object.class, Object.class, Map.Entry.class}, new Object[] {new Integer(getHash()), getKey(), getValue(), (getNext()==null ? null : getNext().clone())});
 		}
 
 //		public Object getKey() {
@@ -501,8 +502,8 @@ public class PersistentHashMap extends PersistentAbstractMap implements RemoteMa
 //		}
 
 		public boolean equals(Object o) {
-			if (!(o instanceof RemoteMap.Entry)) return false;
-			Map.Entry e = PersistentCollections.localEntry((RemoteMap.Entry)o);
+			if (!(o instanceof Map.Entry)) return false;
+			Map.Entry e = (Map.Entry)o;
 
 			return (getKey()==null ? e.getKey()==null : getKey().equals(e.getKey())) && (getValue()==null ? e.getValue()==null : getValue().equals(e.getValue()));
 		}
@@ -514,17 +515,21 @@ public class PersistentHashMap extends PersistentAbstractMap implements RemoteMa
 		public String remoteToString() {
 			return getKey()+"="+getValue();
 		}
+
+		public Object local() {
+			return new LocalEntry(this);
+		}
 	}
 
 	private static final int KEYS = 0;
 	private static final int VALUES = 1;
 	private static final int ENTRIES = 2;
 
-//	private static EmptyHashIterator emptyHashIterator = new EmptyHashIterator();
+	private static EmptyHashIterator emptyHashIterator = new EmptyHashIterator();
 											 
-	private static class EmptyHashIterator extends TransientObject implements RemoteIterator, Serializable {
+	private static class EmptyHashIterator implements Iterator, Serializable {
 		
-		EmptyHashIterator() throws RemoteException {}
+		EmptyHashIterator() {}
 
 		public boolean hasNext() {
 			return false;
@@ -562,7 +567,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements RemoteMa
 			if (getModCount() != expectedModCount)
 				throw new ConcurrentModificationException();
 
-			Entry e = lastReturned = (Entry)nextEntry(lastReturned);
+			Entry e = lastReturned = nextEntry(lastReturned);
 			if(e == null) throw new NoSuchElementException();
 			return type == KEYS ? e.getKey() : (type == VALUES ? e.getValue() : e);
 		}
@@ -577,27 +582,30 @@ public class PersistentHashMap extends PersistentAbstractMap implements RemoteMa
 			expectedModCount++;
 			lastReturned = null;
 		}
+
+		public Object local() {
+			return new LocalIterator(this);
+		}
 	}
 
-	Object nextEntry(Object o) {
-		return execute(
-			methodCall("nextEntry",new Class[] {Object.class},new Object[] {o}));
+	Entry nextEntry(Entry entry) {
+		return (Entry)execute(
+			methodCall("nextEntry",new Class[] {Entry.class},new Object[] {entry}));
 	}
 
-	Object nextEntryImpl(Object o) {
+	Entry nextEntryImpl(Entry entry) {
 	synchronized(mutex()) {
-		Map.Entry entry = PersistentCollections.localEntry((RemoteMap.Entry)o);
 		Object key = entry.getKey();
 		Array tab = getTable();
 		int hash = (key==null ? 0 : key.hashCode());
 		int index = (hash & 0x7FFFFFFF) % tab.length();
 		Entry e;
-		for (e = (Entry)tab.get(index); e != null; e = e.getNext())
-			if (e.getHash()==hash && e.equals(o))
+		for (e = (Entry)remote(tab.get(index)); e != null; e = e.getNext())
+			if (e.getHash()==hash && e.equals(entry))
 				e = e.getNext();
 
 		while (e == null && index > 0)
-			e = (Entry)tab.get(--index);
+			e = (Entry)remote(tab.get(--index));
 
 		return e;
 	}
