@@ -1,13 +1,11 @@
 package persistence.server;
 
 import java.rmi.Naming;
-import java.rmi.RMISecurityManager;
 import persistence.AdminImpl;
 import persistence.StoreImpl;
 
 public class Server {
 	public static void main(String args[]) throws Exception {
-		if (System.getSecurityManager() == null) System.setSecurityManager(new RMISecurityManager());
 		ClassServer cs=new ClassFileServer(2001, "classes");
 		try {
 			final StoreImpl store=new StoreImpl("heapspace");

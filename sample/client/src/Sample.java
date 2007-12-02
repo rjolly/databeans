@@ -4,7 +4,6 @@ import persistence.Connections;
 
 public class Sample {
 	public static void main(String args[]) throws Exception {
-		if (System.getSecurityManager() == null) System.setSecurityManager(new SecurityManager());
 		Connection conn=Connections.getConnection("//localhost/store");
 		Department d=(Department)conn.create("DepartmentImpl");
 		d.setName("Research");

@@ -129,7 +129,7 @@ public abstract class PersistentObject extends UnicastRemoteObject implements Pe
 		return accessor.clazz.toString();
 	}
 
-	public Object local() {
+	protected Object local() {
 		return this;
 	}
 

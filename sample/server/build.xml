@@ -31,6 +31,7 @@
   <target name="run" depends="compile">
     <java fork="true" classpath="classes" classname="persistence.server.Server">
       <sysproperty key="java.rmi.server.codebase" value="http://localhost:2001/"/>
+      <sysproperty key="java.security.manager" value=""/>
       <sysproperty key="java.security.policy" value="policy"/>
     </java>
   </target>
@@ -41,6 +42,7 @@
     </nbjpdastart>
     <java fork="true" classpath="classes" classname="persistence.server.Server">
       <sysproperty key="java.rmi.server.codebase" value="http://localhost:2001/"/>
+      <sysproperty key="java.security.manager" value=""/>
       <sysproperty key="java.security.policy" value="policy"/>
       <jvmarg value="-Xdebug"/>
       <jvmarg value="-Xnoagent"/>
