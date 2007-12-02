@@ -14,7 +14,6 @@ import java.util.Vector;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Enumeration;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -25,6 +24,8 @@ import java.beans.Introspector;
 
 import persistence.PersistentArray;
 import persistence.Connection;
+import persistence.util.PersistentArrayList;
+import persistence.util.PersistentHashMap;
 
 class NullPersistenceDelegate extends PersistenceDelegate {
 	public NullPersistenceDelegate(Connection connection) {
@@ -105,8 +106,8 @@ class ArrayPersistenceDelegate extends PersistenceDelegate {
 	}
 }
 
-class persistence_PersistentArray_PersistenceDelegate extends DefaultPersistenceDelegate {
-	public persistence_PersistentArray_PersistenceDelegate(Connection connection) {
+class persistence_LocalArray_PersistenceDelegate extends DefaultPersistenceDelegate {
+	public persistence_LocalArray_PersistenceDelegate(Connection connection) {
 		super(connection);
 	}
 
@@ -292,24 +293,6 @@ class java_util_Collection_PersistenceDelegate extends DefaultPersistenceDelegat
 	}
 }
 
-class persistence_util_RemoteCollection_PersistenceDelegate extends DefaultPersistenceDelegate {
-	public persistence_util_RemoteCollection_PersistenceDelegate(Connection connection) {
-		super(connection);
-	}
-
-	protected void initialize(Class type, Object oldInstance, Object newInstance, Encoder out) {
-		Collection oldO = (Collection)oldInstance;
-		Collection newO = (Collection)newInstance;
-
-		if (newO.size() != 0) {
-			invokeStatement(oldInstance, "clear", new Object[]{}, out);
-		}
-		for (Iterator i = oldO.iterator();i.hasNext();) {
-			invokeStatement(oldInstance, "add", new Object[]{i.next()}, out);
-		}
-	}
-}
-
 // List
 class java_util_List_PersistenceDelegate extends DefaultPersistenceDelegate {
 	public java_util_List_PersistenceDelegate(Connection connection) {
@@ -348,9 +331,14 @@ class java_util_List_PersistenceDelegate extends DefaultPersistenceDelegate {
 	}
 }
 
-class persistence_util_RemoteList_PersistenceDelegate extends DefaultPersistenceDelegate {
-	public persistence_util_RemoteList_PersistenceDelegate(Connection connection) {
+class persistence_util_LocalList_PersistenceDelegate extends DefaultPersistenceDelegate {
+	public persistence_util_LocalList_PersistenceDelegate(Connection connection) {
 		super(connection);
+	}
+
+	protected Expression instantiate(Object oldInstance, Encoder out) {
+		List oldO = (List)oldInstance;
+		return new Expression(connection, oldInstance, PersistentArrayList.class, "newInstance", new Object[]{});
 	}
 
 	protected void initialize(Class type, Object oldInstance, Object newInstance, Encoder out) {
@@ -430,9 +418,14 @@ class java_util_Map_PersistenceDelegate extends DefaultPersistenceDelegate {
 	}
 }
 
-class persistence_util_RemoteMap_PersistenceDelegate extends DefaultPersistenceDelegate {
-	public persistence_util_RemoteMap_PersistenceDelegate(Connection connection) {
+class persistence_util_LocalMap_PersistenceDelegate extends DefaultPersistenceDelegate {
+	public persistence_util_LocalMap_PersistenceDelegate(Connection connection) {
 		super(connection);
+	}
+
+	protected Expression instantiate(Object oldInstance, Encoder out) {
+		Map oldO = (Map)oldInstance;
+		return new Expression(connection, oldInstance, PersistentHashMap.class, "newInstance", new Object[]{});
 	}
 
 	protected void initialize(Class type, Object oldInstance, Object newInstance, Encoder out) {
@@ -494,18 +487,6 @@ class java_util_AbstractMap_PersistenceDelegate extends java_util_Map_Persistenc
 
 class java_util_Hashtable_PersistenceDelegate extends java_util_Map_PersistenceDelegate {
 	public java_util_Hashtable_PersistenceDelegate(Connection connection) {
-		super(connection);
-	}
-}
-
-class persistence_util_PersistentArrayList_PersistenceDelegate extends persistence_util_RemoteList_PersistenceDelegate {
-	public persistence_util_PersistentArrayList_PersistenceDelegate(Connection connection) {
-		super(connection);
-	}
-}
-
-class persistence_util_PersistentHashMap_PersistenceDelegate extends persistence_util_RemoteMap_PersistenceDelegate {
-	public persistence_util_PersistentHashMap_PersistenceDelegate(Connection connection) {
 		super(connection);
 	}
 }
