@@ -593,8 +593,10 @@ public class PersistentHashMap extends PersistentAbstractMap implements RemoteMa
 			methodCall("nextEntry",new Class[] {Entry.class},new Object[] {entry}));
 	}
 
-	Entry nextEntryImpl(Entry entry) {
+	public Entry nextEntryImpl(Entry entry) {
 	synchronized(mutex()) {
+		if (entry == null) return null;
+
 		Object key = entry.getKey();
 		Array tab = getTable();
 		int hash = (key==null ? 0 : key.hashCode());
