@@ -156,7 +156,12 @@
   </target>
 
   <target name="bundle">
-    <zip destfile="../databeans.zip" basedir=".." includes="databeans/**"/>
+    <zip destfile="../databeans.zip"
+         basedir=".."
+         includes="databeans/**"
+         excludes="databeans/nbproject/private/
+	           databeans/sample/client/nbproject/private/
+	           databeans/sample/server/nbproject/private/"/>
   </target>
 
   <target name="admin">

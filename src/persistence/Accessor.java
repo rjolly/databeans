@@ -74,20 +74,6 @@ public class Accessor {
 		return this == obj || (obj instanceof Accessor && base==((Accessor)obj).base);
 	}
 
-	protected Object clone() {
-		Accessor clone=store.create(clazz);
-		copyInto(clone);
-		return clone;
-	}
-
-	void copyInto(Accessor obj) {
-		Iterator t=clazz.fieldIterator();
-		while(t.hasNext()) {
-			Field field=(Field)t.next();
-			store.set(obj.base,field,store.get(base,field));
-		}
-	}
-
 	public String toString() {
 		return Long.toHexString(base);
 	}
