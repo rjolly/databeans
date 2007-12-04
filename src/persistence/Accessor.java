@@ -4,7 +4,7 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Iterator;
 
-public class Accessor extends UnicastRemoteObject {
+public class Accessor extends UnicastRemoteObject implements RemoteAccessor {
 	static final int TIMEOUT=60000;
 	protected final PersistentObject object;
 	PersistentClass clazz;
@@ -113,8 +113,12 @@ public class Accessor extends UnicastRemoteObject {
 		store.setLock(base.longValue(),accessor);
 	}
 
-	public String toString() {
-		return Long.toHexString(base.longValue());
+	public long base() {
+		return base.longValue();
+	}
+
+	public PersistentClass persistentClass() {
+		return clazz;
 	}
 
 	public Object clone() {

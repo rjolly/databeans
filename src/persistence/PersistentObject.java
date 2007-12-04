@@ -1,15 +1,14 @@
 package persistence;
 
 import java.io.Serializable;
-import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.Iterator;
 
 public class PersistentObject implements Cloneable, Serializable {
-	Remote accessor;
+	RemoteAccessor accessor;
 	Connection connection;
-	PersistentClass clazz;
-	long base;
+	transient PersistentClass clazz;
+	transient long base;
 
 	protected void init() {}
 
@@ -22,8 +21,6 @@ public class PersistentObject implements Cloneable, Serializable {
 	void init(Accessor accessor, Connection connection) {
 		this.accessor=accessor;
 		this.connection=connection;
-		clazz=accessor.clazz;
-		base=accessor.base.longValue();
 	}
 
 	public final PersistentObject create(String name) {
@@ -78,11 +75,11 @@ public class PersistentObject implements Cloneable, Serializable {
 	}
 
 	public int hashCode() {
-		return new Long(base).hashCode();
+		return new Long(base()).hashCode();
 	}
 
 	public boolean equals(Object obj) {
-		return this == obj || (obj instanceof PersistentObject && base==((PersistentObject)obj).base);
+		return this == obj || (obj instanceof PersistentObject && base()==((PersistentObject)obj).base());
 	}
 
 	public String toString() {
@@ -96,10 +93,15 @@ public class PersistentObject implements Cloneable, Serializable {
 		}
 		s.append("]");
 		return s.toString();
+//		return Long.toHexString(base());
+	}
+
+	public final long base() {
+		return base==0?base=accessor.base():base;
 	}
 
 	public final PersistentClass persistentClass() {
-		return clazz;
+		return clazz==null?clazz=accessor.persistentClass():clazz;
 	}
 
 	public Object clone() {
