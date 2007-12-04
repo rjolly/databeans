@@ -14,8 +14,6 @@ import java.util.Vector;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Enumeration;
-import java.util.List;
-import java.util.Map;
 
 import java.beans.BeanInfo;
 import java.beans.PropertyDescriptor;
@@ -24,8 +22,6 @@ import java.beans.Introspector;
 
 import persistence.PersistentArray;
 import persistence.Connection;
-import persistence.util.PersistentArrayList;
-import persistence.util.PersistentHashMap;
 
 class NullPersistenceDelegate extends PersistenceDelegate {
 	public NullPersistenceDelegate(Connection connection) {
@@ -106,8 +102,8 @@ class ArrayPersistenceDelegate extends PersistenceDelegate {
 	}
 }
 
-class persistence_LocalArray_PersistenceDelegate extends DefaultPersistenceDelegate {
-	public persistence_LocalArray_PersistenceDelegate(Connection connection) {
+class persistence_PersistentArray_PersistenceDelegate extends DefaultPersistenceDelegate {
+	public persistence_PersistentArray_PersistenceDelegate(Connection connection) {
 		super(connection);
 	}
 
@@ -331,48 +327,6 @@ class java_util_List_PersistenceDelegate extends DefaultPersistenceDelegate {
 	}
 }
 
-class persistence_util_LocalList_PersistenceDelegate extends DefaultPersistenceDelegate {
-	public persistence_util_LocalList_PersistenceDelegate(Connection connection) {
-		super(connection);
-	}
-
-	protected Expression instantiate(Object oldInstance, Encoder out) {
-		List oldO = (List)oldInstance;
-		return new Expression(connection, oldInstance, PersistentArrayList.class, "newInstance", new Object[]{});
-	}
-
-	protected void initialize(Class type, Object oldInstance, Object newInstance, Encoder out) {
-		List oldO = (List)oldInstance;
-		List newO = (List)newInstance;
-		int oldSize = oldO.size();
-		int newSize = (newO == null) ? 0 : newO.size();
-		if (oldSize < newSize) {
-			invokeStatement(oldInstance, "clear", new Object[]{}, out);
-			newSize = 0;
-		}
-		for (int i = 0;i < newSize;i++) {
-			Object index = new Integer(i);
-
-			Expression oldGetExp = new Expression(connection, oldInstance, "get", new Object[]{index});
-			Expression newGetExp = new Expression(connection, newInstance, "get", new Object[]{index});
-			try {
-				Object oldValue = oldGetExp.getValue();
-				Object newValue = newGetExp.getValue();
-				out.writeExpression(oldGetExp);
-				if (!MetaData.equals(newValue, out.get(oldValue))) {
-					invokeStatement(oldInstance, "set", new Object[]{index, oldValue}, out);
-				}
-			}
-			catch (Exception e) {
-				out.getExceptionListener().exceptionThrown(e);
-			}
-		}
-		for (int i = newSize;i < oldSize;i++) {
-			invokeStatement(oldInstance, "add", new Object[]{oldO.get(i)}, out);
-		}
-	}
-}
-
 // Map
 class java_util_Map_PersistenceDelegate extends DefaultPersistenceDelegate {
 	public java_util_Map_PersistenceDelegate(Connection connection) {
@@ -383,55 +337,6 @@ class java_util_Map_PersistenceDelegate extends DefaultPersistenceDelegate {
 		// System.out.println("Initializing: " + newInstance);
 		java.util.Map oldMap = (java.util.Map)oldInstance;
 		java.util.Map newMap = (java.util.Map)newInstance;
-		// Remove the new elements.
-		// Do this first otherwise we undo the adding work.
-		if (newMap != null) {
-			java.util.Iterator newKeys = newMap.keySet().iterator();
-			while(newKeys.hasNext()) {
-				Object newKey = newKeys.next();
-			   // PENDING: This "key" is not in the right environment.
-				if (!oldMap.containsKey(newKey)) {
-					invokeStatement(oldInstance, "remove", new Object[]{newKey}, out);
-				}
-			}
-		}
-		// Add the new elements.
-		java.util.Iterator oldKeys = oldMap.keySet().iterator();
-		while(oldKeys.hasNext()) {
-			Object oldKey = oldKeys.next();
-
-			Expression oldGetExp = new Expression(connection, oldInstance, "get", new Object[]{oldKey});
-			// Pending: should use newKey.
-			Expression newGetExp = new Expression(connection, newInstance, "get", new Object[]{oldKey});
-			try {
-				Object oldValue = oldGetExp.getValue();
-				Object newValue = newGetExp.getValue();
-				out.writeExpression(oldGetExp);
-				if (!MetaData.equals(newValue, out.get(oldValue))) {
-					invokeStatement(oldInstance, "put", new Object[]{oldKey, oldValue}, out);
-				}
-			}
-			catch (Exception e) {
-				out.getExceptionListener().exceptionThrown(e);
-			}
-		}
-	}
-}
-
-class persistence_util_LocalMap_PersistenceDelegate extends DefaultPersistenceDelegate {
-	public persistence_util_LocalMap_PersistenceDelegate(Connection connection) {
-		super(connection);
-	}
-
-	protected Expression instantiate(Object oldInstance, Encoder out) {
-		Map oldO = (Map)oldInstance;
-		return new Expression(connection, oldInstance, PersistentHashMap.class, "newInstance", new Object[]{});
-	}
-
-	protected void initialize(Class type, Object oldInstance, Object newInstance, Encoder out) {
-		// System.out.println("Initializing: " + newInstance);
-		Map oldMap = (Map)oldInstance;
-		Map newMap = (Map)newInstance;
 		// Remove the new elements.
 		// Do this first otherwise we undo the adding work.
 		if (newMap != null) {
@@ -479,6 +384,12 @@ class java_util_AbstractList_PersistenceDelegate extends java_util_List_Persiste
 	}
 }
 
+class persistence_util_PersistentArrayList_PersistenceDelegate extends java_util_List_PersistenceDelegate {
+	public persistence_util_PersistentArrayList_PersistenceDelegate(Connection connection) {
+		super(connection);
+	}
+}
+
 class java_util_AbstractMap_PersistenceDelegate extends java_util_Map_PersistenceDelegate {
 	public java_util_AbstractMap_PersistenceDelegate(Connection connection) {
 		super(connection);
@@ -487,6 +398,12 @@ class java_util_AbstractMap_PersistenceDelegate extends java_util_Map_Persistenc
 
 class java_util_Hashtable_PersistenceDelegate extends java_util_Map_PersistenceDelegate {
 	public java_util_Hashtable_PersistenceDelegate(Connection connection) {
+		super(connection);
+	}
+}
+
+class persistence_util_PersistentHashMap_PersistenceDelegate extends java_util_Map_PersistenceDelegate {
+	public persistence_util_PersistentHashMap_PersistenceDelegate(Connection connection) {
 		super(connection);
 	}
 }

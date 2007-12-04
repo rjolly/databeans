@@ -1,12 +1,12 @@
 package persistence;
 
-class MethodCall {
-	Object target;
+public class MethodCall {
+	PersistentObject target;
 	String method;
 	Class types[];
 	Object args[];
 
-	MethodCall(Object target, String method, Class types[], Object args[]) {
+	public MethodCall(PersistentObject target, String method, Class types[], Object args[]) {
 		this.target=target;
 		this.method=method;
 		this.types=types;
@@ -14,6 +14,18 @@ class MethodCall {
 	}
 
 	Object execute() {
-		return ((PersistentObject)PersistentObject.remote(target)).call(method,types,args);
+		return ((Accessor)target.accessor).call(method,types,attach(detach(args)));
+	}
+
+	static Object[] attach(Object obj[]) {
+		Object a[]=new Object[obj.length];
+		for(int i=0;i<obj.length;i++) a[i]=Accessor.attach(obj[i]);
+		return a;
+	}
+
+	static Object[] detach(Object obj[]) {
+		Object a[]=new Object[obj.length];
+		for(int i=0;i<obj.length;i++) a[i]=Accessor.detach(obj[i]);
+		return a;
 	}
 }

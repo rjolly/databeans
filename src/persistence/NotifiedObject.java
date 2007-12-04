@@ -1,13 +1,17 @@
 package persistence;
 
+import java.beans.PropertyChangeListener;
 import java.beans.PropertyVetoException;
+import java.beans.VetoableChangeListener;
 import java.rmi.RemoteException;
 import persistence.beans.PersistentPropertyChangeSupport;
 import persistence.beans.PersistentVetoableChangeSupport;
-import persistence.beans.RemotePropertyChangeListener;
-import persistence.beans.RemoteVetoableChangeListener;
 
 public abstract class NotifiedObject extends PersistentObject {
+	protected Accessor accessor() throws RemoteException {
+		return new NotifiedAccessor(this);
+	}
+
 	public PersistentPropertyChangeSupport getPropertyChangeSupport() {
 		return (PersistentPropertyChangeSupport)get("propertyChangeSupport");
 	}
@@ -24,43 +28,40 @@ public abstract class NotifiedObject extends PersistentObject {
 		set("vetoableChangeSupport",support);
 	}
 
-	public NotifiedObject() throws RemoteException {}
-
-	public NotifiedObject(Accessor accessor, Connection connection) throws RemoteException {
-		super(accessor,connection);
+	protected void init() {
 		setPropertyChangeSupport((PersistentPropertyChangeSupport)create(PersistentPropertyChangeSupport.class, new Class[] {Object.class}, new Object[] {this}));
 		setVetoableChangeSupport((PersistentVetoableChangeSupport)create(PersistentVetoableChangeSupport.class, new Class[] {Object.class}, new Object[] {this}));
 	}
 
-	public final void addPropertyChangeListener(RemotePropertyChangeListener listener) {
+	public final void addPropertyChangeListener(PropertyChangeListener listener) {
 		getPropertyChangeSupport().addPropertyChangeListener(listener);
 	}
 
-	public final void removePropertyChangeListener(RemotePropertyChangeListener listener) {
+	public final void removePropertyChangeListener(PropertyChangeListener listener) {
 		getPropertyChangeSupport().removePropertyChangeListener(listener);
 	}
 
-	public final void addPropertyChangeListener(String propertyName, RemotePropertyChangeListener listener) {
+	public final void addPropertyChangeListener(String propertyName, PropertyChangeListener listener) {
 		getPropertyChangeSupport().addPropertyChangeListener(propertyName, listener);
 	}
 
-	public final void removePropertyChangeListener(String propertyName, RemotePropertyChangeListener listener) {
+	public final void removePropertyChangeListener(String propertyName, PropertyChangeListener listener) {
 		getPropertyChangeSupport().removePropertyChangeListener(propertyName, listener);
 	}
 
-	public final void addVetoableChangeListener(RemoteVetoableChangeListener listener) {
+	public final void addVetoableChangeListener(VetoableChangeListener listener) {
 		getVetoableChangeSupport().addVetoableChangeListener(listener);
 	}
 
-	public final void removeVetoableChangeListener(RemoteVetoableChangeListener listener) {
+	public final void removeVetoableChangeListener(VetoableChangeListener listener) {
 		getVetoableChangeSupport().removeVetoableChangeListener(listener);
 	}
 
-	public final void addVetoableChangeListener(String propertyName, RemoteVetoableChangeListener listener) {
+	public final void addVetoableChangeListener(String propertyName, VetoableChangeListener listener) {
 		getVetoableChangeSupport().addVetoableChangeListener(propertyName, listener);
 	}
 
-	public final void removeVetoableChangeListener(String propertyName, RemoteVetoableChangeListener listener) {
+	public final void removeVetoableChangeListener(String propertyName, VetoableChangeListener listener) {
 		getVetoableChangeSupport().removeVetoableChangeListener(propertyName, listener);
 	}
 
@@ -71,17 +72,23 @@ public abstract class NotifiedObject extends PersistentObject {
 	public final boolean hasVetoableChangeListeners(String propertyName) {
 		return getVetoableChangeSupport().hasListeners(propertyName);
 	}
+}
 
-	Object set(Field field, Object value) {
+class NotifiedAccessor extends Accessor {
+	NotifiedAccessor(PersistentObject object) throws RemoteException {
+		super(object);
+	}
+
+	synchronized Object set(Field field, Object value) {
 		Object oldValue=get(field);
 		try {
-			PersistentVetoableChangeSupport support=getVetoableChangeSupport();
+			PersistentVetoableChangeSupport support=((NotifiedObject)object).getVetoableChangeSupport();
 			if(support!=null) support.fireVetoableChange(field.name,oldValue,value);
 		} catch (PropertyVetoException e) {
 			throw new RuntimeException(e);
 		}
 		{
-			PersistentPropertyChangeSupport support=getPropertyChangeSupport();
+			PersistentPropertyChangeSupport support=((NotifiedObject)object).getPropertyChangeSupport();
 			if(support!=null) support.firePropertyChange(field.name,oldValue,value);
 		}
 		return super.set(field,value);

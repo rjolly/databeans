@@ -8,7 +8,6 @@ import java.beans.PropertyDescriptor;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -64,48 +63,12 @@ class PersistentClass extends UnicastSerializedObject {
 		return map.values().iterator();
 	}
 
-	Class javaClass() {
+	PersistentObject newInstance() {
 		try {
-			return Class.forName(name);
-		} catch (ClassNotFoundException e) {
-			throw new PersistentException("class not found");
-		}
-	}
-
-	PersistentObject newInstance(Accessor accessor, Connection connection, Class types[], Object args[]) {
-		Class clazz=javaClass();
-		try {
-			Class t[]=new Class[2+types.length];
-			Object a[]=new Object[2+args.length];
-			System.arraycopy(new Class[] {Accessor.class, Connection.class},0,t,0,2);
-			System.arraycopy(types,0,t,2,types.length);
-			System.arraycopy(new Object[] {accessor, connection},0,a,0,2);
-			System.arraycopy(args,0,a,2,args.length);
-			return (PersistentObject)clazz.getConstructor(t).newInstance(a);
-		} catch (NoSuchMethodException e) {
-			if(types.length==0 && args.length==0) return newInstance(accessor, connection);
-			else throw new RuntimeException(e);
-		} catch (InstantiationException e) {
-			throw new RuntimeException(e);
-		} catch (IllegalAccessException e) {
-			throw new RuntimeException(e);
-		} catch (InvocationTargetException e) {
+			return (PersistentObject)Class.forName(name).newInstance();
+		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
-	}
-
-	PersistentObject newInstance(Accessor accessor, Connection connection) {
-		PersistentObject obj;
-		Class clazz=javaClass();
-		try {
-			obj=(PersistentObject)clazz.newInstance();
-		} catch (InstantiationException e) {
-			throw new RuntimeException(e);
-		} catch (IllegalAccessException e) {
-			throw new RuntimeException(e);
-		}
-		obj.init(accessor,connection);
-		return obj;
 	}
 
 	public String toString() {

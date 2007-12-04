@@ -56,8 +56,6 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 			heap.mount(true);
 			create();
 			init();
-			users.put(none.getName(),none);
-			users.put(anonymous.getName(),anonymous);
 		} else {
 			if(heap.mounted()) {
 				systemConnection.close();
@@ -87,6 +85,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		classes.clear();
 		putAllClasses(map);
 		putAllClasses(classes);
+		createUsers();
 	}
 
 	void putAllClasses(Map map) {
@@ -97,9 +96,15 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		}
 	}
 
+	void createUsers() {
+		Map users=system.getUsers();
+		users.put(none.getName(),none);
+		users.put(anonymous.getName(),anonymous);
+	}
+
 	void createSystem() {
 		system=(PersistentSystem)systemConnection.create(PersistentSystem.class);
-		incRefCount(boot=system.accessor.base);
+		incRefCount(boot=system.base);
 		heap.setBoot(boot);
 	}
 
@@ -118,25 +123,11 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	}
 
 	PersistentSystem getSystem(ConnectionImpl connection) {
-		return (PersistentSystem)connection.attach(systemConnection,system);
+		return (PersistentSystem)connection.attach(system);
 	}
 
 	Transaction getTransaction(String client) {
 		return (Transaction)systemConnection.create(Transaction.class,new Class[] {String.class},new Object[] {client});
-	}
-
-	MethodCall methodCall(ConnectionImpl connection, PersistentObject target, String method, Class types[], Object args[]) {
-		return new MethodCall(attach(connection,target), method, types, attach(connection,args));
-	}
-
-	Object attach(ConnectionImpl connection, Object obj) {
-		return systemConnection.attach(connection,obj);
-	}
-
-	Object[] attach(ConnectionImpl connection, Object obj[]) {
-		Object a[]=new Object[obj.length];
-		for(int i=0;i<obj.length;i++) a[i]=attach(connection,obj[i]);
-		return a;
 	}
 
 	Accessor create(PersistentClass c) {
@@ -144,7 +135,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		long base=heap.alloc(b.length);
 		heap.writeBytes(base,b);
 		setClass(base,c=cache(c));
-		return cache(new Accessor(base,c,this));
+		return cache(Accessor.create(new Long(base),c,this));
 	}
 
 	PersistentClass cache(PersistentClass c) {
@@ -157,37 +148,40 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		}
 	}
 
-	Accessor cache(Accessor obj) {
+	Accessor cache(Accessor accessor) {
 		synchronized(cache) {
-			hold(obj.base);
-			cache.put(obj,new WeakReference(obj));
-			return obj;
+			Long b=accessor.base;
+			hold(b.longValue());
+			cache.put(b,new WeakReference(accessor));
+			return accessor;
 		}
 	}
 
 	Accessor instantiate(long base) {
 		synchronized(cache) {
-			Accessor b;
-			Accessor obj=new Accessor(base,getClass(base),this);
+			Long b=new Long(base);
+			Accessor obj;
 			Reference w;
-			if((b=(w=(Reference)cache.get(obj))==null?null:(Accessor)w.get())==null) {
-				hold(obj.base);
-				cache.put(obj,new WeakReference(obj));
-			} else obj=b;
+			if((obj=(w=(Reference)cache.get(b))==null?null:(Accessor)w.get())==null) {
+				obj=Accessor.create(b,getClass(base),this);
+				hold(b.longValue());
+				cache.put(b,new WeakReference(obj));
+			};
 			return obj;
 		}
 	}
 
-	void release(Accessor obj) {
+	void release(Accessor accessor) {
 		synchronized(cache) {
-			Accessor b;
+			Long b=accessor.base;
+			Accessor obj;
 			Reference w;
-			if((b=(w=(Reference)cache.get(obj))==null?null:(Accessor)w.get())==null) {
-				release(obj.base);
+			if((obj=(w=(Reference)cache.get(b))==null?null:(Accessor)w.get())==null) {
+				release(b.longValue());
 			} else {
-				if(b==obj) {
-					cache.remove(obj);
-					release(obj.base);
+				if(obj==accessor) {
+					cache.remove(b);
+					release(b.longValue());
 				}
 			}
 		}
@@ -415,7 +409,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	void setReference(long base, Field field, Object value) {
 		synchronized(heap) {
 			long src=((Long)field.get(heap,base)).longValue();
-			long dst=value==null?0:value instanceof Accessor?((Accessor)value).base:writeObject(value);
+			long dst=value==null?0:value instanceof Accessor?((Accessor)value).base.longValue():writeObject(value);
 			if(dst!=0) incRefCount(dst);
 			field.set(heap,base,new Long(dst));
 			if(src!=0) decRefCount(src);
@@ -452,11 +446,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	}
 
 	void setLock(long base, Accessor accessor) {
-		Field.LOCK.set(heap,base,new Long(accessor==null?0:accessor.base));
-	}
-
-	Transaction transaction(Accessor accessor) {
-		return (Transaction)systemConnection.attach(accessor);
+		Field.LOCK.set(heap,base,accessor==null?new Long(0):accessor.base);
 	}
 
 	Object readObject(long base) {

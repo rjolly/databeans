@@ -11,11 +11,12 @@ public interface Connection extends Remote {
 //	static final int TRANSACTION_REPEATABLE_READ = 3;
 	static final int TRANSACTION_SERIALIZABLE = 4;
 
-	Object create(String name) throws RemoteException;
-	Object create(Class clazz) throws RemoteException;
-	Object create(Class clazz, Class types[], Object args[]) throws RemoteException;
-	Array create(Class componentType, int length) throws RemoteException;
-	Array create(Object component[]) throws RemoteException;
+	PersistentObject create(String name) throws RemoteException;
+	PersistentObject create(Class clazz) throws RemoteException;
+	PersistentObject create(Class clazz, Class types[], Object args[]) throws RemoteException;
+	PersistentArray create(Class componentType, int length) throws RemoteException;
+	PersistentArray create(Object component[]) throws RemoteException;
+	PersistentObject create(PersistentObject obj) throws RemoteException;
 
 	Object getRoot() throws RemoteException;
 	void setRoot(Object obj) throws RemoteException;
@@ -26,6 +27,8 @@ public interface Connection extends Remote {
 	void setAutoCommit(boolean autoCommit) throws RemoteException;
 	boolean isReadOnly() throws RemoteException;
 	void setReadOnly(boolean readOnly) throws RemoteException;
+
+	Object execute(MethodCall call, MethodCall undo, int index, boolean read);
 
 	void commit() throws RemoteException;
 	void rollback() throws RemoteException;

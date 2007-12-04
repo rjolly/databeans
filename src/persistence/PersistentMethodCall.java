@@ -1,12 +1,7 @@
 package persistence;
 
-import java.rmi.RemoteException;
-
-public class PersistentMethodCall extends PersistentObject implements RemoteMethodCall {
-	public PersistentMethodCall() throws RemoteException {}
-
-	public PersistentMethodCall(Accessor accessor, Connection connection, MethodCall call) throws RemoteException {
-		super(accessor,connection);
+public class PersistentMethodCall extends PersistentObject {
+	protected void init(MethodCall call) {
 		setTarget(call.target);
 		setMethod(call.method);
 		setTypes(create(call.types));
@@ -23,11 +18,11 @@ public class PersistentMethodCall extends PersistentObject implements RemoteMeth
 		return new MethodCall(getTarget(),getMethod(),types,args).execute();
 	}
 
-	public Object getTarget() {
-		return get("target");
+	public PersistentObject getTarget() {
+		return (PersistentObject)get("target");
 	}
 
-	public void setTarget(Object obj) {
+	public void setTarget(PersistentObject obj) {
 		set("target",obj);
 	}
 
@@ -55,7 +50,7 @@ public class PersistentMethodCall extends PersistentObject implements RemoteMeth
 		set("args",array);
 	}
 
-	public String remoteToString() {
+	public String toString() {
 		return getMethod();
 	}
 }

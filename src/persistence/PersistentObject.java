@@ -1,58 +1,60 @@
 package persistence;
 
+import java.io.Serializable;
+import java.rmi.Remote;
 import java.rmi.RemoteException;
-import java.rmi.server.RemoteObject;
-import java.rmi.server.RemoteRef;
-import java.rmi.server.UnicastRemoteObject;
+import java.util.Iterator;
 
-public abstract class PersistentObject extends UnicastRemoteObject implements Persistent {
-	Accessor accessor;
-	ConnectionImpl connection;
-	Peer peer;
-	Long base;
+public class PersistentObject implements Cloneable, Serializable {
+	Remote accessor;
+	Connection connection;
+	PersistentClass clazz;
+	long base;
 
-	public PersistentObject() throws RemoteException {}
+	protected void init() {}
 
-	public PersistentObject(Accessor accessor, Connection connection) throws RemoteException {
-		init(accessor,connection);
+	protected PersistentObject() {}
+
+	protected Accessor accessor() throws RemoteException {
+		return new Accessor(this);
 	}
 
 	void init(Accessor accessor, Connection connection) {
 		this.accessor=accessor;
-		this.connection=(ConnectionImpl)connection;
-		peer=new Peer(ref);
-		base=new Long(accessor.base);
+		this.connection=connection;
+		clazz=accessor.clazz;
+		base=accessor.base.longValue();
 	}
 
-	protected final Object create(String name) {
+	public final PersistentObject create(String name) {
 		return connection.create(name);
 	}
 
-	protected final Object create(Class clazz) {
+	public final PersistentObject create(Class clazz) {
 		return connection.create(clazz);
 	}
 
-	protected final Object create(Class clazz, Class types[], Object args[]) {
+	public final PersistentObject create(Class clazz, Class types[], Object args[]) {
 		return connection.create(clazz,types,args);
 	}
 
-	protected final Array create(Class componentType, int length) {
+	public final PersistentArray create(Class componentType, int length) {
 		return connection.create(componentType,length);
 	}
 
-	protected final Array create(Object component[]) {
+	public final PersistentArray create(Object component[]) {
 		return connection.create(component);
 	}
 
 	protected final Object get(String name) {
 		return execute(
-			methodCall("get",new Class[] {String.class},new Object[] {name}));
+			new MethodCall(this,"get",new Class[] {String.class},new Object[] {name}));
 	}
 
 	protected final void set(String name, Object value) {
 		execute(
-			methodCall("set",new Class[] {String.class,Object.class},new Object[] {name,value}),
-			methodCall("set",new Class[] {String.class,Object.class},new Object[] {name,null}),1);
+			new MethodCall(this,"set",new Class[] {String.class,Object.class},new Object[] {name,value}),
+			new MethodCall(this,"set",new Class[] {String.class,Object.class},new Object[] {name,null}),1);
 	}
 
 	protected final Object execute(MethodCall call) {
@@ -63,87 +65,44 @@ public abstract class PersistentObject extends UnicastRemoteObject implements Pe
 		return connection.execute(call,undo,index,false);
 	}
 
-	protected final MethodCall methodCall(String method, Class types[], Object args[]) {
-		return connection.methodCall(this,method,types,args);
-	}
-
-	Object call(String method, Class types[], Object args[]) {
-		try {
-			return getClass().getMethod(method+"Impl",types).invoke(this,args);
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
 	void lock(Transaction transaction) {
-		accessor.lock(transaction.accessor);
+		((Accessor)accessor).lock((Accessor)transaction.accessor);
 	}
 
 	void unlock() {
-		accessor.unlock();
+		((Accessor)accessor).unlock();
 	}
 
 	void kick() {
-		accessor.kick();
+		((Accessor)accessor).kick();
 	}
 
-	public Object getImpl(String name) {
-		return get(accessor.clazz.getField(name));
+	public int hashCode() {
+		return new Long(base).hashCode();
 	}
 
-	public Object setImpl(String name, Object value) {
-		return set(accessor.clazz.getField(name),value);
+	public boolean equals(Object obj) {
+		return this == obj || (obj instanceof PersistentObject && base==((PersistentObject)obj).base);
 	}
 
-	Object get(Field field) {
-		return connection.attach(accessor.get(field));
-	}
-
-	Object set(Field field, Object value) {
-		synchronized(mutex()) {
-			Object obj=connection.attach(accessor.get(field));
-			accessor.set(field,connection.detach(value));
-			return obj;
-		}
-	}
-
-	public final String toString() {
-		try {
-			return remoteToString();
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	public String remoteToString() throws RemoteException {
+	public String toString() {
 		StringBuffer s=new StringBuffer();
-		Object obj;
 		s.append("[");
-		Field fields[]=accessor.clazz.fields;
-		for(int i=0;i<fields.length;i++) s.append((i==0?"":", ")+fields[i].name+"="+((obj=get(fields[i]))==this?"this":obj));
+		Iterator t=persistentClass().fieldIterator();
+		while(t.hasNext()) {
+			Field field=(Field)t.next();
+			Object obj=get(field.name);
+			s.append(field.name+"="+(equals(obj)?"this":obj)+(t.hasNext()?", ":""));
+		}
 		s.append("]");
 		return s.toString();
 	}
 
-	public final String persistentClass() {
-		return accessor.clazz.toString();
+	public final PersistentClass persistentClass() {
+		return clazz;
 	}
 
-	protected Object local() {
-		return this;
-	}
-
-	public static Object remote(Object obj) {
-		return obj instanceof LocalWrapper?((LocalWrapper)obj).content():obj;
-	}
-
-	protected final Object mutex() {
-		return accessor;
-	}
-}
-
-class Peer extends RemoteObject {
-	Peer(RemoteRef ref) {
-		super(ref);
+	public Object clone() {
+		return connection.create(this);
 	}
 }

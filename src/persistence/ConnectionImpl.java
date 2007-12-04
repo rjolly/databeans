@@ -1,23 +1,16 @@
 package persistence;
 
 import java.io.Serializable;
-import java.lang.ref.Reference;
-import java.lang.ref.WeakReference;
 import java.rmi.RemoteException;
 import java.rmi.server.RemoteServer;
-import java.rmi.server.RemoteStub;
 import java.rmi.server.ServerNotActiveException;
 import java.rmi.server.UnicastRemoteObject;
 import java.security.Principal;
-import java.util.Map;
-import java.util.WeakHashMap;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 
 public class ConnectionImpl extends UnicastRemoteObject implements Connection {
 	final StoreImpl store;
-	final Map cache=new WeakHashMap();
-	final Map refCache=new WeakHashMap();
 	Transaction transaction;
 	boolean autoCommit;
 	boolean readOnly;
@@ -41,7 +34,7 @@ public class ConnectionImpl extends UnicastRemoteObject implements Connection {
 		store.connections.add(this);
 	}
 
-	public Object create(String name) {
+	public PersistentObject create(String name) {
 		try {
 			return create(Class.forName(name));
 		} catch (ClassNotFoundException e) {
@@ -49,68 +42,38 @@ public class ConnectionImpl extends UnicastRemoteObject implements Connection {
 		}
 	}
 
-	public Object create(Class clazz) {
+	public PersistentObject create(Class clazz) {
 		return create(clazz,new Class[] {},new Object[] {});
 	}
 
-	public Object create(Class clazz, Class types[], Object args[]) {
+	public PersistentObject create(Class clazz, Class types[], Object args[]) {
 		return create(new PersistentClass(clazz),types,args);
 	}
 
-	public Array create(Class componentType, int length) {
-		return (Array)create(new ArrayClass(componentType,length),new Class[] {},new Object[] {});
+	public PersistentArray create(Class componentType, int length) {
+		return (PersistentArray)create(new ArrayClass(componentType,length),new Class[] {},new Object[] {});
 	}
 
-	public Array create(Object component[]) {
+	public PersistentArray create(Object component[]) {
 		Class componentType=component.getClass().getComponentType();
 		int length=component.length;
-		return (Array)create(new ArrayClass(componentType,length),new Class[] {Object[].class},new Object[] {component});
+		return (PersistentArray)create(new ArrayClass(componentType,length),new Class[] {Object[].class},new Object[] {component});
 	}
 
-	synchronized Object create(PersistentClass c, Class types[], Object args[]) {
+	synchronized PersistentObject create(PersistentClass c, Class types[], Object args[]) {
 		if(closed) throw new PersistentException("connection closed");
-		return cache(c.newInstance(store.create(c),this,types,args)).local();
-	}
-
-	PersistentObject cache(PersistentObject obj) {
-		synchronized(cache) {
-			cache.put(obj.base,new WeakReference(obj));
-			refCache.put(obj.peer,new WeakReference(obj));
+		try {
+			PersistentObject obj=store.create(c).object(this);
+			obj.getClass().getMethod("init",types).invoke(obj,args);
 			return obj;
+		} catch (Exception e) {
+			throw new RuntimeException(e);
 		}
 	}
 
-	PersistentObject instantiate(Accessor a) {
-		synchronized(cache) {
-			PersistentObject obj;
-			Reference w;
-			if((obj=(w=(Reference)cache.get(new Long(a.base)))==null?null:(PersistentObject)w.get())==null) {
-				obj=a.clazz.newInstance(a,this);
-				cache.put(obj.base,new WeakReference(obj));
-				refCache.put(obj.peer,new WeakReference(obj));
-			}
-			return obj;
-		}
-	}
-
-	Object attach(Object obj) {
-		return obj instanceof Accessor?instantiate((Accessor)obj).local():obj;
-	}
-
-	Object attach(ConnectionImpl connection, Object obj) {
-		return connection==this?obj:attach(connection.detach(obj));
-	}
-
-	Object detach(Object obj) {
-		obj=PersistentObject.remote(obj);
-		if(obj instanceof PersistentObject) {
-			PersistentObject b;
-			if((b=(PersistentObject)obj).connection==this) return b.accessor;
-			else throw new PersistentException("not the same connection");
-		} else if(obj instanceof RemoteStub) synchronized(cache) {
-			Reference w;
-			return (w=(Reference)refCache.get(obj))==null?obj:((PersistentObject)w.get()).accessor;
-		} else return obj;
+	public synchronized PersistentObject create(PersistentObject obj) {
+		if(closed) throw new PersistentException("connection closed");
+		return ((Accessor)((Accessor)obj.accessor).clone()).object(this);
 	}
 
 	public Object getRoot() {
@@ -145,11 +108,7 @@ public class ConnectionImpl extends UnicastRemoteObject implements Connection {
 		this.readOnly=readOnly;
 	}
 
-	MethodCall methodCall(PersistentObject target, String method, Class types[], Object args[]) {
-		return store.methodCall(this,target,method,types,args);
-	}
-
-	synchronized Object execute(MethodCall call, MethodCall undo, int index, boolean read) {
+	public synchronized Object execute(MethodCall call, MethodCall undo, int index, boolean read) {
 		if(closed) throw new PersistentException("connection closed");
 		if(!read && readOnly) throw new PersistentException("read only");
 		if(transaction!=null && level==TRANSACTION_SERIALIZABLE && !(read && readOnly)) transaction.lock(call.target);
@@ -159,7 +118,11 @@ public class ConnectionImpl extends UnicastRemoteObject implements Connection {
 			transaction.record(undo);
 		}
 		if(autoCommit) commit();
-		return obj;
+		return attach(Accessor.detach(obj));
+	}
+
+	Object attach(Object obj) {
+		return obj instanceof Accessor?((Accessor)obj).object(this):obj;
 	}
 
 	public synchronized void commit() {

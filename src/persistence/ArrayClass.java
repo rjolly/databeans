@@ -1,6 +1,7 @@
 package persistence;
 
-import java.util.*;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 public class ArrayClass extends PersistentClass {
 	transient char typeCode;

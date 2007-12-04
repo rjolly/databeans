@@ -4,7 +4,7 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 public interface Admin extends Remote {
-	RemoteSystem getSystem() throws RemoteException;
+	PersistentSystem getSystem() throws RemoteException;
 	void createUser(String username, String password) throws RemoteException;
 	void inport(String name) throws RemoteException;
 	void export(String name) throws RemoteException;

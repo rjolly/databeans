@@ -1,16 +1,12 @@
 package persistence;
 
-import java.rmi.RemoteException;
 import java.util.Collection;
 import java.util.Map;
 import persistence.util.PersistentArrayList;
 import persistence.util.PersistentHashMap;
 
-public class PersistentSystem extends PersistentObject implements RemoteSystem {
-	public PersistentSystem() throws RemoteException {}
-
-	public PersistentSystem(Accessor accessor, Connection connection) throws RemoteException {
-		super(accessor,connection);
+public class PersistentSystem extends PersistentObject {
+	protected void init() {
 		setUsers((Map)create(PersistentHashMap.class));
 		setClasses((Map)create(PersistentHashMap.class));
 		setTransactions((Collection)create(PersistentArrayList.class));

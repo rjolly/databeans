@@ -1,26 +1,22 @@
 package persistence;
 
-import java.rmi.RemoteException;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import persistence.util.PersistentArrayList;
 
-public class Transaction extends PersistentObject implements RemoteTransaction {
-	public Transaction() throws RemoteException {}
-
-	public Transaction(Accessor accessor, Connection connection, String client) throws RemoteException {
-		super(accessor,connection);
+public class Transaction extends PersistentObject {
+	protected void init(String client) {
 		setClient(client);
 		setMethodCalls((List)create(PersistentArrayList.class));
 		setObjects((Collection)create(PersistentArrayList.class));
 	}
 
-	void lock(Object target) {
+	void lock(PersistentObject target) {
 		Collection o=getObjects();
 		if(!o.contains(target)) {
-			((PersistentObject)remote(target)).lock(this);
+			target.lock(this);
 			o.add(target);
 		}
 	}
@@ -35,18 +31,24 @@ public class Transaction extends PersistentObject implements RemoteTransaction {
 
 	void rollback() {
 		List l=getMethodCalls();
-		for(ListIterator it=l.listIterator(l.size());it.hasPrevious();it.remove()) ((PersistentMethodCall)it.previous()).execute();
+		for(ListIterator it=l.listIterator(l.size());it.hasPrevious();it.remove()) {
+			((PersistentMethodCall)it.previous()).execute();
+		}
 		unlock();
 	}
 
 	void unlock() {
 		Collection o=getObjects();
-		for(Iterator it=o.iterator();it.hasNext();it.remove()) ((PersistentObject)remote(it.next())).unlock();
+		for(Iterator it=o.iterator();it.hasNext();it.remove()) {
+			((PersistentObject)it.next()).unlock();
+		}
 	}
 
 	void kick() {
 		Collection o=getObjects();
-		for(Iterator it=o.iterator();it.hasNext();) ((PersistentObject)remote(it.next())).kick();
+		for(Iterator it=o.iterator();it.hasNext();) {
+			((PersistentObject)it.next()).kick();
+		}
 	}
 
 	public String getClient() {
@@ -73,7 +75,7 @@ public class Transaction extends PersistentObject implements RemoteTransaction {
 		set("objects",collection);
 	}
 
-	public String remoteToString() {
+	public String toString() {
 		return getClient();
 	}
 }

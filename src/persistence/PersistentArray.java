@@ -2,16 +2,13 @@ package persistence;
 
 import java.rmi.RemoteException;
 
-public final class PersistentArray extends PersistentObject implements RemoteArray {
-	public PersistentArray() throws RemoteException {}
-
-	public PersistentArray(Accessor accessor, Connection connection) throws RemoteException {
-		super(accessor,connection);
+public final class PersistentArray extends PersistentObject implements Array {
+	protected Accessor accessor() throws RemoteException {
+		return new ArrayAccessor(this);
 	}
 
-	public PersistentArray(Accessor accessor, Connection connection, Object component[]) throws RemoteException {
-		super(accessor,connection);
-		Arrays.copy(component,0,(Array)local(),0,component.length);
+	protected void init(Object component[]) {
+		Arrays.copy(component,0,this,0,component.length);
 	}
 
 	public int length() {
@@ -96,24 +93,16 @@ public final class PersistentArray extends PersistentObject implements RemoteArr
 
 	public Object get(int index) {
 		return execute(
-			methodCall("get",new Class[] {Integer.class},new Object[] {new Integer(index)}));
+			new MethodCall(this,"get",new Class[] {int.class},new Object[] {new Integer(index)}));
 	}
 
 	public void set(int index, Object value) {
 		execute(
-			methodCall("set",new Class[] {Integer.class,Object.class},new Object[] {new Integer(index),value}),
-			methodCall("set",new Class[] {Integer.class,Object.class},new Object[] {new Integer(index),null}),1);
+			new MethodCall(this,"set",new Class[] {int.class,Object.class},new Object[] {new Integer(index),value}),
+			new MethodCall(this,"set",new Class[] {int.class,Object.class},new Object[] {new Integer(index),null}),1);
 	}
 
-	public Object getImpl(Integer index) {
-		return get(((ArrayClass)accessor.clazz).getField(index.intValue()));
-	}
-
-	public Object setImpl(Integer index, Object value) {
-		return set(((ArrayClass)accessor.clazz).getField(index.intValue()),value);
-	}
-
-	public String remoteToString() throws RemoteException {
+	public String toString() {
 		StringBuffer s=new StringBuffer();
 		s.append("{");
 		int n=length();
@@ -121,8 +110,18 @@ public final class PersistentArray extends PersistentObject implements RemoteArr
 		s.append("}");
 		return s.toString();
 	}
+}
 
-	public Object local() {
-		return new LocalArray(this);
+class ArrayAccessor extends Accessor {
+	ArrayAccessor(PersistentObject object) throws RemoteException {
+		super(object);
+	}
+
+	public Object get(int index) {
+		return get(((ArrayClass)clazz).getField(index));
+	}
+
+	public Object set(int index, Object value) {
+		return set(((ArrayClass)clazz).getField(index),value);
 	}
 }

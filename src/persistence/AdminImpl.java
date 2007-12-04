@@ -10,7 +10,7 @@ public class AdminImpl extends UnicastRemoteObject implements Admin {
 		this.store=store;
 	}
 
-	public RemoteSystem getSystem() {
+	public PersistentSystem getSystem() {
 		return store.getSystem();
 	}
 

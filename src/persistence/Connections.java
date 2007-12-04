@@ -1,9 +1,13 @@
 package persistence;
 
-import java.util.*;
-import java.net.*;
-import java.rmi.*;
-import java.security.*;
+import java.net.MalformedURLException;
+import java.rmi.Naming;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.util.Random;
 
 public class Connections {
 	private Connections() {}

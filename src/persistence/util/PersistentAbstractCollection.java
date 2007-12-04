@@ -10,38 +10,131 @@ import java.rmi.RemoteException;
 import java.util.Collection;
 import java.util.Iterator;
 import persistence.Accessor;
-import persistence.Connection;
+import persistence.MethodCall;
 import persistence.PersistentObject;
 
-public abstract class PersistentAbstractCollection extends PersistentObject implements RemoteCollection {
-	public PersistentAbstractCollection() throws RemoteException {}
-
-	public PersistentAbstractCollection(Accessor accessor, Connection connection) throws RemoteException {
-		super(accessor,connection);
-	}
-
-	public abstract Iterator iterator() throws RemoteException;
+public abstract class PersistentAbstractCollection extends PersistentObject implements Collection {
+	public abstract Iterator iterator();
 
 	public abstract int size();
 
 	public boolean isEmpty() {
-	synchronized(mutex()) {
 		return size() == 0;
-	}
 	}
 
 	public boolean contains(Object o) {
 		return ((Boolean)execute(
-			methodCall("contains",new Class[] {Object.class},new Object[] {o}))).booleanValue();
+			new MethodCall(this,"contains",new Class[] {Object.class},new Object[] {o}))).booleanValue();
 	}
 
-	public Boolean containsImpl(Object key) {
-		return new Boolean(contains0(key));
+	public Object[] toArray() {
+		Object[] result = new Object[size()];
+		Iterator e = iterator();
+		for (int i=0; e.hasNext(); i++)
+			result[i] = e.next();
+		return result;
 	}
 
-	boolean contains0(Object o) {
-	synchronized(mutex()) {
-		Iterator e = ((Collection)local()).iterator();
+	public Object[] toArray(Object a[]) {
+		int size = size();
+		if (a.length < size)
+			a = (Object[])java.lang.reflect.Array.newInstance(a.getClass().getComponentType(), size);
+
+		Iterator it=iterator();
+		for (int i=0; i<size; i++)
+			a[i] = it.next();
+
+		if (a.length > size)
+			a[size] = null;
+
+		return a;
+	}
+
+	public boolean add(Object o) {
+		return ((Boolean)execute(
+			new MethodCall(this,"add",new Class[] {Object.class,boolean.class},new Object[] {o,new Boolean(true)}),
+			new MethodCall(this,"remove",new Class[] {Object.class,boolean.class},new Object[] {o,null}),1)).booleanValue();
+	}
+
+	public boolean remove(Object o) {
+		return ((Boolean)execute(
+			new MethodCall(this,"remove",new Class[] {Object.class,boolean.class},new Object[] {o,new Boolean(true)}),
+			new MethodCall(this,"add",new Class[] {Object.class,boolean.class},new Object[] {o,null}),1)).booleanValue();
+	}
+
+	public boolean containsAll(Collection c) {
+		Iterator e = c.iterator();
+		while (e.hasNext())
+			if(!contains(e.next()))
+				return false;
+
+		return true;
+	}
+
+	public boolean addAll(Collection c) {
+		boolean modified = false;
+		Iterator e = c.iterator();
+		while (e.hasNext()) {
+			if(add(e.next()))
+				modified = true;
+		}
+		return modified;
+	}
+
+	public boolean removeAll(Collection c) {
+		boolean modified = false;
+		Iterator e = iterator();
+		while (e.hasNext()) {
+			if(c.contains(e.next())) {
+				e.remove();
+				modified = true;
+			}
+		}
+		return modified;
+	}
+
+	public boolean retainAll(Collection c) {
+		boolean modified = false;
+		Iterator e = iterator();
+		while (e.hasNext()) {
+			if(!c.contains(e.next())) {
+				e.remove();
+				modified = true;
+			}
+		}
+		return modified;
+	}
+
+	public void clear() {
+		Iterator e = iterator();
+		while (e.hasNext()) {
+			e.next();
+			e.remove();
+		}
+	}
+
+	public String toString() {
+		StringBuffer buf = new StringBuffer();
+		Iterator e = iterator();
+		buf.append("[");
+		int maxIndex = size() - 1;
+		for (int i = 0; i <= maxIndex; i++) {
+			buf.append(String.valueOf(e.next()));
+			if (i < maxIndex)
+				buf.append(", ");
+		}
+		buf.append("]");
+		return buf.toString();
+	}
+}
+
+class AbstractCollectionAccessor extends Accessor {
+	AbstractCollectionAccessor(PersistentObject object) throws RemoteException {
+		super(object);
+	}
+
+	public synchronized boolean contains(Object o) {
+		Iterator e = ((Collection)object).iterator();
 		if (o==null) {
 			while (e.hasNext())
 				if (e.next()==null)
@@ -53,62 +146,21 @@ public abstract class PersistentAbstractCollection extends PersistentObject impl
 		}
 		return false;
 	}
+
+	public boolean add(Object o, boolean b) {
+		return b?add0(o):false;
 	}
 
-	public Object[] toArray() {
-	synchronized(mutex()) {
-		Object[] result = new Object[size()];
-		Iterator e = ((Collection)local()).iterator();
-		for (int i=0; e.hasNext(); i++)
-			result[i] = e.next();
-		return result;
-	}
-	}
-
-	public Object[] toArray(Object a[]) {
-	synchronized(mutex()) {
-		int size = size();
-		if (a.length < size)
-			a = (Object[])java.lang.reflect.Array.newInstance(a.getClass().getComponentType(), size);
-
-		Iterator it=((Collection)local()).iterator();
-		for (int i=0; i<size; i++)
-			a[i] = it.next();
-
-		if (a.length > size)
-			a[size] = null;
-
-		return a;
-	}
-	}
-
-	public boolean add(Object o) {
-		return ((Boolean)execute(
-			methodCall("add",new Class[] {Object.class,Boolean.class},new Object[] {o,new Boolean(true)}),
-			methodCall("remove",new Class[] {Object.class,Boolean.class},new Object[] {o,null}),1)).booleanValue();
-	}
-
-	public Boolean addImpl(Object o, Boolean b) {
-		return new Boolean(b.booleanValue()?add0(o):false);
-	}
-
-	boolean add0(Object o) {
+	synchronized boolean add0(Object o) {
 		throw new UnsupportedOperationException();
 	}
 
-	public boolean remove(Object o) {
-		return ((Boolean)execute(
-			methodCall("remove",new Class[] {Object.class,Boolean.class},new Object[] {o,new Boolean(true)}),
-			methodCall("add",new Class[] {Object.class,Boolean.class},new Object[] {o,null}),1)).booleanValue();
+	public boolean remove(Object o, boolean b) {
+		return b?remove0(o):false;
 	}
 
-	public Boolean removeImpl(Object o, Boolean b) {
-		return new Boolean(b.booleanValue()?remove0(o):false);
-	}
-
-	boolean remove0(Object o) {
-	synchronized(mutex()) {
-		Iterator e = ((Collection)local()).iterator();
+	synchronized boolean remove0(Object o) {
+		Iterator e = ((Collection)object).iterator();
 		if (o==null) {
 			while (e.hasNext()) {
 				if (e.next()==null) {
@@ -125,87 +177,5 @@ public abstract class PersistentAbstractCollection extends PersistentObject impl
 			}
 		}
 		return false;
-	}
-	}
-
-	public boolean containsAll(Collection c) {
-	synchronized(mutex()) {
-		Iterator e = c.iterator();
-		while (e.hasNext())
-			if(!contains(e.next()))
-				return false;
-
-		return true;
-	}
-	}
-
-	public boolean addAll(Collection c) {
-	synchronized(mutex()) {
-		boolean modified = false;
-		Iterator e = c.iterator();
-		while (e.hasNext()) {
-			if(add(e.next()))
-				modified = true;
-		}
-		return modified;
-	}
-	}
-
-	public boolean removeAll(Collection c) {
-	synchronized(mutex()) {
-		boolean modified = false;
-		Iterator e = ((Collection)local()).iterator();
-		while (e.hasNext()) {
-			if(c.contains(e.next())) {
-				e.remove();
-				modified = true;
-			}
-		}
-		return modified;
-	}
-	}
-
-	public boolean retainAll(Collection c) {
-	synchronized(mutex()) {
-		boolean modified = false;
-		Iterator e = ((Collection)local()).iterator();
-		while (e.hasNext()) {
-			if(!c.contains(e.next())) {
-				e.remove();
-				modified = true;
-			}
-		}
-		return modified;
-	}
-	}
-
-	public void clear() {
-	synchronized(mutex()) {
-		Iterator e = ((Collection)local()).iterator();
-		while (e.hasNext()) {
-			e.next();
-			e.remove();
-		}
-	}
-	}
-
-	public String remoteToString() {
-	synchronized(mutex()) {
-		StringBuffer buf = new StringBuffer();
-		Iterator e = ((Collection)local()).iterator();
-		buf.append("[");
-		int maxIndex = size() - 1;
-		for (int i = 0; i <= maxIndex; i++) {
-			buf.append(String.valueOf(e.next()));
-			if (i < maxIndex)
-				buf.append(", ");
-		}
-		buf.append("]");
-		return buf.toString();
-	}
-	}
-
-	public Object local() {
-		return new LocalCollection(this);
 	}
 }
