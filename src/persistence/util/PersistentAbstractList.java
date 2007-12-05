@@ -1,101 +1,70 @@
 /*
- * @(#)AbstractList.java	1.37 03/01/18
+ * @(#)AbstractList.java		1.37 03/01/18
  *
  * Copyright 2003 Sun Microsystems, Inc. All rights reserved.
  * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package persistence.util;
 
-import java.rmi.RemoteException;
 import java.util.Collection;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
-import persistence.Accessor;
-import persistence.Connection;
-import persistence.TransientObject;
+import java.util.RandomAccess;
+import persistence.MethodCall;
+import persistence.PersistentObject;
 
-public abstract class PersistentAbstractList extends PersistentAbstractCollection implements RemoteList {
-	public PersistentAbstractList() throws RemoteException {}
+public abstract class PersistentAbstractList extends PersistentAbstractCollection implements List {
+	protected abstract class Accessor extends PersistentObject.Accessor {
+		abstract public Object get(int index);
 
-	public PersistentAbstractList(Accessor accessor, Connection connection) throws RemoteException {
-		super(accessor,connection);
+		public Object set(int index, Object element) {
+			throw new UnsupportedOperationException();
+		}
+
+		public void add(int index, Object element) {
+			throw new UnsupportedOperationException();
+		}
+
+		public Object remove(int index) {
+			throw new UnsupportedOperationException();
+		}
 	}
 
 	public boolean add(Object o) {
-	synchronized(mutex()) {
 		add(size(), o);
 		return true;
-	}
 	}
 
 	public Object get(int index) {
 		return execute(
-			methodCall("get",new Class[] {Integer.class},new Object[] {new Integer(index)}));
+			new MethodCall(this,"get",new Class[] {int.class},new Object[] {new Integer(index)}));
 	}
-
-	public Object getImpl(Integer index) {
-		return get0(index.intValue());
-	}
-
-	abstract Object get0(int index);
 
 	public Object set(int index, Object element) {
 		return execute(
-			methodCall("set",new Class[] {Integer.class,Object.class},new Object[] {new Integer(index),element}),
-			methodCall("set",new Class[] {Integer.class,Object.class},new Object[] {new Integer(index),null}),1);
-	}
-
-	public Object setImpl(Integer index, Object element) {
-		return set0(index.intValue(),element);
-	}
-
-	Object set0(int index, Object element) {
-		throw new UnsupportedOperationException();
+			new MethodCall(this,"set",new Class[] {int.class,Object.class},new Object[] {new Integer(index),element}),
+			new MethodCall(this,"set",new Class[] {int.class,Object.class},new Object[] {new Integer(index),null}),1);
 	}
 
 	public void add(int index, Object element) {
 		execute(
-			methodCall("add",new Class[] {Integer.class,Object.class},new Object[] {new Integer(index),element}),
-			methodCall("remove",new Class[] {Integer.class},new Object[] {null}),0);
-	}
-
-	public Integer addImpl(Integer index, Object element) {
-		return new Integer(add0(index.intValue(),element));
-	}
-
-	int add0(int index, Object element) {
-		throw new UnsupportedOperationException();
+			new MethodCall(this,"add",new Class[] {int.class,Object.class},new Object[] {new Integer(index),element}),
+			new MethodCall(this,"remove",new Class[] {int.class},new Object[] {null}),0);
 	}
 
 	public Object remove(int index) {
 		return execute(
-			methodCall("remove",new Class[] {Integer.class},new Object[] {new Integer(index)}),
-			methodCall("add",new Class[] {Integer.class,Object.class},new Object[] {new Integer(index),null}),1);
+			new MethodCall(this,"remove",new Class[] {int.class},new Object[] {new Integer(index)}),
+			new MethodCall(this,"add",new Class[] {int.class,Object.class},new Object[] {new Integer(index),null}),1);
 	}
 
-	public Object removeImpl(Integer index) {
-		return remove0(index.intValue());
-	}
+	// Search Operations
 
-	Object remove0(int index) {
-		throw new UnsupportedOperationException();
-	}
-
-	public int indexOf(Object elem) {
-		return ((Integer)execute(
-			methodCall("indexOf",new Class[] {Object.class},new Object[] {elem}))).intValue();
-	}
-
-	public Integer indexOfImpl(Object elem) {
-		return new Integer(indexOf0(elem));
-	}
-
-	int indexOf0(Object o) {
-	synchronized(mutex()) {
-		ListIterator e = ((List)local()).listIterator();
+	public int indexOf(Object o) {
+		ListIterator e = listIterator();
 		if (o==null) {
 			while (e.hasNext())
 				if (e.next()==null)
@@ -107,20 +76,9 @@ public abstract class PersistentAbstractList extends PersistentAbstractCollectio
 		}
 		return -1;
 	}
-	}
 
-	public int lastIndexOf(Object elem) {
-		return ((Integer)execute(
-			methodCall("lastIndexOf",new Class[] {Object.class},new Object[] {elem}))).intValue();
-	}
-
-	public Integer lastIndexOfImpl(Object elem) {
-		return new Integer(lastIndexOf0(elem));
-	}
-
-	int lastIndexOf0(Object o) {
-	synchronized(mutex()) {
-		ListIterator e = ((List)local()).listIterator(size());
+	public int lastIndexOf(Object o) {
+		ListIterator e = listIterator(size());
 		if (o==null) {
 			while (e.hasPrevious())
 				if (e.previous()==null)
@@ -132,16 +90,14 @@ public abstract class PersistentAbstractList extends PersistentAbstractCollectio
 		}
 		return -1;
 	}
-	}
+
+	// Bulk Operations
 
 	public void clear() {
-	synchronized(mutex()) {
 		removeRange(0, size());
-	}
 	}
 
 	public boolean addAll(int index, Collection c) {
-	synchronized(mutex()) {
 		boolean modified = false;
 		Iterator e = c.iterator();
 		while (e.hasNext()) {
@@ -150,40 +106,37 @@ public abstract class PersistentAbstractList extends PersistentAbstractCollectio
 		}
 		return modified;
 	}
+
+	// Iterators
+
+	public Iterator iterator() {
+		return new Itr();
 	}
 
-	public Iterator iterator() throws RemoteException {
-		return (Iterator)new Itr().local();
-	}
-
-	public ListIterator listIterator() throws RemoteException {
+	public ListIterator listIterator() {
 		return listIterator(0);
 	}
 
-	public ListIterator listIterator(final int index) throws RemoteException {
+	public ListIterator listIterator(final int index) {
 		if (index<0 || index>size())
 		  throw new IndexOutOfBoundsException("Index: "+index);
 
-		return (ListIterator)new ListItr(index).local();
+		return new ListItr(index);
 	}
 
-	private class Itr extends TransientObject implements RemoteIterator {
+	private class Itr implements Iterator {
 		int cursor = 0;
-
 		int lastRet = -1;
-
 		int expectedModCount = getModCount();
-
-		Itr() throws RemoteException {}
 
 		public boolean hasNext() {
 			return cursor != size();
 		}
 
 		public Object next() {
+			checkForComodification();
 			try {
-				Object next = PersistentAbstractList.this.get(cursor);
-				checkForComodification();
+				Object next = get(cursor);
 				lastRet = cursor++;
 				return next;
 			} catch(IndexOutOfBoundsException e) {
@@ -212,14 +165,10 @@ public abstract class PersistentAbstractList extends PersistentAbstractCollectio
 			if (getModCount() != expectedModCount)
 				throw new ConcurrentModificationException();
 		}
-
-		public Object local() {
-			return new LocalIterator(this);
-		}
 	}
 
-	private class ListItr extends Itr implements RemoteListIterator {
-		ListItr(int index) throws RemoteException {
+	private class ListItr extends Itr implements ListIterator {
+		ListItr(int index) {
 			cursor = index;
 		}
 
@@ -228,10 +177,11 @@ public abstract class PersistentAbstractList extends PersistentAbstractCollectio
 		}
 
 		public Object previous() {
+			checkForComodification();
 			try {
-				Object previous = PersistentAbstractList.this.get(--cursor);
-				checkForComodification();
-				lastRet = cursor;
+				int i = cursor - 1;
+				Object previous = get(i);
+				lastRet = cursor = i;
 				return previous;
 			} catch(IndexOutOfBoundsException e) {
 				checkForComodification();
@@ -271,25 +221,23 @@ public abstract class PersistentAbstractList extends PersistentAbstractCollectio
 				throw new ConcurrentModificationException();
 			}
 		}
-
-		public Object local() {
-			return new LocalListIterator(this);
-		}
 	}
 
-	public List subList(int fromIndex, int toIndex) throws RemoteException {
-	synchronized(mutex()) {
-		return (List)new SubList(this, fromIndex, toIndex, mutex()).local();
+	public List subList(int fromIndex, int toIndex) {
+		return (this instanceof RandomAccess ?
+				new RandomAccessSubList(this, fromIndex, toIndex) :
+				new SubList(this, fromIndex, toIndex));
 	}
-	}
+
+	// Comparison and hashing
 
 	public boolean equals(Object o) {
 		if (o == this)
 			return true;
-		if (!(o instanceof RemoteList))
+		if (!(o instanceof List))
 			return false;
 
-		ListIterator e1 = ((List)local()).listIterator();
+		ListIterator e1 = listIterator();
 		ListIterator e2 = ((List) o).listIterator();
 		while(e1.hasNext() && e2.hasNext()) {
 			Object o1 = e1.next();
@@ -302,8 +250,8 @@ public abstract class PersistentAbstractList extends PersistentAbstractCollectio
 
 	public int hashCode() {
 		int hashCode = 1;
-		Iterator i = ((List)local()).iterator();
-			 while (i.hasNext()) {
+		Iterator i = iterator();
+	 		while (i.hasNext()) {
 			Object obj = i.next();
 			hashCode = 31*hashCode + (obj==null ? 0 : obj.hashCode());
 		}
@@ -311,7 +259,7 @@ public abstract class PersistentAbstractList extends PersistentAbstractCollectio
 	}
 
 	protected void removeRange(int fromIndex, int toIndex) {
-		ListIterator it = ((List)local()).listIterator(fromIndex);
+		ListIterator it = listIterator(fromIndex);
 		for (int i=0, n=toIndex-fromIndex; i<n; i++) {
 			it.next();
 			it.remove();
@@ -324,9 +272,5 @@ public abstract class PersistentAbstractList extends PersistentAbstractCollectio
 
 	public void setModCount(int n) {
 		set("modCount",new Integer(n));
-	}
-
-	public Object local() {
-		return new LocalList(this);
 	}
 }
