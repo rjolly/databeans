@@ -1,5 +1,5 @@
 /*
- * @(#)AbstractCollection.java	1.24 03/01/18
+ * @(#)AbstractCollection.java		1.24 03/01/18
  *
  * Copyright 2003 Sun Microsystems, Inc. All rights reserved.
  * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
@@ -48,6 +48,8 @@ public abstract class PersistentAbstractCollection extends PersistentObject impl
 		};
 	}
 
+	// Query Operations
+
 	public abstract Iterator iterator();
 
 	public abstract int size();
@@ -81,7 +83,8 @@ public abstract class PersistentAbstractCollection extends PersistentObject impl
 	public Object[] toArray(Object a[]) {
 		int size = size();
 		if (a.length < size)
-			a = (Object[])java.lang.reflect.Array.newInstance(a.getClass().getComponentType(), size);
+			a = (Object[])java.lang.reflect.Array.newInstance(
+								  a.getClass().getComponentType(), size);
 
 		Iterator it=iterator();
 		for (int i=0; i<size; i++)
@@ -92,6 +95,8 @@ public abstract class PersistentAbstractCollection extends PersistentObject impl
 
 		return a;
 	}
+
+	// Modification Operations
 
 	public boolean add(Object o) {
 		return ((Boolean)execute(
@@ -104,6 +109,8 @@ public abstract class PersistentAbstractCollection extends PersistentObject impl
 			new MethodCall(this,"remove",new Class[] {Object.class,boolean.class},new Object[] {o,new Boolean(true)}),
 			new MethodCall(this,"add",new Class[] {Object.class,boolean.class},new Object[] {o,null}),1)).booleanValue();
 	}
+
+	// Bulk Operations
 
 	public boolean containsAll(Collection c) {
 		Iterator e = c.iterator();
@@ -156,16 +163,22 @@ public abstract class PersistentAbstractCollection extends PersistentObject impl
 		}
 	}
 
+	//  String conversion
+
 	public String toString() {
 		StringBuffer buf = new StringBuffer();
-		Iterator e = iterator();
 		buf.append("[");
-		int maxIndex = size() - 1;
-		for (int i = 0; i <= maxIndex; i++) {
-			buf.append(String.valueOf(e.next()));
-			if (i < maxIndex)
+
+		Iterator i = iterator();
+		boolean hasNext = i.hasNext();
+		while (hasNext) {
+			Object o = i.next();
+			buf.append(o == this ? "(this Collection)" : String.valueOf(o));
+			hasNext = i.hasNext();
+			if (hasNext)
 				buf.append(", ");
 		}
+
 		buf.append("]");
 		return buf.toString();
 	}

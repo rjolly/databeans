@@ -19,7 +19,7 @@ import persistence.PersistentObject;
 public abstract class PersistentAbstractMap extends PersistentObject implements Map {
 	protected Accessor createAccessor() {
 		return new Accessor() {
-			public Object get(Object key) {
+			public synchronized Object get(Object key) {
 				Iterator i = entrySet().iterator();
 				if (key==null) {
 					while (i.hasNext()) {
@@ -45,7 +45,7 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 				throw new UnsupportedOperationException();
 			}
 
-			public Object remove0(Object key) {
+			public synchronized Object remove0(Object key) {
 				Iterator i = entrySet().iterator();
 				Entry correctEntry = null;
 				if (key==null) {
