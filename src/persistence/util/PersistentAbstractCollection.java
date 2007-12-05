@@ -6,7 +6,6 @@
  */
 package persistence.util;
 
-import java.rmi.RemoteException;
 import java.util.Collection;
 import java.util.Iterator;
 import persistence.Accessor;
@@ -14,6 +13,42 @@ import persistence.MethodCall;
 import persistence.PersistentObject;
 
 public abstract class PersistentAbstractCollection extends PersistentObject implements Collection {
+	protected Accessor createAccessor() {
+		return new Accessor() {
+			public boolean add(Object o, boolean b) {
+				return b?add0(o):false;
+			}
+
+			synchronized boolean add0(Object o) {
+				throw new UnsupportedOperationException();
+			}
+
+			public boolean remove(Object o, boolean b) {
+				return b?remove0(o):false;
+			}
+
+			synchronized boolean remove0(Object o) {
+				Iterator e = iterator();
+				if (o==null) {
+					while (e.hasNext()) {
+						if (e.next()==null) {
+							e.remove();
+							return true;
+						}
+					}
+				} else {
+					while (e.hasNext()) {
+						if (o.equals(e.next())) {
+							e.remove();
+							return true;
+						}
+					}
+				}
+				return false;
+			}
+		};
+	}
+
 	public abstract Iterator iterator();
 
 	public abstract int size();
@@ -23,8 +58,17 @@ public abstract class PersistentAbstractCollection extends PersistentObject impl
 	}
 
 	public boolean contains(Object o) {
-		return ((Boolean)execute(
-			new MethodCall(this,"contains",new Class[] {Object.class},new Object[] {o}))).booleanValue();
+		Iterator e = iterator();
+		if (o==null) {
+			while (e.hasNext())
+				if (e.next()==null)
+					return true;
+		} else {
+			while (e.hasNext())
+				if (o.equals(e.next()))
+					return true;
+		}
+		return false;
 	}
 
 	public Object[] toArray() {
@@ -125,57 +169,5 @@ public abstract class PersistentAbstractCollection extends PersistentObject impl
 		}
 		buf.append("]");
 		return buf.toString();
-	}
-}
-
-class AbstractCollectionAccessor extends Accessor {
-	AbstractCollectionAccessor(PersistentObject object) throws RemoteException {
-		super(object);
-	}
-
-	public synchronized boolean contains(Object o) {
-		Iterator e = ((Collection)object).iterator();
-		if (o==null) {
-			while (e.hasNext())
-				if (e.next()==null)
-					return true;
-		} else {
-			while (e.hasNext())
-				if (o.equals(e.next()))
-					return true;
-		}
-		return false;
-	}
-
-	public boolean add(Object o, boolean b) {
-		return b?add0(o):false;
-	}
-
-	synchronized boolean add0(Object o) {
-		throw new UnsupportedOperationException();
-	}
-
-	public boolean remove(Object o, boolean b) {
-		return b?remove0(o):false;
-	}
-
-	synchronized boolean remove0(Object o) {
-		Iterator e = ((Collection)object).iterator();
-		if (o==null) {
-			while (e.hasNext()) {
-				if (e.next()==null) {
-					e.remove();
-					return true;
-				}
-			}
-		} else {
-			while (e.hasNext()) {
-				if (o.equals(e.next())) {
-					e.remove();
-					return true;
-				}
-			}
-		}
-		return false;
 	}
 }
