@@ -139,7 +139,7 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 		return obj==NULL?null:obj;
 	}
 
-	static Object NULL=new Object();
+	static final Object NULL=new Object();
 
 	// Bulk Operations
 
@@ -157,73 +157,64 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 
 	// Views
 
-	transient volatile Set		keySet = null;
-	transient volatile Collection values = null;
-
 	public Set keySet() {
-		if (keySet == null) {
-			keySet = new AbstractSet() {
-				public Iterator iterator() {
-					return new Iterator() {
-						private Iterator i = entrySet().iterator();
+		return new AbstractSet() {
+			public Iterator iterator() {
+				return new Iterator() {
+					private Iterator i = entrySet().iterator();
 
-						public boolean hasNext() {
-							return i.hasNext();
-						}
+					public boolean hasNext() {
+						return i.hasNext();
+					}
 
-						public Object next() {
-							return ((Entry)i.next()).getKey();
-						}
+					public Object next() {
+						return ((Entry)i.next()).getKey();
+					}
 
-						public void remove() {
-							i.remove();
-						}
-					};
-				}
+					public void remove() {
+						i.remove();
+					}
+				};
+			}
+			
+			public int size() {
+				return PersistentAbstractMap.this.size();
+			}
 
-				public int size() {
-					return PersistentAbstractMap.this.size();
-				}
-
-				public boolean contains(Object k) {
-					return PersistentAbstractMap.this.containsKey(k);
-				}
-			};
-		}
-		return keySet;
+			public boolean contains(Object k) {
+				return PersistentAbstractMap.this.containsKey(k);
+			}
+		};
 	}
 
 	public Collection values() {
-		if (values == null) {
-			values = new AbstractCollection() {
-				public Iterator iterator() {
-					return new Iterator() {
-						private Iterator i = entrySet().iterator();
+		return new AbstractCollection() {
+			public Iterator iterator() {
+				return new Iterator() {
+					private Iterator i = entrySet().iterator();
 
-						public boolean hasNext() {
-							return i.hasNext();
-						}
+					public boolean hasNext() {
+						return i.hasNext();
+					}
 
-						public Object next() {
-							return ((Entry)i.next()).getValue();
-						}
+					public Object next() {
+						return ((Entry)i.next()).getValue();
+					}
 
-						public void remove() {
-							i.remove();
-						}
-					};
-				}
+					public void remove() {
+						i.remove();
+					}
+				};
+			}
 
-				public int size() {
-					return PersistentAbstractMap.this.size();
-				}
+			public int size() {
+				return PersistentAbstractMap.this.size();
+			}
 
-				public boolean contains(Object v) {
-					return PersistentAbstractMap.this.containsValue(v);
-				}
-			};
-		}
-		return values;
+			public boolean contains(Object v) {
+				return PersistentAbstractMap.this.containsValue(v);
+			}
+		};
 	}
 
 	public abstract Set entrySet();
@@ -291,13 +282,6 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 
 		buf.append("}");
 		return buf.toString();
-	}
-
-	public Object clone() {
-		PersistentAbstractMap result = (PersistentAbstractMap)super.clone();
-		result.keySet = null;
-		result.values = null;
-		return result;
 	}
 
 	static class SimpleEntry implements Entry {

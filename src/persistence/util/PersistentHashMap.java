@@ -172,7 +172,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 		int i = indexFor(hash, getTable().length());
 		Entry e = (Entry)getTable().get(i); 
 		while (e != null && !(e.getHash() == hash && eq(k, e.getKey())))
-			e.setNext(e.getNext());
+			e=e.getNext();
 		return e;
 	}
 

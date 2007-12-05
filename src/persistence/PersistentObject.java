@@ -53,8 +53,8 @@ public class PersistentObject implements Cloneable, Serializable {
 			new MethodCall(this,"get",new Class[] {String.class},new Object[] {name}));
 	}
 
-	protected final void set(String name, Object value) {
-		execute(
+	protected final Object set(String name, Object value) {
+		return execute(
 			new MethodCall(this,"set",new Class[] {String.class,Object.class},new Object[] {name,value}),
 			new MethodCall(this,"set",new Class[] {String.class,Object.class},new Object[] {name,null}),1);
 	}
