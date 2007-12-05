@@ -76,6 +76,18 @@ public class Accessor extends UnicastRemoteObject implements RemoteAccessor {
 		return obj instanceof PersistentObject?((PersistentObject)obj).accessor:obj;
 	}
 
+	static Object[] attach(Object obj[]) {
+		Object a[]=new Object[obj.length];
+		for(int i=0;i<obj.length;i++) a[i]=attach(obj[i]);
+		return a;
+	}
+
+	static Object[] detach(Object obj[]) {
+		Object a[]=new Object[obj.length];
+		for(int i=0;i<obj.length;i++) a[i]=detach(obj[i]);
+		return a;
+	}
+
 	synchronized void lock(Accessor transaction) {
 		Accessor t=getLock();
 		if(t==null) setLock(transaction);

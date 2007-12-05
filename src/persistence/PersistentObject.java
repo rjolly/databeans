@@ -62,6 +62,10 @@ public class PersistentObject implements Cloneable, Serializable {
 		return connection.execute(call,undo,index,false);
 	}
 
+	Object call(String method, Class types[], Object args[]) {
+		return ((Accessor)accessor).call(method,types,args);
+	}
+
 	void lock(Transaction transaction) {
 		((Accessor)accessor).lock((Accessor)transaction.accessor);
 	}

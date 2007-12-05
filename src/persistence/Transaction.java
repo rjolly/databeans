@@ -4,33 +4,78 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Map;
+import persistence.storage.MemoryModel;
 import persistence.util.PersistentArrayList;
+import persistence.util.PersistentHashMap;
 
 public class Transaction extends PersistentObject {
 	protected void init(String client) {
 		setClient(client);
-		setMethodCalls((List)create(PersistentArrayList.class));
-		setObjects((Collection)create(PersistentArrayList.class));
+		setCalls((List)create(PersistentArrayList.class));
+		setUndos((List)create(PersistentArrayList.class));
+		setPairs((Map)create(PersistentHashMap.class));
 	}
 
-	void lock(PersistentObject target) {
-		Collection o=getObjects();
-		if(!o.contains(target)) {
-			target.lock(this);
-			o.add(target);
+	PersistentObject copy(PersistentObject obj, int level, boolean read, boolean readOnly) {
+		switch(level) {
+		case Connection.TRANSACTION_READ_UNCOMMITTED:
+			return obj;
+		case Connection.TRANSACTION_READ_COMMITTED:
+			return read?obj:copy(obj);
+		case Connection.TRANSACTION_REPEATABLE_READ:
+			return copy(obj);
+		case Connection.TRANSACTION_SERIALIZABLE:
+			if(!readOnly) obj.lock(this);
+			return copy(obj);
+		default:
+			throw new PersistentException("bad transaction isolation level");
 		}
 	}
 
-	void record(MethodCall call) {
-		getMethodCalls().add(create(PersistentMethodCall.class,new Class[] {MethodCall.class},new Object[] {call}));
+	PersistentObject copy(PersistentObject obj) {
+		Array pair;
+		Map map=getPairs();
+		Number base=MemoryModel.model.toNumber(obj.base());
+		if(map.containsKey(base)) pair=(Array)map.get(base);
+		else {
+			pair=(Array)create(new Object[] {obj,obj.clone()});
+			map.put(base,pair);
+		}
+		return (PersistentObject)pair.get(1);
+	}
+
+	void record(MethodCall call, MethodCall undo, int level) {
+		List calls=getCalls();
+		List undos=getUndos();
+		switch(level) {
+		case Connection.TRANSACTION_READ_UNCOMMITTED:
+			undos.add(call(undo));
+			break;
+		case Connection.TRANSACTION_READ_COMMITTED:
+		case Connection.TRANSACTION_REPEATABLE_READ:
+		case Connection.TRANSACTION_SERIALIZABLE:
+			calls.add(call(call));
+			break;
+		default:
+			throw new PersistentException("bad transaction isolation level");
+		}
+	}
+
+	PersistentMethodCall call(MethodCall call) {
+		return (PersistentMethodCall)create(PersistentMethodCall.class,new Class[] {MethodCall.class},new Object[] {call});
 	}
 
 	void commit() {
+		List l=getCalls();
+		for(ListIterator it=l.listIterator(0);it.hasNext();it.remove()) {
+			((PersistentMethodCall)it.next()).execute();
+		}
 		unlock();
 	}
 
 	void rollback() {
-		List l=getMethodCalls();
+		List l=getUndos();
 		for(ListIterator it=l.listIterator(l.size());it.hasPrevious();it.remove()) {
 			((PersistentMethodCall)it.previous()).execute();
 		}
@@ -38,16 +83,16 @@ public class Transaction extends PersistentObject {
 	}
 
 	void unlock() {
-		Collection o=getObjects();
+		Collection o=getPairs().values();
 		for(Iterator it=o.iterator();it.hasNext();it.remove()) {
-			((PersistentObject)it.next()).unlock();
+			((PersistentObject)((Array)it.next()).get(0)).unlock();
 		}
 	}
 
 	void kick() {
-		Collection o=getObjects();
+		Collection o=getPairs().values();
 		for(Iterator it=o.iterator();it.hasNext();) {
-			((PersistentObject)it.next()).kick();
+			((PersistentObject)((Array)it.next()).get(0)).kick();
 		}
 	}
 
@@ -59,20 +104,28 @@ public class Transaction extends PersistentObject {
 		set("client",str);
 	}
 
-	public List getMethodCalls() {
-		return (List)get("methodCalls");
+	public List getCalls() {
+		return (List)get("calls");
 	}
 
-	public void setMethodCalls(List list) {
-		set("methodCalls",list);
+	public void setCalls(List list) {
+		set("calls",list);
 	}
 
-	public Collection getObjects() {
-		return (Collection)get("objects");
+	public List getUndos() {
+		return (List)get("undos");
 	}
 
-	public void setObjects(Collection collection) {
-		set("objects",collection);
+	public void setUndos(List list) {
+		set("undos",list);
+	}
+
+	public Map getPairs() {
+		return (Map)get("pairs");
+	}
+
+	public void setPairs(Map map) {
+		set("pairs",map);
 	}
 
 	public String toString() {

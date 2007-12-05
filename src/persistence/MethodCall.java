@@ -13,19 +13,19 @@ public class MethodCall {
 		this.args=args;
 	}
 
+	PersistentObject target() {
+		return ((Accessor)target.accessor).object;
+	}
+
+	Object[] args() {
+		return Accessor.attach(Accessor.detach(args));
+	}
+
 	Object execute() {
-		return ((Accessor)target.accessor).call(method,types,attach(detach(args)));
+		return execute(target());
 	}
 
-	static Object[] attach(Object obj[]) {
-		Object a[]=new Object[obj.length];
-		for(int i=0;i<obj.length;i++) a[i]=Accessor.attach(obj[i]);
-		return a;
-	}
-
-	static Object[] detach(Object obj[]) {
-		Object a[]=new Object[obj.length];
-		for(int i=0;i<obj.length;i++) a[i]=Accessor.detach(obj[i]);
-		return a;
+	Object execute(PersistentObject target) {
+		return target.call(method,types,args());
 	}
 }

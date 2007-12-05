@@ -7,8 +7,8 @@ import javax.transaction.xa.XAResource;
 public interface Connection extends Remote {
 	static final int TRANSACTION_NONE = 0;
 	static final int TRANSACTION_READ_UNCOMMITTED = 1;
-//	static final int TRANSACTION_READ_COMMITTED = 2;
-//	static final int TRANSACTION_REPEATABLE_READ = 3;
+	static final int TRANSACTION_READ_COMMITTED = 2;
+	static final int TRANSACTION_REPEATABLE_READ = 3;
 	static final int TRANSACTION_SERIALIZABLE = 4;
 
 	PersistentObject create(String name) throws RemoteException;

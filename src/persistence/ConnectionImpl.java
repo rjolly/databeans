@@ -111,12 +111,14 @@ public class ConnectionImpl extends UnicastRemoteObject implements Connection {
 	public synchronized Object execute(MethodCall call, MethodCall undo, int index, boolean read) {
 		if(closed) throw new PersistentException("connection closed");
 		if(!read && readOnly) throw new PersistentException("read only");
-		if(transaction!=null && level==TRANSACTION_SERIALIZABLE && !(read && readOnly)) transaction.lock(call.target);
-		Object obj=call.execute();
-		if(transaction!=null && !read) {
-			undo.args[index]=obj;
-			transaction.record(undo);
-		}
+		Object obj;
+		if(transaction!=null) {
+			obj=call.execute(transaction.copy(call.target(),level,read,readOnly));
+			if(!read) {
+				undo.args[index]=obj;
+				transaction.record(call,undo,level);
+			}
+		} else obj=call.execute();
 		if(autoCommit) commit();
 		return attach(Accessor.detach(obj));
 	}
