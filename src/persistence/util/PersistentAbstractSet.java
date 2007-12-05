@@ -6,63 +6,57 @@
  */
 package persistence.util;
 
-import java.rmi.RemoteException;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
-import persistence.Accessor;
-import persistence.Connection;
 
-public abstract class PersistentAbstractSet extends PersistentAbstractCollection implements RemoteSet {
-	public PersistentAbstractSet() throws RemoteException {}
+public abstract class PersistentAbstractSet extends PersistentAbstractCollection implements Set {
 
-	public PersistentAbstractSet(Accessor accessor, Connection connection) throws RemoteException {
-		super(accessor,connection);
-	}
+    // Comparison and hashing
 
-	public boolean equals(Object o) {
-		if (o == this)
-			return true;
+    public boolean equals(Object o) {
+	if (o == this)
+	    return true;
 
-		if (!(o instanceof Set))
-			return false;
-		Collection c = (Collection) o;
-		if (c.size() != size())
-			return false;
-		return containsAll(c);
-	}
+	if (!(o instanceof Set))
+	    return false;
+	Collection c = (Collection) o;
+	if (c.size() != size())
+	    return false;
+        try {
+            return containsAll(c);
+        } catch(ClassCastException unused)   {
+            return false;
+        } catch(NullPointerException unused) {
+            return false;
+        }
+    }
 
-	public int hashCode() {
-		int h = 0;
-		Iterator i = ((Set)local()).iterator();
-		while (i.hasNext()) {
-			Object obj = i.next();
-			if (obj != null)
-				h += obj.hashCode();
-		}
-		return h;
-	}
+    public int hashCode() {
+	int h = 0;
+	Iterator i = iterator();
+	while (i.hasNext()) {
+	    Object obj = i.next();
+            if (obj != null)
+                h += obj.hashCode();
+        }
+	return h;
+    }
 
-	public boolean removeAll(Collection c) {
-	synchronized(mutex()) {
-		boolean modified = false;
+    public boolean removeAll(Collection c) {
+        boolean modified = false;
 
-		if (size() > c.size()) {
-			for (Iterator i = c.iterator(); i.hasNext(); )
-				modified |= remove(i.next());
-		} else {
-			for (Iterator i = ((Set)local()).iterator(); i.hasNext(); ) {
-				if(c.contains(i.next())) {
-					i.remove();
-					modified = true;
-				}
-			}
-		}
-		return modified;
-	}
-	}
-
-	public Object local() {
-		return new LocalSet(this);
-	}
+        if (size() > c.size()) {
+            for (Iterator i = c.iterator(); i.hasNext(); )
+                modified |= remove(i.next());
+        } else {
+            for (Iterator i = iterator(); i.hasNext(); ) {
+                if(c.contains(i.next())) {
+                    i.remove();
+                    modified = true;
+                }
+            }
+        }
+        return modified;
+    }
 }

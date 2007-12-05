@@ -1,295 +1,234 @@
 /*
- * @(#)AbstractMap.java	1.34 03/01/23
+ * @(#)AbstractMap.java		1.34 03/01/23
  *
  * Copyright 2003 Sun Microsystems, Inc. All rights reserved.
  * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package persistence.util;
 
-import java.rmi.RemoteException;
+import java.util.AbstractCollection;
+import java.util.AbstractSet;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
-import persistence.Accessor;
-import persistence.Connection;
+import persistence.MethodCall;
 import persistence.PersistentObject;
-import persistence.TransientObject;
 
-public abstract class PersistentAbstractMap extends PersistentObject implements RemoteMap {
-	public PersistentAbstractMap() throws RemoteException {}
+public abstract class PersistentAbstractMap extends PersistentObject implements Map {
+	protected Accessor createAccessor() {
+		return new Accessor() {
+			public Object get(Object key) {
+				Iterator i = entrySet().iterator();
+				if (key==null) {
+					while (i.hasNext()) {
+						Entry e = (Entry) i.next();
+						if (e.getKey()==null)
+							return e.getValue();
+					}
+				} else {
+					while (i.hasNext()) {
+						Entry e = (Entry) i.next();
+						if (key.equals(e.getKey()))
+							return e.getValue();
+					}
+				}
+				return null;
+			}
 
-	public PersistentAbstractMap(Accessor accessor, Connection connection) throws RemoteException {
-		super(accessor,connection);
+			public Object put(Object key, Object value) {
+				return value==NULL?remove0(key):put0(key,value);
+			}
+
+			public Object put0(Object key, Object value) {
+				throw new UnsupportedOperationException();
+			}
+
+			public Object remove0(Object key) {
+				Iterator i = entrySet().iterator();
+				Entry correctEntry = null;
+				if (key==null) {
+					while (correctEntry==null && i.hasNext()) {
+						Entry e = (Entry) i.next();
+						if (e.getKey()==null)
+							correctEntry = e;
+					}
+				} else {
+					while (correctEntry==null && i.hasNext()) {
+						Entry e = (Entry) i.next();
+						if (key.equals(e.getKey()))
+							correctEntry = e;
+					}
+				}
+
+				Object oldValue = null;
+				if (correctEntry !=null) {
+					oldValue = correctEntry.getValue();
+					i.remove();
+				}
+				return oldValue;
+			}
+		};
 	}
+
+	// Query Operations
 
 	public int size() {
-	synchronized(mutex()) {
-		return ((Map)local()).entrySet().size();
-	}
+		return entrySet().size();
 	}
 
 	public boolean isEmpty() {
-	synchronized(mutex()) {
 		return size() == 0;
-	}
 	}
 
 	public boolean containsValue(Object value) {
-		return ((Boolean)execute(
-			methodCall("containsValue",new Class[] {Object.class},new Object[] {value}))).booleanValue();
-	}
-
-	public Boolean containsValueImpl(Object value) {
-		return new Boolean(containsValue0(value));
-	}
-
-	boolean containsValue0(Object value) {
-	synchronized(mutex()) {
-		Iterator i = ((Map)local()).entrySet().iterator();
+		Iterator i = entrySet().iterator();
 		if (value==null) {
 			while (i.hasNext()) {
-				Map.Entry e = (Map.Entry) i.next();
+				Entry e = (Entry) i.next();
 				if (e.getValue()==null)
 					return true;
 			}
 		} else {
 			while (i.hasNext()) {
-				Map.Entry e = (Map.Entry) i.next();
+				Entry e = (Entry) i.next();
 				if (value.equals(e.getValue()))
 					return true;
 			}
 		}
 		return false;
 	}
-	}
 
 	public boolean containsKey(Object key) {
-		return ((Boolean)execute(
-			methodCall("containsKey",new Class[] {Object.class},new Object[] {key}))).booleanValue();
-	}
-
-	public Boolean containsKeyImpl(Object key) {
-		return new Boolean(containsKey0(key));
-	}
-
-	boolean containsKey0(Object key) {
-	synchronized(mutex()) {
-		Iterator i = ((Map)local()).entrySet().iterator();
+		Iterator i = entrySet().iterator();
 		if (key==null) {
 			while (i.hasNext()) {
-				Map.Entry e = (Map.Entry) i.next();
+				Entry e = (Entry) i.next();
 				if (e.getKey()==null)
 					return true;
 			}
 		} else {
 			while (i.hasNext()) {
-				Map.Entry e = (Map.Entry) i.next();
+				Entry e = (Entry) i.next();
 				if (key.equals(e.getKey()))
 					return true;
 			}
 		}
 		return false;
 	}
-	}
 
 	public Object get(Object key) {
 		return execute(
-			methodCall("get",new Class[] {Object.class},new Object[] {key}));
+			new MethodCall(this,"get",new Class[] {Object.class},new Object[] {key}));
 	}
 
-	public Object getImpl(Object key) {
-	synchronized(mutex()) {
-		Iterator i = ((Map)local()).entrySet().iterator();
-		if (key==null) {
-			while (i.hasNext()) {
-				Map.Entry e = (Map.Entry) i.next();
-				if (e.getKey()==null)
-					return e.getValue();
-			}
-		} else {
-			while (i.hasNext()) {
-				Map.Entry e = (Map.Entry) i.next();
-				if (key.equals(e.getKey()))
-					return e.getValue();
-			}
-		}
-		return null;
-	}
-	}
+	// Modification Operations
 
 	public Object put(Object key, Object value) {
 		Object obj=execute(
-			methodCall("put",new Class[] {Object.class,Object.class},new Object[] {key,value}),
-			methodCall("put",new Class[] {Object.class,Object.class},new Object[] {key,null}),1);
+			new MethodCall(this,"put",new Class[] {Object.class,Object.class},new Object[] {key,value}),
+			new MethodCall(this,"put",new Class[] {Object.class,Object.class},new Object[] {key,null}),1);
 		return obj==NULL?null:obj;
 	}
 
 	public Object remove(Object key) {
 		Object obj=execute(
-			methodCall("put",new Class[] {Object.class,Object.class},new Object[] {key,NULL}),
-			methodCall("put",new Class[] {Object.class,Object.class},new Object[] {key,null}),1);
+			new MethodCall(this,"put",new Class[] {Object.class,Object.class},new Object[] {key,NULL}),
+			new MethodCall(this,"put",new Class[] {Object.class,Object.class},new Object[] {key,null}),1);
 		return obj==NULL?null:obj;
 	}
 
 	static Object NULL=new Object();
 
-	public Object putImpl(Object key, Object value) {
-		return value==NULL?remove0(key):put0(key,value);
-	}
-
-	Object put0(Object key, Object value) {
-		throw new UnsupportedOperationException();
-	}
-
-	Object remove0(Object key) {
-	synchronized(mutex()) {
-		Iterator i = ((Map)local()).entrySet().iterator();
-		Map.Entry correctEntry = null;
-		if (key==null) {
-			while (correctEntry==null && i.hasNext()) {
-				Map.Entry e = (Map.Entry) i.next();
-				if (e.getKey()==null)
-					correctEntry = e;
-			}
-		} else {
-			while (correctEntry==null && i.hasNext()) {
-				Map.Entry e = (Map.Entry) i.next();
-				if (key.equals(e.getKey()))
-					correctEntry = e;
-			}
-		}
-
-		Object oldValue = null;
-		if (correctEntry !=null) {
-			oldValue = correctEntry.getValue();
-			i.remove();
-		}
-		return oldValue;
-	}
-	}
+	// Bulk Operations
 
 	public void putAll(Map t) {
-	synchronized(mutex()) {
 		Iterator i = t.entrySet().iterator();
 		while (i.hasNext()) {
-			Map.Entry e = (Map.Entry) i.next();
+			Entry e = (Entry) i.next();
 			put(e.getKey(), e.getValue());
 		}
 	}
-	}
 
 	public void clear() {
-	synchronized(mutex()) {
-		((Map)local()).entrySet().clear();
-	}
+		entrySet().clear();
 	}
 
-	public Set keySet() throws RemoteException {
-	synchronized(mutex()) {
-		return (Set)new KeySet(mutex()).local();
-	}
-	}
+	// Views
 
-	class KeySet extends TransientAbstractSet implements RemoteSet {
-		KeySet(Object mutex) throws RemoteException {
-			super(mutex);
+	transient volatile Set		keySet = null;
+	transient volatile Collection values = null;
+
+	public Set keySet() {
+		if (keySet == null) {
+			keySet = new AbstractSet() {
+				public Iterator iterator() {
+					return new Iterator() {
+						private Iterator i = entrySet().iterator();
+
+						public boolean hasNext() {
+							return i.hasNext();
+						}
+
+						public Object next() {
+							return ((Entry)i.next()).getKey();
+						}
+
+						public void remove() {
+							i.remove();
+						}
+					};
+				}
+
+				public int size() {
+					return PersistentAbstractMap.this.size();
+				}
+
+				public boolean contains(Object k) {
+					return PersistentAbstractMap.this.containsKey(k);
+				}
+			};
 		}
-
-		class Itr extends TransientObject implements RemoteIterator {
-			private Iterator i;
-
-			Itr(Iterator i) throws RemoteException {
-				this.i = i;
-			}
-
-			public boolean hasNext() {
-				return i.hasNext();
-			}
-
-			public Object next() {
-				return ((Map.Entry)i.next()).getKey();
-			}
-
-			public void remove() {
-				i.remove();
-			}
-
-			public Object local() {
-				return new LocalIterator(this);
-			}
-		}
-
-		public Iterator iterator() throws RemoteException {
-			return (Iterator)new Itr(((Map)PersistentAbstractMap.this.local()).entrySet().iterator()).local();
-		}
-
-		public int size() {
-		synchronized(mutex()) {
-			return PersistentAbstractMap.this.size();
-		}
-		}
-
-		public boolean contains(Object k) {
-		synchronized(mutex()) {
-			return PersistentAbstractMap.this.containsKey(k);
-		}
-		}
+		return keySet;
 	}
 
-	public Collection values() throws RemoteException {
-	synchronized(mutex()) {
-		return (Collection)new Values(mutex()).local();
-	}
-	}
+	public Collection values() {
+		if (values == null) {
+			values = new AbstractCollection() {
+				public Iterator iterator() {
+					return new Iterator() {
+						private Iterator i = entrySet().iterator();
 
-	class Values extends TransientAbstractCollection implements RemoteCollection {
-		Values(Object mutex) throws RemoteException {
-			super(mutex);
+						public boolean hasNext() {
+							return i.hasNext();
+						}
+
+						public Object next() {
+							return ((Entry)i.next()).getValue();
+						}
+
+						public void remove() {
+							i.remove();
+						}
+					};
+				}
+
+				public int size() {
+					return PersistentAbstractMap.this.size();
+				}
+
+				public boolean contains(Object v) {
+					return PersistentAbstractMap.this.containsValue(v);
+				}
+			};
 		}
-
-		class Itr extends TransientObject implements RemoteIterator {
-			private Iterator i;
-
-			Itr(Iterator i) throws RemoteException {
-				this.i = i;
-			}
-
-			public boolean hasNext() {
-				return i.hasNext();
-			}
-
-			public Object next() {
-				return ((Map.Entry)i.next()).getKey();
-			}
-
-			public void remove() {
-				i.remove();
-			}
-
-			public Object local() {
-				return new LocalIterator(this);
-			}
-		}
-
-		public Iterator iterator() throws RemoteException {
-			return (Iterator)new Itr(((Map)PersistentAbstractMap.this.local()).entrySet().iterator()).local();
-		}
-
-		public int size() {
-		synchronized(mutex()) {
-			return PersistentAbstractMap.this.size();
-		}
-		}
-
-		public boolean contains(Object v) {
-		synchronized(mutex()) {
-			return PersistentAbstractMap.this.containsValue(v);
-		}
-		}
+		return values;
 	}
 
-	public abstract Set entrySet() throws RemoteException;
+	public abstract Set entrySet();
+
+	// Comparison and hashing
 
 	public boolean equals(Object o) {
 		if (o == this)
@@ -301,49 +240,113 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 		if (t.size() != size())
 			return false;
 
-		Iterator i = ((Map)local()).entrySet().iterator();
-		while (i.hasNext()) {
-			Map.Entry e = (Map.Entry) i.next();
-			Object key = e.getKey();
-			Object value = e.getValue();
-			if (value == null) {
-				if (!(t.get(key)==null && t.containsKey(key)))
-					return false;
-			} else {
-				if (!value.equals(t.get(key)))
-					return false;
+		try {
+			Iterator i = entrySet().iterator();
+			while (i.hasNext()) {
+				Entry e = (Entry) i.next();
+				Object key = e.getKey();
+				Object value = e.getValue();
+				if (value == null) {
+					if (!(t.get(key)==null && t.containsKey(key)))
+						return false;
+				} else {
+					if (!value.equals(t.get(key)))
+						return false;
+				}
 			}
+		} catch(ClassCastException unused)   {
+			return false;
+		} catch(NullPointerException unused) {
+			return false;
 		}
+
 		return true;
 	}
 
 	public int hashCode() {
 		int h = 0;
-		Iterator i = ((Map)local()).entrySet().iterator();
+		Iterator i = entrySet().iterator();
 		while (i.hasNext())
 			h += i.next().hashCode();
 		return h;
 	}
 
-	public String remoteToString() {
-	synchronized(mutex()) {
-		int max = size() - 1;
+	public String toString() {
 		StringBuffer buf = new StringBuffer();
-		Iterator i = ((Map)local()).entrySet().iterator();
-
 		buf.append("{");
-		for (int j = 0; j <= max; j++) {
-			Map.Entry e = (Map.Entry) i.next();
-			buf.append(e.getKey() + "=" + e.getValue());
-			if (j < max)
+
+		Iterator i = entrySet().iterator();
+		boolean hasNext = i.hasNext();
+		while (hasNext) {
+			Entry e = (Entry) (i.next());
+			Object key = e.getKey();
+			Object value = e.getValue();
+			buf.append((key == this ?  "(this Map)" : key) + "=" + 
+					   (value == this ? "(this Map)": value));
+
+			hasNext = i.hasNext();
+			if (hasNext)
 				buf.append(", ");
 		}
+
 		buf.append("}");
 		return buf.toString();
 	}
+
+	public Object clone() {
+		PersistentAbstractMap result = (PersistentAbstractMap)super.clone();
+		result.keySet = null;
+		result.values = null;
+		return result;
 	}
 
-	public Object local() {
-		return new LocalMap(this);
+	static class SimpleEntry implements Entry {
+		Object key;
+		Object value;
+
+		public SimpleEntry(Object key, Object value) {
+			this.key   = key;
+			this.value = value;
+		}
+
+		public SimpleEntry(Map.Entry e) {
+			this.key   = e.getKey();
+			this.value = e.getValue();
+		}
+
+		public Object getKey() {
+			return key;
+		}
+
+		public Object getValue() {
+			return value;
+		}
+
+		public Object setValue(Object value) {
+			Object oldValue = this.value;
+			this.value = value;
+			return oldValue;
+		}
+
+		public boolean equals(Object o) {
+			if (!(o instanceof Map.Entry))
+				return false;
+			Map.Entry e = (Map.Entry)o;
+			return eq(key, e.getKey()) &&  eq(value, e.getValue());
+		}
+
+		public int hashCode() {
+			Object v;
+			return ((key   == null)   ? 0 :   key.hashCode()) ^
+				   ((value == null)   ? 0 : value.hashCode());
+		}
+
+		public String toString() {
+			return key + "=" + value;
+		}
+
+		private static boolean eq(Object o1, Object o2) {
+			return (o1 == null ? o2 == null : o1.equals(o2));
+		}
 	}
 }
