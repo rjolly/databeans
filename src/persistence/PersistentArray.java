@@ -1,14 +1,20 @@
 package persistence;
 
-import java.rmi.RemoteException;
-
 public final class PersistentArray extends PersistentObject implements Array {
-	protected Accessor accessor() throws RemoteException {
-		return new ArrayAccessor(this);
+	public void init(Object component[]) {
+		Arrays.copy(component,0,this,0,component.length);
 	}
 
-	protected void init(Object component[]) {
-		Arrays.copy(component,0,this,0,component.length);
+	protected Accessor createAccessor() {
+		return new Accessor() {
+			public Object get(int index) {
+				return get(((ArrayClass)clazz).getField(index));
+			}
+			
+			public Object set(int index, Object value) {
+				return set(((ArrayClass)clazz).getField(index),value);
+			}
+		};
 	}
 
 	public int length() {
@@ -109,19 +115,5 @@ public final class PersistentArray extends PersistentObject implements Array {
 		for(int i=0;i<n;i++) s.append((i==0?"":", ")+get(i));
 		s.append("}");
 		return s.toString();
-	}
-}
-
-class ArrayAccessor extends Accessor {
-	ArrayAccessor(PersistentObject object) throws RemoteException {
-		super(object);
-	}
-
-	public Object get(int index) {
-		return get(((ArrayClass)clazz).getField(index));
-	}
-
-	public Object set(int index, Object value) {
-		return set(((ArrayClass)clazz).getField(index),value);
 	}
 }

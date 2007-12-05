@@ -1,45 +1,45 @@
 package persistence;
 
 import java.io.Serializable;
-import java.rmi.RemoteException;
 import java.util.Iterator;
 
 public class PersistentObject implements Cloneable, Serializable {
-	RemoteAccessor accessor;
+	persistence.Accessor accessor;
 	Connection connection;
 	transient PersistentClass clazz;
 	transient long base;
 
-	protected void init() {}
+	public void init() {}
+
+	protected Accessor createAccessor() {
+		return new Accessor();
+	}
+
+	protected class Accessor extends AccessorImpl {
+		PersistentObject object() {
+			return PersistentObject.this;
+		}
+	}
 
 	protected PersistentObject() {}
 
-	protected Accessor accessor() throws RemoteException {
-		return new Accessor(this);
-	}
-
-	void init(Accessor accessor, Connection connection) {
-		this.accessor=accessor;
-		this.connection=connection;
-	}
-
-	public final PersistentObject create(String name) {
+	protected final PersistentObject create(String name) {
 		return connection.create(name);
 	}
 
-	public final PersistentObject create(Class clazz) {
+	protected final PersistentObject create(Class clazz) {
 		return connection.create(clazz);
 	}
 
-	public final PersistentObject create(Class clazz, Class types[], Object args[]) {
+	protected final PersistentObject create(Class clazz, Class types[], Object args[]) {
 		return connection.create(clazz,types,args);
 	}
 
-	public final PersistentArray create(Class componentType, int length) {
+	protected final PersistentArray create(Class componentType, int length) {
 		return connection.create(componentType,length);
 	}
 
-	public final PersistentArray create(Object component[]) {
+	protected final PersistentArray create(Object component[]) {
 		return connection.create(component);
 	}
 
@@ -55,27 +55,36 @@ public class PersistentObject implements Cloneable, Serializable {
 	}
 
 	protected final Object execute(MethodCall call) {
-		return connection.execute(call,null,0,true);
+		return connection.execute(call);
 	}
 
 	protected final Object execute(MethodCall call, MethodCall undo, int index) {
-		return connection.execute(call,undo,index,false);
+		return connection.execute(call,undo,index);
+	}
+
+	void init(persistence.Accessor accessor, Connection connection) {
+		this.accessor=accessor;
+		this.connection=connection;
+	}
+
+	AccessorImpl accessor() {
+		return (AccessorImpl)accessor;
 	}
 
 	Object call(String method, Class types[], Object args[]) {
-		return ((Accessor)accessor).call(method,types,args);
+		return accessor().call(method,types,args);
 	}
 
 	void lock(Transaction transaction) {
-		((Accessor)accessor).lock((Accessor)transaction.accessor);
+		accessor().lock(transaction.accessor());
 	}
 
 	void unlock() {
-		((Accessor)accessor).unlock();
+		accessor().unlock();
 	}
 
 	void kick() {
-		((Accessor)accessor).kick();
+		accessor().kick();
 	}
 
 	public int hashCode() {
@@ -97,7 +106,6 @@ public class PersistentObject implements Cloneable, Serializable {
 		}
 		s.append("]");
 		return s.toString();
-//		return Long.toHexString(base());
 	}
 
 	public final long base() {

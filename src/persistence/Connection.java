@@ -28,7 +28,8 @@ public interface Connection extends Remote {
 	boolean isReadOnly() throws RemoteException;
 	void setReadOnly(boolean readOnly) throws RemoteException;
 
-	Object execute(MethodCall call, MethodCall undo, int index, boolean read);
+	Object execute(MethodCall call) throws RemoteException;
+	Object execute(MethodCall call, MethodCall undo, int index) throws RemoteException;
 
 	void commit() throws RemoteException;
 	void rollback() throws RemoteException;

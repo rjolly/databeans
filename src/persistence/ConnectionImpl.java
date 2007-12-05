@@ -73,7 +73,7 @@ public class ConnectionImpl extends UnicastRemoteObject implements Connection {
 
 	public synchronized PersistentObject create(PersistentObject obj) {
 		if(closed) throw new PersistentException("connection closed");
-		return ((Accessor)((Accessor)obj.accessor).clone()).object(this);
+		return ((AccessorImpl)obj.accessor().clone()).object(this);
 	}
 
 	public Object getRoot() {
@@ -108,23 +108,27 @@ public class ConnectionImpl extends UnicastRemoteObject implements Connection {
 		this.readOnly=readOnly;
 	}
 
-	public synchronized Object execute(MethodCall call, MethodCall undo, int index, boolean read) {
+	public Object execute(MethodCall call) {
+		return MethodCall.attach(this,execute(call.detach(),null,0,true));
+	}
+
+	public Object execute(MethodCall call, MethodCall undo, int index) {
+		return MethodCall.attach(this,execute(call.detach(),undo.detach(),index,false));
+	}
+
+	synchronized Object execute(MethodCall call, MethodCall undo, int index, boolean read) {
 		if(closed) throw new PersistentException("connection closed");
 		if(!read && readOnly) throw new PersistentException("read only");
 		Object obj;
 		if(transaction!=null) {
-			obj=call.execute(transaction.copy(call.target(),level,read,readOnly));
+			obj=call.execute(transaction.copy(call.target,level,read,readOnly));
 			if(!read) {
 				undo.args[index]=obj;
 				transaction.record(call,undo,level);
 			}
 		} else obj=call.execute();
 		if(autoCommit) commit();
-		return attach(Accessor.detach(obj));
-	}
-
-	Object attach(Object obj) {
-		return obj instanceof Accessor?((Accessor)obj).object(this):obj;
+		return obj;
 	}
 
 	public synchronized void commit() {

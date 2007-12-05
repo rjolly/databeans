@@ -2,20 +2,10 @@ package persistence;
 
 public class PersistentMethodCall extends PersistentObject {
 	protected void init(MethodCall call) {
-		setTarget(call.target());
+		setTarget(call.target);
 		setMethod(call.method);
 		setTypes(create(call.types));
-		setArgs(create(call.args()));
-	}
-
-	Object execute() {
-		Array t=getTypes();
-		Array a=getArgs();
-		Class types[]=new Class[t.length()];
-		Object args[]=new Object[a.length()];
-		Arrays.copy(t,0,types,0,types.length);
-		Arrays.copy(a,0,args,0,args.length);
-		getTarget().call(getMethod(),types,args);
+		setArgs(create(call.args));
 	}
 
 	public PersistentObject getTarget() {

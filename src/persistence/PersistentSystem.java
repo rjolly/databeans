@@ -6,7 +6,7 @@ import persistence.util.PersistentArrayList;
 import persistence.util.PersistentHashMap;
 
 public class PersistentSystem extends PersistentObject {
-	protected void init() {
+	public void init() {
 		setUsers((Map)create(PersistentHashMap.class));
 		setClasses((Map)create(PersistentHashMap.class));
 		setTransactions((Collection)create(PersistentArrayList.class));

@@ -130,12 +130,12 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		return (Transaction)systemConnection.create(Transaction.class,new Class[] {String.class},new Object[] {client});
 	}
 
-	Accessor create(PersistentClass c) {
+	AccessorImpl create(PersistentClass c) {
 		byte b[]=new byte[c.size];
 		long base=heap.alloc(b.length);
 		heap.writeBytes(base,b);
 		setClass(base,c=cache(c));
-		return cache(Accessor.create(new Long(base),c,this));
+		return cache(AccessorImpl.create(new Long(base),c,this));
 	}
 
 	PersistentClass cache(PersistentClass c) {
@@ -148,7 +148,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		}
 	}
 
-	Accessor cache(Accessor accessor) {
+	AccessorImpl cache(AccessorImpl accessor) {
 		synchronized(cache) {
 			Long b=accessor.base;
 			hold(b.longValue());
@@ -157,13 +157,13 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		}
 	}
 
-	Accessor instantiate(long base) {
+	AccessorImpl instantiate(long base) {
 		synchronized(cache) {
 			Long b=new Long(base);
-			Accessor obj;
+			AccessorImpl obj;
 			Reference w;
-			if((obj=(w=(Reference)cache.get(b))==null?null:(Accessor)w.get())==null) {
-				obj=Accessor.create(b,getClass(base),this);
+			if((obj=(w=(Reference)cache.get(b))==null?null:(AccessorImpl)w.get())==null) {
+				obj=AccessorImpl.create(b,getClass(base),this);
 				hold(b.longValue());
 				cache.put(b,new WeakReference(obj));
 			};
@@ -171,12 +171,12 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		}
 	}
 
-	void release(Accessor accessor) {
+	void release(AccessorImpl accessor) {
 		synchronized(cache) {
 			Long b=accessor.base;
-			Accessor obj;
+			AccessorImpl obj;
 			Reference w;
-			if((obj=(w=(Reference)cache.get(b))==null?null:(Accessor)w.get())==null) {
+			if((obj=(w=(Reference)cache.get(b))==null?null:(AccessorImpl)w.get())==null) {
 				release(b.longValue());
 			} else {
 				if(obj==accessor) {
@@ -409,7 +409,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	void setReference(long base, Field field, Object value) {
 		synchronized(heap) {
 			long src=((Long)field.get(heap,base)).longValue();
-			long dst=value==null?0:value instanceof Accessor?((Accessor)value).base.longValue():writeObject(value);
+			long dst=value==null?0:value instanceof AccessorImpl?((AccessorImpl)value).base.longValue():writeObject(value);
 			if(dst!=0) incRefCount(dst);
 			field.set(heap,base,new Long(dst));
 			if(src!=0) decRefCount(src);
@@ -440,12 +440,12 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		}
 	}
 
-	Accessor getLock(long base) {
+	AccessorImpl getLock(long base) {
 		long ptr=((Long)Field.LOCK.get(heap,base)).longValue();
 		return ptr==0?null:instantiate(ptr);
 	}
 
-	void setLock(long base, Accessor accessor) {
+	void setLock(long base, AccessorImpl accessor) {
 		Field.LOCK.set(heap,base,accessor==null?new Long(0):accessor.base);
 	}
 

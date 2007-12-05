@@ -10,7 +10,7 @@ import persistence.util.PersistentArrayList;
 import persistence.util.PersistentHashMap;
 
 public class Transaction extends PersistentObject {
-	protected void init(String client) {
+	public void init(String client) {
 		setClient(client);
 		setCalls((List)create(PersistentArrayList.class));
 		setUndos((List)create(PersistentArrayList.class));
@@ -69,7 +69,7 @@ public class Transaction extends PersistentObject {
 	void commit() {
 		List l=getCalls();
 		for(ListIterator it=l.listIterator(0);it.hasNext();it.remove()) {
-			((PersistentMethodCall)it.next()).execute();
+			MethodCall.execute(((PersistentMethodCall)it.next()));
 		}
 		unlock();
 	}
@@ -77,7 +77,7 @@ public class Transaction extends PersistentObject {
 	void rollback() {
 		List l=getUndos();
 		for(ListIterator it=l.listIterator(l.size());it.hasPrevious();it.remove()) {
-			((PersistentMethodCall)it.previous()).execute();
+			MethodCall.execute((PersistentMethodCall)it.previous());
 		}
 		unlock();
 	}

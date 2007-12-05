@@ -3,13 +3,29 @@ package persistence;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyVetoException;
 import java.beans.VetoableChangeListener;
-import java.rmi.RemoteException;
 import persistence.beans.PersistentPropertyChangeSupport;
 import persistence.beans.PersistentVetoableChangeSupport;
 
 public abstract class NotifiedObject extends PersistentObject {
-	protected Accessor accessor() throws RemoteException {
-		return new NotifiedAccessor(this);
+	protected Accessor createAccessor() {
+		return new NotifiedAccessor();
+	}
+
+	protected class NotifiedAccessor extends Accessor {
+		synchronized Object set(Field field, Object value) {
+			Object oldValue=get(field);
+			try {
+				PersistentVetoableChangeSupport support=getVetoableChangeSupport();
+				if(support!=null) support.fireVetoableChange(field.name,oldValue,value);
+			} catch (PropertyVetoException e) {
+				throw new RuntimeException(e);
+			}
+			{
+				PersistentPropertyChangeSupport support=getPropertyChangeSupport();
+				if(support!=null) support.firePropertyChange(field.name,oldValue,value);
+			}
+			return super.set(field,value);
+		}
 	}
 
 	public PersistentPropertyChangeSupport getPropertyChangeSupport() {
@@ -28,7 +44,7 @@ public abstract class NotifiedObject extends PersistentObject {
 		set("vetoableChangeSupport",support);
 	}
 
-	protected void init() {
+	public void init() {
 		setPropertyChangeSupport((PersistentPropertyChangeSupport)create(PersistentPropertyChangeSupport.class, new Class[] {Object.class}, new Object[] {this}));
 		setVetoableChangeSupport((PersistentVetoableChangeSupport)create(PersistentVetoableChangeSupport.class, new Class[] {Object.class}, new Object[] {this}));
 	}
@@ -71,26 +87,5 @@ public abstract class NotifiedObject extends PersistentObject {
 
 	public final boolean hasVetoableChangeListeners(String propertyName) {
 		return getVetoableChangeSupport().hasListeners(propertyName);
-	}
-}
-
-class NotifiedAccessor extends Accessor {
-	NotifiedAccessor(PersistentObject object) throws RemoteException {
-		super(object);
-	}
-
-	synchronized Object set(Field field, Object value) {
-		Object oldValue=get(field);
-		try {
-			PersistentVetoableChangeSupport support=((NotifiedObject)object).getVetoableChangeSupport();
-			if(support!=null) support.fireVetoableChange(field.name,oldValue,value);
-		} catch (PropertyVetoException e) {
-			throw new RuntimeException(e);
-		}
-		{
-			PersistentPropertyChangeSupport support=((NotifiedObject)object).getPropertyChangeSupport();
-			if(support!=null) support.firePropertyChange(field.name,oldValue,value);
-		}
-		return super.set(field,value);
 	}
 }
