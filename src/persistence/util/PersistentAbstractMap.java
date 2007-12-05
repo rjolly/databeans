@@ -17,59 +17,61 @@ import persistence.MethodCall;
 import persistence.PersistentObject;
 
 public abstract class PersistentAbstractMap extends PersistentObject implements Map {
-	protected Accessor createAccessor() {
-		return new Accessor() {
-			public synchronized Object get(Object key) {
-				Iterator i = entrySet().iterator();
-				if (key==null) {
-					while (i.hasNext()) {
-						Entry e = (Entry) i.next();
-						if (e.getKey()==null)
-							return e.getValue();
-					}
-				} else {
-					while (i.hasNext()) {
-						Entry e = (Entry) i.next();
-						if (key.equals(e.getKey()))
-							return e.getValue();
-					}
+	protected PersistentObject.Accessor createAccessor() {
+		return new Accessor();
+	}
+
+	protected class Accessor extends PersistentObject.Accessor {
+		public synchronized Object get(Object key) {
+			Iterator i = entrySet().iterator();
+			if (key==null) {
+				while (i.hasNext()) {
+					Entry e = (Entry) i.next();
+					if (e.getKey()==null)
+						return e.getValue();
 				}
-				return null;
-			}
-
-			public Object put(Object key, Object value) {
-				return value==NULL?remove0(key):put0(key,value);
-			}
-
-			public Object put0(Object key, Object value) {
-				throw new UnsupportedOperationException();
-			}
-
-			public synchronized Object remove0(Object key) {
-				Iterator i = entrySet().iterator();
-				Entry correctEntry = null;
-				if (key==null) {
-					while (correctEntry==null && i.hasNext()) {
-						Entry e = (Entry) i.next();
-						if (e.getKey()==null)
-							correctEntry = e;
-					}
-				} else {
-					while (correctEntry==null && i.hasNext()) {
-						Entry e = (Entry) i.next();
-						if (key.equals(e.getKey()))
-							correctEntry = e;
-					}
+			} else {
+				while (i.hasNext()) {
+					Entry e = (Entry) i.next();
+					if (key.equals(e.getKey()))
+						return e.getValue();
 				}
-
-				Object oldValue = null;
-				if (correctEntry !=null) {
-					oldValue = correctEntry.getValue();
-					i.remove();
-				}
-				return oldValue;
 			}
-		};
+			return null;
+		}
+
+		public Object put(Object key, Object value) {
+			return value==NULL?remove0(key):put0(key,value);
+		}
+
+		public Object put0(Object key, Object value) {
+			throw new UnsupportedOperationException();
+		}
+
+		public synchronized Object remove0(Object key) {
+			Iterator i = entrySet().iterator();
+			Entry correctEntry = null;
+			if (key==null) {
+				while (correctEntry==null && i.hasNext()) {
+					Entry e = (Entry) i.next();
+					if (e.getKey()==null)
+						correctEntry = e;
+				}
+			} else {
+				while (correctEntry==null && i.hasNext()) {
+					Entry e = (Entry) i.next();
+					if (key.equals(e.getKey()))
+						correctEntry = e;
+				}
+			}
+			
+			Object oldValue = NULL;
+			if (correctEntry !=null) {
+				oldValue = correctEntry.getValue();
+				i.remove();
+			}
+			return oldValue;
+		}
 	}
 
 	// Query Operations

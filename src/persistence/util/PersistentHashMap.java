@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import persistence.Array;
+import persistence.MethodCall;
 import persistence.PersistentObject;
 
 public class PersistentHashMap extends PersistentAbstractMap implements Map, Cloneable
@@ -22,6 +23,60 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 	static final int DEFAULT_INITIAL_CAPACITY = 16;
 	static final int MAXIMUM_CAPACITY = 1 << 30;
 	static final float DEFAULT_LOAD_FACTOR = 0.75f;
+
+	protected PersistentObject.Accessor createAccessor() {
+		return new Accessor();
+	}
+
+	protected class Accessor extends PersistentAbstractMap.Accessor {
+		public synchronized Object get(Object key) {
+			Object k = maskNull(key);
+			int hash = hash(k);
+			int i = indexFor(hash, getTable().length());
+			Entry e = (Entry)getTable().get(i);
+			while (true) {
+				if (e == null)
+					return e;
+				if (e.getHash() == hash && eq(k, e.getKey()))
+					return e.getValue();
+				e=e.getNext();
+			}
+		}
+
+		public synchronized Entry getEntry(Object key) {
+			Object k = maskNull(key);
+			int hash = hash(k);
+			int i = indexFor(hash, getTable().length());
+			Entry e = (Entry)getTable().get(i);
+			while (e != null && !(e.getHash() == hash && eq(k, e.getKey())))
+				e=e.getNext();
+			return e;
+		}
+
+		public synchronized Object put0(Object key, Object value) {
+			Object k = maskNull(key);
+			int hash = hash(k);
+			int i = indexFor(hash, getTable().length());
+
+			for (Entry e = (Entry)getTable().get(i); e != null; e = e.getNext()) {
+				if (e.getHash() == hash && eq(k, e.getKey())) {
+					Object oldValue = e.getValue();
+					e.setValue(value);
+					e.recordAccess(PersistentHashMap.this);
+					return oldValue;
+				}
+			}
+
+			incModCount();
+			addEntry(hash, k, value, i);
+			return NULL;
+		}
+  
+		public synchronized Object remove0(Object key) {
+			Entry e = removeEntryForKey(key);
+			return (e == null ? NULL : e.getValue());
+		}
+	}
 
 	public Array getTable() {
 		return (Array)get("table");
@@ -98,7 +153,8 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 	public void init(Map m) {
 		init(Math.max((int) (m.size() / DEFAULT_LOAD_FACTOR) + 1,
 					  DEFAULT_INITIAL_CAPACITY), DEFAULT_LOAD_FACTOR);
-		putAllForCreate(m);
+//		putAllForCreate(m);
+		putAll(m);
 	}
 
 	// internal utilities
@@ -139,87 +195,49 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 		return getSize() == 0;
 	}
 
-	public Object get(Object key) {
-		Object k = maskNull(key);
-		int hash = hash(k);
-		int i = indexFor(hash, getTable().length());
-		Entry e = (Entry)getTable().get(i); 
-		while (true) {
-			if (e == null)
-				return e;
-			if (e.getHash() == hash && eq(k, e.getKey())) 
-				return e.getValue();
-			e.setNext(e.getNext());
-		}
-	}
-
-	public boolean containsKey(Object key) {
-		Object k = maskNull(key);
-		int hash = hash(k);
-		int i = indexFor(hash, getTable().length());
-		Entry e = (Entry)getTable().get(i); 
-		while (e != null) {
-			if (e.getHash() == hash && eq(k, e.getKey())) 
-				return true;
-			e.setNext(e.getNext());
-		}
-		return false;
-	}
+//	public boolean containsKey(Object key) {
+//		Object k = maskNull(key);
+//		int hash = hash(k);
+//		int i = indexFor(hash, getTable().length());
+//		Entry e = (Entry)getTable().get(i); 
+//		while (e != null) {
+//			if (e.getHash() == hash && eq(k, e.getKey())) 
+//				return true;
+//			e=e.getNext();
+//		}
+//		return false;
+//	}
 
 	Entry getEntry(Object key) {
-		Object k = maskNull(key);
-		int hash = hash(k);
-		int i = indexFor(hash, getTable().length());
-		Entry e = (Entry)getTable().get(i); 
-		while (e != null && !(e.getHash() == hash && eq(k, e.getKey())))
-			e=e.getNext();
-		return e;
+		return (Entry)execute(
+			new MethodCall(this,"getEntry",new Class[] {Object.class},new Object[] {key}));
 	}
 
 	void incModCount() {
 		setModCount(getModCount()+1);
 	}
 
-	public Object put(Object key, Object value) {
-		Object k = maskNull(key);
-		int hash = hash(k);
-		int i = indexFor(hash, getTable().length());
+//	private void putForCreate(Object key, Object value) {
+//		Object k = maskNull(key);
+//		int hash = hash(k);
+//		int i = indexFor(hash, getTable().length());
+//
+//		for (Entry e = (Entry)getTable().get(i); e != null; e = e.getNext()) {
+//			if (e.getHash() == hash && eq(k, e.getKey())) {
+//				e.setValue(value);
+//				return;
+//			}
+//		}
+//
+//		createEntry(hash, k, value, i);
+//	}
 
-		for (Entry e = (Entry)getTable().get(i); e != null; e = e.getNext()) {
-			if (e.getHash() == hash && eq(k, e.getKey())) {
-				Object oldValue = e.getValue();
-				e.setValue(value);
-				e.recordAccess(this);
-				return oldValue;
-			}
-		}
-
-		incModCount();
-		addEntry(hash, k, value, i);
-		return null;
-	}
-
-	private void putForCreate(Object key, Object value) {
-		Object k = maskNull(key);
-		int hash = hash(k);
-		int i = indexFor(hash, getTable().length());
-
-		for (Entry e = (Entry)getTable().get(i); e != null; e = e.getNext()) {
-			if (e.getHash() == hash && eq(k, e.getKey())) {
-				e.setValue(value);
-				return;
-			}
-		}
-
-		createEntry(hash, k, value, i);
-	}
-
-	void putAllForCreate(Map m) {
-		for (Iterator i = m.entrySet().iterator(); i.hasNext(); ) {
-			Map.Entry e = (Map.Entry) i.next();
-			putForCreate(e.getKey(), e.getValue());
-		}
-	}
+//	void putAllForCreate(Map m) {
+//		for (Iterator i = m.entrySet().iterator(); i.hasNext(); ) {
+//			Map.Entry e = (Map.Entry) i.next();
+//			putForCreate(e.getKey(), e.getValue());
+//		}
+//	}
 
 	void resize(int newCapacity) {
 		Array oldTable = getTable();
@@ -253,32 +271,27 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 		}
 	}
 
-	public void putAll(Map m) {
-		int numKeysToBeAdded = m.size();
-		if (numKeysToBeAdded == 0)
-			return;
-
-		if (numKeysToBeAdded > getThreshold()) {
-			int targetCapacity = (int)(numKeysToBeAdded / getLoadFactor() + 1);
-			if (targetCapacity > MAXIMUM_CAPACITY)
-				targetCapacity = MAXIMUM_CAPACITY;
-			int newCapacity = getTable().length();
-			while (newCapacity < targetCapacity)
-				newCapacity <<= 1;
-			if (newCapacity > getTable().length())
-				resize(newCapacity);
-		}
-
-		for (Iterator i = m.entrySet().iterator(); i.hasNext(); ) {
-			Map.Entry e = (Map.Entry) i.next();
-			put(e.getKey(), e.getValue());
-		}
-	}
-  
-	public Object remove(Object key) {
-		Entry e = removeEntryForKey(key);
-		return (e == null ? e : e.getValue());
-	}
+//	public void putAll(Map m) {
+//		int numKeysToBeAdded = m.size();
+//		if (numKeysToBeAdded == 0)
+//			return;
+//
+//		if (numKeysToBeAdded > getThreshold()) {
+//			int targetCapacity = (int)(numKeysToBeAdded / getLoadFactor() + 1);
+//			if (targetCapacity > MAXIMUM_CAPACITY)
+//				targetCapacity = MAXIMUM_CAPACITY;
+//			int newCapacity = getTable().length();
+//			while (newCapacity < targetCapacity)
+//				newCapacity <<= 1;
+//			if (newCapacity > getTable().length())
+//				resize(newCapacity);
+//		}
+//
+//		for (Iterator i = m.entrySet().iterator(); i.hasNext(); ) {
+//			Map.Entry e = (Map.Entry) i.next();
+//			put(e.getKey(), e.getValue());
+//		}
+//	}
 
 	Entry removeEntryForKey(Object key) {
 		Object k = maskNull(key);
@@ -336,41 +349,42 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 		return e;
 	}
 
-	public void clear() {
-		incModCount();
-		Array tab = getTable();
-		for (int i = 0; i < tab.length(); i++) 
-			tab.set(i,null);
-		setSize(0);
-	}
+//	public void clear() {
+//		incModCount();
+//		Array tab = getTable();
+//		for (int i = 0; i < tab.length(); i++) 
+//			tab.set(i,null);
+//		setSize(0);
+//	}
 
-	public boolean containsValue(Object value) {
-		if (value == null) 
-			return containsNullValue();
+//	public boolean containsValue(Object value) {
+//		if (value == null) 
+//			return containsNullValue();
+//
+//		Array tab = getTable();
+//		for (int i = 0; i < tab.length() ; i++)
+//			for (Entry e = (Entry)tab.get(i) ; e != null ; e = e.getNext())
+//				if (value.equals(e.getValue()))
+//					return true;
+//		return false;
+//	}
 
-		Array tab = getTable();
-		for (int i = 0; i < tab.length() ; i++)
-			for (Entry e = (Entry)tab.get(i) ; e != null ; e = e.getNext())
-				if (value.equals(e.getValue()))
-					return true;
-		return false;
-	}
-
-	private boolean containsNullValue() {
-		Array tab = getTable();
-		for (int i = 0; i < tab.length() ; i++)
-			for (Entry e = (Entry)tab.get(i) ; e != null ; e = e.getNext())
-				if (e.getValue() == null)
-					return true;
-		return false;
-	}
+//	private boolean containsNullValue() {
+//		Array tab = getTable();
+//		for (int i = 0; i < tab.length() ; i++)
+//			for (Entry e = (Entry)tab.get(i) ; e != null ; e = e.getNext())
+//				if (e.getValue() == null)
+//					return true;
+//		return false;
+//	}
 
 	public Object clone() {
 		PersistentHashMap result = (PersistentHashMap)super.clone();
 		result.setTable(create(Entry.class,getTable().length()));
 		result.setModCount(0);
 		result.setSize(0);
-		result.putAllForCreate(this);
+//		result.putAllForCreate(this);
+		result.putAll(this);
 
 		return result;
 	}
@@ -465,10 +479,10 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 			resize(2 * getTable().length());
 	}
 
-	void createEntry(int hash, Object key, Object value, int bucketIndex) {
-		getTable().set(bucketIndex,create(Entry.class,new Class[] {int.class,Object.class,Object.class,Entry.class},new Object[] {new Integer(hash), key, value, getTable().get(bucketIndex)}));
-		setSize(getSize()+1);
-	}
+//	void createEntry(int hash, Object key, Object value, int bucketIndex) {
+//		getTable().set(bucketIndex,create(Entry.class,new Class[] {int.class,Object.class,Object.class,Entry.class},new Object[] {new Integer(hash), key, value, getTable().get(bucketIndex)}));
+//		setSize(getSize()+1);
+//	}
 
 	private abstract class HashIterator implements Iterator {
 		Entry next;				  // next entry to return
