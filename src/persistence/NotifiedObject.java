@@ -7,11 +7,11 @@ import persistence.beans.PersistentPropertyChangeSupport;
 import persistence.beans.PersistentVetoableChangeSupport;
 
 public abstract class NotifiedObject extends PersistentObject {
-	protected Accessor createAccessor() {
-		return new NotifiedAccessor();
+	protected PersistentObject.Accessor createAccessor() {
+		return new Accessor();
 	}
 
-	protected class NotifiedAccessor extends Accessor {
+	protected class Accessor extends PersistentObject.Accessor {
 		synchronized Object set(Field field, Object value) {
 			Object oldValue=get(field);
 			try {

@@ -23,6 +23,11 @@ public class PersistentObject implements Cloneable, Serializable {
 
 	protected PersistentObject() {}
 
+	void init(persistence.Accessor accessor, Connection connection) {
+		this.accessor=accessor;
+		this.connection=connection;
+	}
+
 	protected final PersistentObject create(String name) {
 		return connection.create(name);
 	}
@@ -60,11 +65,6 @@ public class PersistentObject implements Cloneable, Serializable {
 
 	protected final Object execute(MethodCall call, MethodCall undo, int index) {
 		return connection.execute(call,undo,index);
-	}
-
-	void init(persistence.Accessor accessor, Connection connection) {
-		this.accessor=accessor;
-		this.connection=connection;
 	}
 
 	AccessorImpl accessor() {

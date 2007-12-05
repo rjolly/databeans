@@ -8,7 +8,6 @@ package persistence.util;
 
 import java.util.Collection;
 import java.util.Iterator;
-import persistence.Accessor;
 import persistence.MethodCall;
 import persistence.PersistentObject;
 

@@ -1,7 +1,7 @@
 package persistence;
 
 public class PersistentMethodCall extends PersistentObject {
-	protected void init(MethodCall call) {
+	public void init(MethodCall call) {
 		setTarget(call.target);
 		setMethod(call.method);
 		setTypes(create(call.types));
