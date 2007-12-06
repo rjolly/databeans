@@ -1,6 +1,8 @@
 package persistence;
 
-public class MethodCall {
+import java.io.Serializable;
+
+public class MethodCall implements Serializable {
 	PersistentObject target;
 	String method;
 	Class types[];
