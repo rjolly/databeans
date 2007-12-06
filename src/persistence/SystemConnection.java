@@ -10,11 +10,11 @@ class SystemConnection extends ConnectionImpl {
 
 	void open() {}
 
-	Object execute(MethodCall call) {
+	public Object execute(MethodCall call) {
 		return execute(call,null,0,true);
 	}
 
-	Object execute(MethodCall call, MethodCall undo, int index) {
+	public Object execute(MethodCall call, MethodCall undo, int index) {
 		return execute(call,undo,index,false);
 	}
 
@@ -24,11 +24,11 @@ class SystemConnection extends ConnectionImpl {
 		return call.execute();
 	}
 
-	synchronized void commit() {
+	public synchronized void commit() {
 		if(closed) throw new PersistentException("connection closed");
 	}
 
-	synchronized void rollback() {
+	public synchronized void rollback() {
 		if(closed) throw new PersistentException("connection closed");
 	}
 

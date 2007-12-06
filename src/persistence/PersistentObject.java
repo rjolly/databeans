@@ -5,10 +5,8 @@ import java.rmi.RemoteException;
 import java.util.Iterator;
 
 public class PersistentObject implements Cloneable, Serializable {
-	private persistence.Accessor accessor;
-	private Connection connection;
-	transient PersistentClass clazz;
-	transient Long base;
+	persistence.Accessor accessor;
+	Connection connection;
 
 	public void init() {}
 
@@ -154,6 +152,9 @@ public class PersistentObject implements Cloneable, Serializable {
 			throw new RuntimeException(e);
 		}
 	}
+
+	private transient PersistentClass clazz;
+	private transient Long base;
 
 	public Object clone() {
 		return execute(

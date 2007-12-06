@@ -391,7 +391,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 		return result;
 	}
 
-	static class Entry extends PersistentObject implements Map.Entry {
+	public static class Entry extends PersistentObject implements Map.Entry {
 		public Object getKey() {
 			return get("key");
 		}
@@ -424,7 +424,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 			set("next",entry);
 		}
 
-		Entry(int h, Object k, Object v, Entry n) { 
+		public void init(int h, Object k, Object v, Entry n) { 
 			setValue(v);
 			setNext(n);
 			setKey(k);

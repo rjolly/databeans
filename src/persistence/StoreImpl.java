@@ -131,7 +131,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		long base=heap.alloc(b.length);
 		heap.writeBytes(base,b);
 		setClass(base,clazz=cache(clazz));
-		return cache(AccessorImpl.create(new Long(base),clazz,this));
+		return cache(AccessorImpl.newInstance(new Long(base),clazz,this));
 	}
 
 	PersistentClass cache(PersistentClass clazz) {
@@ -159,7 +159,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 			AccessorImpl obj;
 			Reference w;
 			if((obj=(w=(Reference)cache.get(b))==null?null:(AccessorImpl)w.get())==null) {
-				obj=cache(AccessorImpl.create(b,getClass(base),this));
+				obj=cache(AccessorImpl.newInstance(b,getClass(base),this));
 			};
 			return obj;
 		}

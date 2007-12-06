@@ -29,15 +29,7 @@
     <mkdir dir="classes"/>
     <javac srcdir="src" destdir="classes"/>
     <rmic base="classes"
-          includes="persistence/*Impl.class
-                    persistence/util/Persistent*.class
-                    persistence/beans/Persistent*.class
-                    persistence/Persistent*.class
-                    persistence/Transaction.class"
-          excludes="persistence/Persistent.class
-                    persistence/PersistentClass.class
-                    persistence/PersistentException.class
-                    persistence/util/PersistentHashMap$EmptyHashIterator.class"
+          includes="persistence/*Impl.class"
     />
   </target>
 
@@ -46,15 +38,7 @@
     <javac debug="on" srcdir="src" destdir="classes"/>
     <rmic debug="on"
           base="classes"
-          includes="persistence/*Impl.class
-                    persistence/util/Persistent*.class
-                    persistence/beans/Persistent*.class
-                    persistence/Persistent*.class
-                    persistence/Transaction.class"
-          excludes="persistence/Persistent.class
-                    persistence/PersistentClass.class
-                    persistence/PersistentException.class
-                    persistence/util/PersistentHashMap$EmptyHashIterator.class"
+          includes="persistence/*Impl.class"
     />
   </target>
 
@@ -90,40 +74,10 @@
     <zip destfile="databeans_client.jar"
          basedir="classes"
          compress="false"
-         includes="persistence/RemoteArray.class
-                   persistence/beans/Remote*.class
-                   persistence/util/Remote*.class
-                   persistence/util/Local*.class
-                   persistence/Local*.class
-                   persistence/Persistent.class
-                   persistence/PersistentException.class
-                   persistence/Notified.class
-                   persistence/Array.class
-                   persistence/Arrays.class
-                   persistence/Connections.class
-                   persistence/Connection.class
-                   persistence/Store.class"
-    />
-    <zip destfile="databeans_admin.jar"
-         basedir="classes"
-         compress="false"
-         includes="persistence/Admin.class
-                   persistence/RemoteMethodCall.class
-                   persistence/RemoteTransaction.class
-                   persistence/RemoteSystem.class
-                   persistence/RemoteArray.class
-                   persistence/beans/Remote*.class
-                   persistence/util/Remote*.class
-                   persistence/util/Local*.class
-                   persistence/Local*.class
-                   persistence/Persistent.class
-                   persistence/PersistentException.class
-                   persistence/Notified.class
-                   persistence/Array.class
-                   persistence/Arrays.class
-                   persistence/Connections.class
-                   persistence/Connection.class
-                   persistence/Store.class"
+         includes="persistence/*.class
+                   persistence/beans/*.class
+                   persistence/util/*.class"
+         excludes="persistence/*Impl.class"
     />
   </target>
 
@@ -165,7 +119,7 @@
   </target>
 
   <target name="admin">
-    <java classname="bsh.Console" classpath="lib/bsh-2.0b4.jar:databeans_admin.jar" fork="true">
+    <java classname="bsh.Console" classpath="lib/bsh-2.0b4.jar:databeans_client.jar" fork="true">
       <sysproperty key="java.security.manager" value=""/>
       <sysproperty key="java.security.policy" value="policy"/>
     </java>

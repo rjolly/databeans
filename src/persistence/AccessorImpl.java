@@ -6,9 +6,9 @@ import java.util.Iterator;
 
 public abstract class AccessorImpl extends UnicastRemoteObject implements Accessor {
 	static final int TIMEOUT=60000;
-	private PersistentClass clazz;
-	private StoreImpl store;
-	private Long base;
+	PersistentClass clazz;
+	StoreImpl store;
+	Long base;
 
 	protected AccessorImpl() throws RemoteException {}
 
@@ -113,7 +113,7 @@ public abstract class AccessorImpl extends UnicastRemoteObject implements Access
 		return clazz;
 	}
 
-	static AccessorImpl create(Long base, PersistentClass clazz, StoreImpl store) {
+	static AccessorImpl newInstance(Long base, PersistentClass clazz, StoreImpl store) {
 		try {
 			PersistentObject obj=clazz.newInstance();
 			AccessorImpl accessor=obj.createAccessor();
