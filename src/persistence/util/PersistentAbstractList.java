@@ -18,7 +18,7 @@ import persistence.MethodCall;
 import persistence.PersistentObject;
 
 public abstract class PersistentAbstractList extends PersistentAbstractCollection implements List {
-	protected abstract class Accessor extends PersistentObject.Accessor {
+	protected abstract class Accessor extends PersistentAbstractCollection.Accessor {
 		protected Accessor() throws RemoteException {}
 
 		abstract public Object get(int index);
