@@ -17,7 +17,7 @@ public class PersistentObject implements Cloneable, Serializable {
 	protected class Accessor extends AccessorImpl {
 		protected Accessor() throws RemoteException {}
 
-		PersistentObject object() {
+		public final PersistentObject object() {
 			return PersistentObject.this;
 		}
 	}
@@ -96,24 +96,36 @@ public class PersistentObject implements Cloneable, Serializable {
 		}
 	}
 
-	AccessorImpl accessor() {
-		return (AccessorImpl)accessor;
-	}
-
 	Object call(String method, Class types[], Object args[]) {
-		return accessor().call(method,types,args);
+		try {
+			return accessor.call(method,types,args);
+		} catch (RemoteException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	void lock(Transaction transaction) {
-		accessor().lock(transaction.accessor());
+		try {
+			accessor.lock(transaction.accessor);
+		} catch (RemoteException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	void unlock() {
-		accessor().unlock();
+		try {
+			accessor.unlock();
+		} catch (RemoteException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	void kick() {
-		accessor().kick();
+		try {
+			accessor.kick();
+		} catch (RemoteException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	public int hashCode() {

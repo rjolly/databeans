@@ -71,11 +71,11 @@ public class ConnectionImpl extends UnicastRemoteObject implements Connection {
 		}
 	}
 
-	public Object getRoot() {
+	public Object getRoot() throws RemoteException {
 		return store.getSystem(this).getRoot();
 	}
 
-	public void setRoot(Object obj) {
+	public void setRoot(Object obj) throws RemoteException {
 		store.getSystem(this).setRoot(obj);
 	}
 
@@ -103,11 +103,11 @@ public class ConnectionImpl extends UnicastRemoteObject implements Connection {
 		this.readOnly=readOnly;
 	}
 
-	public Object execute(MethodCall call) {
+	public Object execute(MethodCall call) throws RemoteException {
 		return MethodCall.attach(this,execute(call.detach(),null,0,true));
 	}
 
-	public Object execute(MethodCall call, MethodCall undo, int index) {
+	public Object execute(MethodCall call, MethodCall undo, int index) throws RemoteException {
 		return MethodCall.attach(this,execute(call.detach(),undo.detach(),index,false));
 	}
 

@@ -72,6 +72,7 @@ public class Transaction extends PersistentObject {
 		for(ListIterator it=l.listIterator(0);it.hasNext();it.remove()) {
 			MethodCall.execute(((PersistentMethodCall)it.next()));
 		}
+		getUndos().clear();
 		unlock();
 	}
 
@@ -80,6 +81,7 @@ public class Transaction extends PersistentObject {
 		for(ListIterator it=l.listIterator(l.size());it.hasPrevious();it.remove()) {
 			MethodCall.execute((PersistentMethodCall)it.previous());
 		}
+		getCalls().clear();
 		unlock();
 	}
 

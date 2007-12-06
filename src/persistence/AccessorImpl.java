@@ -18,15 +18,15 @@ public abstract class AccessorImpl extends UnicastRemoteObject implements Access
 		this.store=store;
 	}
 
-	abstract PersistentObject object();
+	public abstract PersistentObject object();
 
-	PersistentObject object(Connection connection) {
+	public PersistentObject object(Connection connection) {
 		PersistentObject obj=clazz.newInstance();
 		obj.init(this,connection);
 		return obj;
 	}
 
-	synchronized Object call(String method, Class types[], Object args[]) {
+	public synchronized Object call(String method, Class types[], Object args[]) {
 		try {
 			return getClass().getMethod(method,types).invoke(this,args);
 		} catch (Exception e) {
@@ -61,11 +61,11 @@ public abstract class AccessorImpl extends UnicastRemoteObject implements Access
 	}
 
 	static Object detach(Object obj) {
-		return obj instanceof PersistentObject?((PersistentObject)obj).accessor():obj;
+		return obj instanceof PersistentObject?((PersistentObject)obj).accessor:obj;
 	}
 
-	synchronized void lock(AccessorImpl transaction) {
-		AccessorImpl t=getLock();
+	public synchronized void lock(Accessor transaction) throws RemoteException {
+		Accessor t=getLock();
 		if(t==null) setLock(transaction);
 		else if(t==transaction);
 		else {
@@ -75,12 +75,12 @@ public abstract class AccessorImpl extends UnicastRemoteObject implements Access
 		}
 	}
 
-	synchronized void unlock() {
+	public synchronized void unlock() {
 		setLock(null);
 		notify();
 	}
 
-	synchronized void kick() {
+	public synchronized void kick() {
 		notifyAll();
 	}
 
@@ -97,7 +97,7 @@ public abstract class AccessorImpl extends UnicastRemoteObject implements Access
 		return store.getLock(base.longValue());
 	}
 
-	void setLock(AccessorImpl transaction) {
+	void setLock(Accessor transaction) {
 		store.setLock(base.longValue(),transaction);
 	}
 
