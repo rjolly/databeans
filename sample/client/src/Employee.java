@@ -1,17 +1,56 @@
-import java.rmi.RemoteException;
-import persistence.Persistent;
+import java.text.NumberFormat;
+import persistence.PersistentObject;
 
-public interface Employee extends Persistent {
-	public String getName() throws RemoteException;
-	public void setName(String s) throws RemoteException;
-	public Department getDepartment() throws RemoteException;
-	public void setDepartment(Department d) throws RemoteException;
-	public String getLocation() throws RemoteException;
-	public void setLocation(String s) throws RemoteException;
-	public double getSalary() throws RemoteException;
-	public void setSalary(double d) throws RemoteException;
-	public Employee getManager() throws RemoteException;
-	public void setManager(Employee e) throws RemoteException;
-	public String getJob() throws RemoteException;
-	public void setJob(String s) throws RemoteException;
+public class Employee extends PersistentObject {
+	public String getName() {
+		return (String)get("name");
+	}
+
+	public void setName(String s) {
+		set("name",s);
+	}
+
+	public Department getDepartment() {
+		return (Department)get("department");
+	}
+
+	public void setDepartment(Department d) {
+		set("department",d);
+	}
+
+	public String getLocation() {
+		return (String)get("location");
+	}
+
+	public void setLocation(String s) {
+		set("location",s);
+	}
+
+	public double getSalary() {
+		return ((Double)get("salary")).doubleValue();
+	}
+
+	public void setSalary(double d) {
+		set("salary",new Double(d));
+	}
+
+	public Employee getManager() {
+		return (Employee)get("manager");
+	}
+
+	public void setManager(Employee e) {
+		set("manager",e);
+	}
+
+	public String getJob() {
+		return (String)get("job");
+	}
+
+	public void setJob(String s) {
+		set("job",s);
+	}
+
+	public String toString() {
+		return "["+getName()+" "+getDepartment()+" "+getLocation()+" "+getJob()+" "+NumberFormat.getCurrencyInstance().format(getSalary())+" "+getManager().getName()+"]";
+	}
 }

@@ -5,9 +5,9 @@ import persistence.Connections;
 public class Sample {
 	public static void main(String args[]) throws Exception {
 		Connection conn=Connections.getConnection("//localhost/store");
-		Department d=(Department)conn.create("DepartmentImpl");
+		Department d=(Department)conn.create("Department");
 		d.setName("Research");
-		Employee e=(Employee)conn.create("EmployeeImpl");
+		Employee e=(Employee)conn.create("Employee");
 		e.setName("Clark");
 		e.setDepartment(d);
 		e.setLocation("New York");
@@ -18,7 +18,7 @@ public class Sample {
 		employees.add(e);
 		conn.setRoot(employees);
 		Employee m=(Employee)employees.iterator().next();
-		e=(Employee)conn.create("EmployeeImpl");
+		e=(Employee)conn.create("Employee");
 		e.setName("Miller");
 		e.setDepartment(m.getDepartment());
 		e.setLocation("New York");
