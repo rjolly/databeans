@@ -29,20 +29,6 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 	}
 
 	protected class Accessor extends PersistentAbstractMap.Accessor {
-		public synchronized Object get(Object key) {
-			Object k = maskNull(key);
-			int hash = hash(k);
-			int i = indexFor(hash, getTable().length());
-			Entry e = (Entry)getTable().get(i);
-			while (true) {
-				if (e == null)
-					return e;
-				if (e.getHash() == hash && eq(k, e.getKey()))
-					return e.getValue();
-				e=e.getNext();
-			}
-		}
-
 		public synchronized Entry getEntry(Object key) {
 			Object k = maskNull(key);
 			int hash = hash(k);
@@ -53,28 +39,62 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 			return e;
 		}
 
-		public synchronized Object put0(Object key, Object value) {
+		public synchronized Entry nextEntry(Entry entry) {
+			Entry n;
+			Array t = getTable();
+			if(entry == null) {
+				n = entry;
+				int i = t.length();
+				if (getSize() != 0) {
+					while (n == null && i > 0) n = (Entry)t.get(--i);
+				}
+			} else {
+				n = entry.getNext();
+				Object k = maskNull(entry.getKey());
+				int hash = hash(k);
+				int i = indexFor(hash, t.length());
+				while (n == null && i > 0) n = (Entry)t.get(--i);
+			}
+			return n;
+		}
+
+		public synchronized Map.Entry putMapping(Map.Entry entry) {
+			return putMapping(entry.getKey(),entry.getValue());
+		}
+
+		public synchronized Map.Entry putMapping(Object key, Object value) {
 			Object k = maskNull(key);
 			int hash = hash(k);
 			int i = indexFor(hash, getTable().length());
-
-			for (Entry e = (Entry)getTable().get(i); e != null; e = e.getNext()) {
-				if (e.getHash() == hash && eq(k, e.getKey())) {
-					Object oldValue = e.getValue();
-					e.setValue(value);
-					e.recordAccess(PersistentHashMap.this);
-					return oldValue;
-				}
-			}
-
+			
 			incModCount();
-			addEntry(hash, k, value, i);
-			return NULL;
+			return addEntry(hash, k, value, i);
 		}
-  
-		public synchronized Object remove0(Object key) {
-			Entry e = removeEntryForKey(key);
-			return (e == null ? NULL : e.getValue());
+
+		public synchronized Map.Entry removeMapping(Map.Entry entry) {
+			Object k = maskNull(entry.getKey());
+			int hash = hash(k);
+			int i = indexFor(hash, getTable().length());
+			Entry prev = (Entry)getTable().get(i);
+			Entry e = prev;
+			
+			while (e != null) {
+				Entry next = e.getNext();
+				if (e.getHash() == hash && e.equals(entry)) {
+					incModCount();
+					setSize(getSize()-1);
+					if (prev == e)
+						getTable().set(i,next);
+					else
+						prev.setNext(next);
+					e.recordRemoval(PersistentHashMap.this);
+					return e;
+				}
+				prev = e;
+				e = next;
+			}
+			
+			return e;
 		}
 	}
 
@@ -195,6 +215,11 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 		return getSize() == 0;
 	}
 
+	public Object get(Object key) {
+		Entry e=getEntry(key);
+		return e==null?e:e.getValue();
+	}
+
 //	public boolean containsKey(Object key) {
 //		Object k = maskNull(key);
 //		int hash = hash(k);
@@ -211,6 +236,16 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 	Entry getEntry(Object key) {
 		return (Entry)execute(
 			new MethodCall(this,"getEntry",new Class[] {Object.class},new Object[] {key}));
+	}
+
+	public Object put(Object key, Object value) {
+		Entry e = getEntry(key);
+		if(e != null) {
+			Object oldValue = e.getValue();
+			e.setValue(value);
+			e.recordAccess(this);
+			return oldValue;
+		} else return putMapping(key,value);
 	}
 
 	void incModCount() {
@@ -292,61 +327,25 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 //			put(e.getKey(), e.getValue());
 //		}
 //	}
-
-	Entry removeEntryForKey(Object key) {
-		Object k = maskNull(key);
-		int hash = hash(k);
-		int i = indexFor(hash, getTable().length());
-		Entry prev = (Entry)getTable().get(i);
-		Entry e = prev;
-
-		while (e != null) {
-			Entry next = e.getNext();
-			if (e.getHash() == hash && eq(k, e.getKey())) {
-				incModCount();
-				setSize(getSize()-1);
-				if (prev == e) 
-					getTable().set(i,next);
-				else
-					prev.setNext(next);
-				e.recordRemoval(this);
-				return e;
-			}
-			prev = e;
-			e = next;
-		}
-   
-		return e;
+  
+	public Object remove(Object key) {
+		return(removeEntryForKey(key));
 	}
 
-	Entry removeMapping(Object o) {
-		if (!(o instanceof Map.Entry))
-			return null;
+	Entry removeEntryForKey(Object key) {
+		return (Entry)removeMapping(getEntry(key));
+	}
 
-		Map.Entry entry = (Map.Entry)o;
-		Object k = maskNull(entry.getKey());
-		int hash = hash(k);
-		int i = indexFor(hash, getTable().length());
-		Entry prev = (Entry)getTable().get(i);
-		Entry e = prev;
+	Map.Entry putMapping(Object key, Object value) {
+		return (Map.Entry)execute(
+			new MethodCall(this,"putMapping",new Class[] {Object.class,Object.class},new Object[] {key,value}),
+			new MethodCall(this,"removeMapping",new Class[] {Map.Entry.class},new Object[] {null}),0);
+	}
 
-		while (e != null) {
-			Entry next = e.getNext();
-			if (e.getHash() == hash && e.equals(entry)) {
-				incModCount();
-				setSize(getSize()-1);
-				if (prev == e) 
-					getTable().set(i,next);
-				else
-					prev.setNext(next);
-				e.recordRemoval(this);
-				return e;
-			}
-			prev = e;
-			e = next;
-		}
-   
-		return e;
+	Map.Entry removeMapping(Map.Entry entry) {
+		return (Map.Entry)execute(
+			new MethodCall(this,"removeMapping",new Class[] {Map.Entry.class},new Object[] {entry}),
+			new MethodCall(this,"putMapping",new Class[] {Map.Entry.class},new Object[] {null}),0);
 	}
 
 //	public void clear() {
@@ -472,35 +471,33 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 		void recordRemoval(PersistentHashMap m) {}
 	}
 
-	void addEntry(int hash, Object key, Object value, int bucketIndex) {
-		getTable().set(bucketIndex,create(Entry.class,new Class[] {int.class,Object.class,Object.class,Entry.class},new Object[] {new Integer(hash), key, value, getTable().get(bucketIndex)}));
-		setSize(getSize()+1);
+	Entry addEntry(int hash, Object key, Object value, int bucketIndex) {
+		Entry entry=createEntry(hash,key,value,bucketIndex);
 		if (getSize() >= getThreshold()) 
 			resize(2 * getTable().length());
+		return entry;
 	}
 
-//	void createEntry(int hash, Object key, Object value, int bucketIndex) {
-//		getTable().set(bucketIndex,create(Entry.class,new Class[] {int.class,Object.class,Object.class,Entry.class},new Object[] {new Integer(hash), key, value, getTable().get(bucketIndex)}));
-//		setSize(getSize()+1);
-//	}
+	Entry createEntry(int hash, Object key, Object value, int bucketIndex) {
+		Entry entry;
+		getTable().set(bucketIndex,entry=(Entry)create(Entry.class,new Class[] {int.class,Object.class,Object.class,Entry.class},new Object[] {new Integer(hash), key, value, getTable().get(bucketIndex)}));
+		setSize(getSize()+1);
+		return entry;
+	}
+
+	Entry nextEntry(Entry entry) {
+		return (Entry)execute(
+			new MethodCall(this,"nextEntry",new Class[] {Entry.class},new Object[] {entry}));
+	}
 
 	private abstract class HashIterator implements Iterator {
 		Entry next;				  // next entry to return
 		int expectedModCount;		// For fast-fail 
-		int index;				   // current slot 
 		Entry current;			   // current entry
 
 		HashIterator() {
 			expectedModCount = getModCount();
-			Array t = getTable();
-			int i = t.length();
-			Entry n = null;
-			if (getSize() != 0) { // advance to first entry
-				while (i > 0 && (n = (Entry)t.get(--i)) == null)
-					;
-			}
-			next = n;
-			index = i;
+			next = PersistentHashMap.this.nextEntry(null);
 		}
 
 		public boolean hasNext() {
@@ -513,14 +510,8 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 			Entry e = next;
 			if (e == null) 
 				throw new NoSuchElementException();
-				
-			Entry n = e.getNext();
-			Array t = getTable();
-			int i = index;
-			while (n == null && i > 0)
-				n = (Entry)t.get(--i);
-			index = i;
-			next = n;
+
+			next = PersistentHashMap.this.nextEntry(e);
 			return current = e;
 		}
 
@@ -626,7 +617,11 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 			return candidate != null && candidate.equals(e);
 		}
 		public boolean remove(Object o) {
-			return removeMapping(o) != null;
+			if (!(o instanceof Map.Entry))
+				return false;
+			
+			Map.Entry entry = (Map.Entry)o;
+			return removeMapping(entry) != null;
 		}
 		public int size() {
 			return getSize();

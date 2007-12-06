@@ -141,7 +141,7 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 		return obj==NULL?null:obj;
 	}
 
-	static final Object NULL=new Object();
+	private static final Object NULL=new Object();
 
 	// Bulk Operations
 
