@@ -6,6 +6,7 @@
  */
 package persistence.util;
 
+import java.rmi.RemoteException;
 import java.util.AbstractCollection;
 import java.util.AbstractSet;
 import java.util.Collection;
@@ -17,12 +18,14 @@ import persistence.MethodCall;
 import persistence.PersistentObject;
 
 public abstract class PersistentAbstractMap extends PersistentObject implements Map {
-	protected PersistentObject.Accessor createAccessor() {
+	protected PersistentObject.Accessor createAccessor() throws RemoteException {
 		return new Accessor();
 	}
 
 	protected class Accessor extends PersistentObject.Accessor {
-		public synchronized Object get(Object key) {
+		protected Accessor() throws RemoteException {}
+
+		public Object get(Object key) {
 			Iterator i = entrySet().iterator();
 			if (key==null) {
 				while (i.hasNext()) {
@@ -48,7 +51,7 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 			throw new UnsupportedOperationException();
 		}
 
-		public synchronized Object remove0(Object key) {
+		public Object remove0(Object key) {
 			Iterator i = entrySet().iterator();
 			Entry correctEntry = null;
 			if (key==null) {

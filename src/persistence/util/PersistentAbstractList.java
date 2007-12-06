@@ -6,6 +6,7 @@
  */
 package persistence.util;
 
+import java.rmi.RemoteException;
 import java.util.Collection;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
@@ -18,6 +19,8 @@ import persistence.PersistentObject;
 
 public abstract class PersistentAbstractList extends PersistentAbstractCollection implements List {
 	protected abstract class Accessor extends PersistentObject.Accessor {
+		protected Accessor() throws RemoteException {}
+
 		abstract public Object get(int index);
 
 		public Object set(int index, Object element) {

@@ -6,46 +6,51 @@
  */
 package persistence.util;
 
+import java.rmi.RemoteException;
 import java.util.Collection;
 import java.util.Iterator;
 import persistence.MethodCall;
 import persistence.PersistentObject;
 
 public abstract class PersistentAbstractCollection extends PersistentObject implements Collection {
-	protected Accessor createAccessor() {
-		return new Accessor() {
-			public boolean add(Object o, boolean b) {
-				return b?add0(o):false;
-			}
+	protected PersistentObject.Accessor createAccessor() throws RemoteException {
+		return new Accessor();
+	}
 
-			synchronized boolean add0(Object o) {
-				throw new UnsupportedOperationException();
-			}
+	protected class Accessor extends PersistentObject.Accessor {
+		protected Accessor() throws RemoteException {}
 
-			public boolean remove(Object o, boolean b) {
-				return b?remove0(o):false;
-			}
+		public boolean add(Object o, boolean b) {
+			return b?add0(o):false;
+		}
 
-			synchronized boolean remove0(Object o) {
-				Iterator e = iterator();
-				if (o==null) {
-					while (e.hasNext()) {
-						if (e.next()==null) {
-							e.remove();
-							return true;
-						}
-					}
-				} else {
-					while (e.hasNext()) {
-						if (o.equals(e.next())) {
-							e.remove();
-							return true;
-						}
+		boolean add0(Object o) {
+			throw new UnsupportedOperationException();
+		}
+
+		public boolean remove(Object o, boolean b) {
+			return b?remove0(o):false;
+		}
+
+		boolean remove0(Object o) {
+			Iterator e = iterator();
+			if (o==null) {
+				while (e.hasNext()) {
+					if (e.next()==null) {
+						e.remove();
+						return true;
 					}
 				}
-				return false;
+			} else {
+				while (e.hasNext()) {
+					if (o.equals(e.next())) {
+						e.remove();
+						return true;
+					}
+				}
 			}
-		};
+			return false;
+		}
 	}
 
 	// Query Operations

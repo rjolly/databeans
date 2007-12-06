@@ -71,11 +71,6 @@ public class ConnectionImpl extends UnicastRemoteObject implements Connection {
 		}
 	}
 
-	public synchronized PersistentObject create(PersistentObject obj) {
-		if(closed) throw new PersistentException("connection closed");
-		return ((AccessorImpl)obj.accessor().clone()).object(this);
-	}
-
 	public Object getRoot() {
 		return store.getSystem(this).getRoot();
 	}

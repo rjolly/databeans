@@ -4,11 +4,19 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Iterator;
 
-abstract class AccessorImpl extends UnicastRemoteObject implements Accessor {
+public abstract class AccessorImpl extends UnicastRemoteObject implements Accessor {
 	static final int TIMEOUT=60000;
-	PersistentClass clazz;
-	StoreImpl store;
-	Long base;
+	private PersistentClass clazz;
+	private StoreImpl store;
+	private Long base;
+
+	protected AccessorImpl() throws RemoteException {}
+
+	void init(Long base, PersistentClass clazz, StoreImpl store) {
+		this.base=base;
+		this.clazz=clazz;
+		this.store=store;
+	}
 
 	abstract PersistentObject object();
 
@@ -18,7 +26,7 @@ abstract class AccessorImpl extends UnicastRemoteObject implements Accessor {
 		return obj;
 	}
 
-	Object call(String method, Class types[], Object args[]) {
+	synchronized Object call(String method, Class types[], Object args[]) {
 		try {
 			return getClass().getMethod(method,types).invoke(this,args);
 		} catch (Exception e) {
@@ -32,6 +40,10 @@ abstract class AccessorImpl extends UnicastRemoteObject implements Accessor {
 
 	public Object set(String name, Object value) {
 		return set(clazz.getField(name),value);
+	}
+
+	public Object copy() {
+		return ((AccessorImpl)clone()).object();
 	}
 
 	Object get(Field field) {
@@ -85,12 +97,12 @@ abstract class AccessorImpl extends UnicastRemoteObject implements Accessor {
 		return store.getLock(base.longValue());
 	}
 
-	void setLock(AccessorImpl accessor) {
-		store.setLock(base.longValue(),accessor);
+	void setLock(AccessorImpl transaction) {
+		store.setLock(base.longValue(),transaction);
 	}
 
-	public final long base() {
-		return base.longValue();
+	public final Long base() {
+		return base;
 	}
 
 	public final String toString() {
@@ -99,16 +111,6 @@ abstract class AccessorImpl extends UnicastRemoteObject implements Accessor {
 
 	public final PersistentClass persistentClass() {
 		return clazz;
-	}
-
-	public final Object clone() {
-		AccessorImpl obj=store.create(clazz);
-		Iterator t=clazz.fieldIterator();
-		while(t.hasNext()) {
-			Field field=(Field)t.next();
-			set(field,get(field));
-		}
-		return obj;
 	}
 
 	static AccessorImpl create(Long base, PersistentClass clazz, StoreImpl store) {
@@ -123,10 +125,14 @@ abstract class AccessorImpl extends UnicastRemoteObject implements Accessor {
 		}
 	}
 
-	void init(Long base, PersistentClass clazz, StoreImpl store) {
-		this.base=base;
-		this.clazz=clazz;
-		this.store=store;
+	public final Object clone() {
+		AccessorImpl obj=store.create(clazz);
+		Iterator t=clazz.fieldIterator();
+		while(t.hasNext()) {
+			Field field=(Field)t.next();
+			set(field,get(field));
+		}
+		return obj;
 	}
 
 	protected final void finalize() {

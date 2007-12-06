@@ -3,16 +3,19 @@ package persistence;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyVetoException;
 import java.beans.VetoableChangeListener;
+import java.rmi.RemoteException;
 import persistence.beans.PersistentPropertyChangeSupport;
 import persistence.beans.PersistentVetoableChangeSupport;
 
 public abstract class NotifiedObject extends PersistentObject {
-	protected PersistentObject.Accessor createAccessor() {
+	protected PersistentObject.Accessor createAccessor() throws RemoteException {
 		return new Accessor();
 	}
 
 	protected class Accessor extends PersistentObject.Accessor {
-		synchronized Object set(Field field, Object value) {
+		protected Accessor() throws RemoteException {}
+
+		Object set(Field field, Object value) {
 			Object oldValue=get(field);
 			try {
 				PersistentVetoableChangeSupport support=getVetoableChangeSupport();

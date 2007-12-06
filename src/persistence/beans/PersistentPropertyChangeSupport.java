@@ -11,6 +11,7 @@ package persistence.beans;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -22,45 +23,49 @@ import persistence.util.PersistentArrayList;
 import persistence.util.PersistentHashMap;
 
 public class PersistentPropertyChangeSupport extends PersistentObject {
-	protected Accessor createAccessor() {
-		return new Accessor() {
-			public synchronized void addPropertyChangeListener(PropertyChangeListener listener) {
-				if (getListeners() == null) {
-					setListeners((List)create(PersistentArrayList.class));
-				}
-				getListeners().add(listener);
-			}
+	protected PersistentObject.Accessor createAccessor() throws RemoteException {
+		return new Accessor();
+	}
 
-			public synchronized void removePropertyChangeListener(PropertyChangeListener listener) {
-				if (getListeners() == null) {
-					return;
-				}
-				getListeners().remove(listener);
-			}
+	protected class Accessor extends PersistentObject.Accessor {
+		protected Accessor() throws RemoteException {}
 
-			public synchronized void addPropertyChangeListener(String propertyName, PropertyChangeListener listener) {
-				if (getChildren() == null) {
-					setChildren((Map)create(PersistentHashMap.class));
-				}
-				PersistentPropertyChangeSupport child = (PersistentPropertyChangeSupport)getChildren().get(propertyName);
-				if (child == null) {
-					child = (PersistentPropertyChangeSupport)create(PersistentPropertyChangeSupport.class, new Class[] {Object.class}, new Object[] {getSource()});
-					getChildren().put(propertyName, child);
-				}
-				child.addPropertyChangeListener(listener);
+		public void addPropertyChangeListener(PropertyChangeListener listener) {
+			if (getListeners() == null) {
+				setListeners((List)create(PersistentArrayList.class));
 			}
+			getListeners().add(listener);
+		}
 
-			public synchronized void removePropertyChangeListener(String propertyName, PropertyChangeListener listener) {
-				if (getChildren() == null) {
-					return;
-				}
-				PersistentPropertyChangeSupport child = (PersistentPropertyChangeSupport)getChildren().get(propertyName);
-				if (child == null) {
-					return;
-				}
-				child.removePropertyChangeListener(listener);
+		public void removePropertyChangeListener(PropertyChangeListener listener) {
+			if (getListeners() == null) {
+				return;
 			}
-		};
+			getListeners().remove(listener);
+		}
+
+		public void addPropertyChangeListener(String propertyName, PropertyChangeListener listener) {
+			if (getChildren() == null) {
+				setChildren((Map)create(PersistentHashMap.class));
+			}
+			PersistentPropertyChangeSupport child = (PersistentPropertyChangeSupport)getChildren().get(propertyName);
+			if (child == null) {
+				child = (PersistentPropertyChangeSupport)create(PersistentPropertyChangeSupport.class, new Class[] {Object.class}, new Object[] {getSource()});
+				getChildren().put(propertyName, child);
+			}
+			child.addPropertyChangeListener(listener);
+		}
+
+		public void removePropertyChangeListener(String propertyName, PropertyChangeListener listener) {
+			if (getChildren() == null) {
+				return;
+			}
+			PersistentPropertyChangeSupport child = (PersistentPropertyChangeSupport)getChildren().get(propertyName);
+			if (child == null) {
+				return;
+			}
+			child.removePropertyChangeListener(listener);
+		}
 	}
 
 	public Collection getListeners() {

@@ -14,7 +14,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-class PersistentClass extends UnicastSerializedObject {
+public class PersistentClass extends UnicastSerializedObject {
 	String name;
 	Field fields[];
 	transient Map map;

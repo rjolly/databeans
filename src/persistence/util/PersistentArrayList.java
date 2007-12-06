@@ -6,6 +6,7 @@
  */
 package persistence.util;
 
+import java.rmi.RemoteException;
 import java.util.Collection;
 import java.util.List;
 import java.util.RandomAccess;
@@ -16,18 +17,20 @@ import persistence.PersistentObject;
 public class PersistentArrayList extends PersistentAbstractList
 		implements List, RandomAccess, Cloneable
 {
-	protected PersistentObject.Accessor createAccessor() {
+	protected PersistentObject.Accessor createAccessor() throws RemoteException {
 		return new Accessor();
 	}
 
 	protected class Accessor extends PersistentAbstractList.Accessor {
-		public synchronized Object get(int index) {
+		protected Accessor() throws RemoteException {}
+
+		public Object get(int index) {
 			RangeCheck(index);
 
 			return getElementData().get(index);
 		}
 
-		public synchronized Object set(int index, Object element) {
+		public Object set(int index, Object element) {
 			RangeCheck(index);
 
 			Object oldValue = getElementData().get(index);
@@ -35,7 +38,7 @@ public class PersistentArrayList extends PersistentAbstractList
 			return oldValue;
 		}
 
-		public synchronized void add(int index, Object element) {
+		public void add(int index, Object element) {
 			if (index > getSize() || index < 0)
 				throw new IndexOutOfBoundsException(
 					"Index: "+index+", Size: "+getSize());
@@ -47,7 +50,7 @@ public class PersistentArrayList extends PersistentAbstractList
 			setSize(getSize()+1);
 		}
 
-		public synchronized Object remove(int index) {
+		public Object remove(int index) {
 			RangeCheck(index);
 			
 			incModCount();

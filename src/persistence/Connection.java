@@ -16,7 +16,6 @@ public interface Connection extends Remote {
 	PersistentObject create(Class clazz, Class types[], Object args[]) throws RemoteException;
 	PersistentArray create(Class componentType, int length) throws RemoteException;
 	PersistentArray create(Object component[]) throws RemoteException;
-	PersistentObject create(PersistentObject obj) throws RemoteException;
 
 	Object getRoot() throws RemoteException;
 	void setRoot(Object obj) throws RemoteException;

@@ -1,21 +1,24 @@
 package persistence;
 
 import java.io.Serializable;
+import java.rmi.RemoteException;
 import java.util.Iterator;
 
 public class PersistentObject implements Cloneable, Serializable {
-	persistence.Accessor accessor;
-	Connection connection;
+	private persistence.Accessor accessor;
+	private Connection connection;
 	transient PersistentClass clazz;
-	transient long base;
+	transient Long base;
 
 	public void init() {}
 
-	protected Accessor createAccessor() {
+	protected Accessor createAccessor() throws RemoteException {
 		return new Accessor();
 	}
 
 	protected class Accessor extends AccessorImpl {
+		protected Accessor() throws RemoteException {}
+
 		PersistentObject object() {
 			return PersistentObject.this;
 		}
@@ -29,23 +32,43 @@ public class PersistentObject implements Cloneable, Serializable {
 	}
 
 	protected final PersistentObject create(String name) {
-		return connection.create(name);
+		try {
+			return connection.create(name);
+		} catch (RemoteException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	protected final PersistentObject create(Class clazz) {
-		return connection.create(clazz);
+		try {
+			return connection.create(clazz);
+		} catch (RemoteException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	protected final PersistentObject create(Class clazz, Class types[], Object args[]) {
-		return connection.create(clazz,types,args);
+		try {
+			return connection.create(clazz,types,args);
+		} catch (RemoteException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	protected final PersistentArray create(Class componentType, int length) {
-		return connection.create(componentType,length);
+		try {
+			return connection.create(componentType,length);
+		} catch (RemoteException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	protected final PersistentArray create(Object component[]) {
-		return connection.create(component);
+		try {
+			return connection.create(component);
+		} catch (RemoteException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	protected final Object get(String name) {
@@ -60,11 +83,19 @@ public class PersistentObject implements Cloneable, Serializable {
 	}
 
 	protected final Object execute(MethodCall call) {
-		return connection.execute(call);
+		try {
+			return connection.execute(call);
+		} catch (RemoteException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	protected final Object execute(MethodCall call, MethodCall undo, int index) {
-		return connection.execute(call,undo,index);
+		try {
+			return connection.execute(call,undo,index);
+		} catch (RemoteException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	AccessorImpl accessor() {
@@ -88,11 +119,11 @@ public class PersistentObject implements Cloneable, Serializable {
 	}
 
 	public int hashCode() {
-		return new Long(base()).hashCode();
+		return base().hashCode();
 	}
 
 	public boolean equals(Object obj) {
-		return this == obj || (obj instanceof PersistentObject && base()==((PersistentObject)obj).base());
+		return this == obj || (obj instanceof PersistentObject && base().equals(((PersistentObject)obj).base()));
 	}
 
 	public String toString() {
@@ -108,15 +139,24 @@ public class PersistentObject implements Cloneable, Serializable {
 		return s.toString();
 	}
 
-	public final long base() {
-		return base==0?base=accessor.base():base;
+	public final Long base() {
+		try {
+			return base==null?base=accessor.base():base;
+		} catch (RemoteException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	public final PersistentClass persistentClass() {
-		return clazz==null?clazz=accessor.persistentClass():clazz;
+		try {
+			return clazz==null?clazz=accessor.persistentClass():clazz;
+		} catch (RemoteException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	public Object clone() {
-		return connection.create(this);
+		return execute(
+			new MethodCall(this,"copy",new Class[] {},new Object[] {}));
 	}
 }

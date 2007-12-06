@@ -6,6 +6,7 @@
  */
 package persistence.util;
 
+import java.rmi.RemoteException;
 import java.util.AbstractCollection;
 import java.util.AbstractSet;
 import java.util.Collection;
@@ -24,12 +25,14 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 	static final int MAXIMUM_CAPACITY = 1 << 30;
 	static final float DEFAULT_LOAD_FACTOR = 0.75f;
 
-	protected PersistentObject.Accessor createAccessor() {
+	protected PersistentObject.Accessor createAccessor() throws RemoteException {
 		return new Accessor();
 	}
 
 	protected class Accessor extends PersistentAbstractMap.Accessor {
-		public synchronized Entry getEntry(Object key) {
+		protected Accessor() throws RemoteException {}
+
+		public Entry getEntry(Object key) {
 			Object k = maskNull(key);
 			int hash = hash(k);
 			int i = indexFor(hash, getTable().length());
@@ -39,7 +42,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 			return e;
 		}
 
-		public synchronized Entry nextEntry(Entry entry) {
+		public Entry nextEntry(Entry entry) {
 			Entry n;
 			Array t = getTable();
 			if(entry == null) {
@@ -58,11 +61,11 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 			return n;
 		}
 
-		public synchronized Map.Entry putMapping(Map.Entry entry) {
+		public Map.Entry putMapping(Map.Entry entry) {
 			return putMapping(entry.getKey(),entry.getValue());
 		}
 
-		public synchronized Map.Entry putMapping(Object key, Object value) {
+		public Map.Entry putMapping(Object key, Object value) {
 			Object k = maskNull(key);
 			int hash = hash(k);
 			int i = indexFor(hash, getTable().length());
@@ -71,7 +74,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 			return addEntry(hash, k, value, i);
 		}
 
-		public synchronized Map.Entry removeMapping(Map.Entry entry) {
+		public Map.Entry removeMapping(Map.Entry entry) {
 			Object k = maskNull(entry.getKey());
 			int hash = hash(k);
 			int i = indexFor(hash, getTable().length());
