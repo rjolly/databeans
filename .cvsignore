@@ -1,6 +1,5 @@
 heapspace
-databeans_client.jar
-databeans.jar
-api
 classes
 lib
+databeans.jar
+api
