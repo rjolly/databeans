@@ -17,7 +17,7 @@ public class Sample {
 		Collection employees=(Collection)conn.create("persistence.util.PersistentArrayList");
 		employees.add(e);
 		conn.setRoot(employees);
-		Employee m=(Employee)employees.iterator().next();
+		Employee m=e;
 		e=(Employee)conn.create("Employee");
 		e.setName("Miller");
 		e.setDepartment(m.getDepartment());
@@ -28,5 +28,6 @@ public class Sample {
 		employees.add(e);
 		System.out.println(conn.getRoot());
 		conn.commit();
+		conn.close();
 	}
 }

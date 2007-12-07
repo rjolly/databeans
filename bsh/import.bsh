@@ -1,4 +1,3 @@
 import java.io.*;
-import java.rmi.*;
-admin=Naming.lookup("//localhost:2000/admin");
+admin=Connections.getAdmin("//localhost/store");
 admin.inport(new File("data.xml").getAbsolutePath());
