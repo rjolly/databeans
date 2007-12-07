@@ -3,7 +3,7 @@ package persistence;
 import java.io.Serializable;
 
 public class UnicastSerializedObject implements Serializable {
-	transient long base;
+	long base;
 
 	public final int hashCode() {
 		return new Long(base).hashCode();
