@@ -198,7 +198,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 
 	public boolean authenticate(String username, char[] password) {
 		byte pw[]=(byte[])users.get(username);
-		return Arrays.equals(pw,crypt(new String(password),salt(pw)));
+		return pw==null?false:Arrays.equals(pw,crypt(new String(password),salt(pw)));
 	}
 
 	static char salt(byte pw[]) {
@@ -231,6 +231,15 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 
 	public synchronized Connection getConnection(CallbackHandler handler) throws RemoteException {
 		if(closing) throw new PersistentException("store closing");
+		return new ConnectionImpl(this,Connection.TRANSACTION_READ_UNCOMMITTED,login(handler).getSubject());
+	}
+
+	public synchronized Admin getAdmin(CallbackHandler handler) throws RemoteException {
+		if(closing) throw new PersistentException("store closing");
+		return new AdminImpl(this,login(handler).getSubject());
+	}
+
+	static LoginContext login(CallbackHandler handler) {
 
 		// Obtain a LoginContext, needed for authentication. Tell it
 		// to use the LoginModule implementation specified by the
@@ -280,7 +289,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		}
 
 		System.out.println("Authentication succeeded!");
-		return new ConnectionImpl(this,Connection.TRANSACTION_READ_UNCOMMITTED,lc.getSubject());
+		return lc;
 	}
 
 	public void inport(String name) {

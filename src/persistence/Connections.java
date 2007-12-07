@@ -1,5 +1,6 @@
 package persistence;
 
+import com.sun.security.auth.callback.DialogCallbackHandler;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.MalformedURLException;
@@ -16,8 +17,11 @@ public class Connections {
 	private Connections() {}
 
 	public static Connection getConnection(String name) throws NotBoundException, MalformedURLException, RemoteException {
-		Store store=(Store)Naming.lookup(name);
-		return store.getConnection(new LocalCallbackHandler(new com.sun.security.auth.callback.DialogCallbackHandler()));
+		return ((Store)Naming.lookup(name)).getConnection(new LocalCallbackHandler(new DialogCallbackHandler()));
+	}
+
+	public static Admin getAdmin(String name) throws NotBoundException, MalformedURLException, RemoteException {
+		return ((Store)Naming.lookup(name)).getAdmin(new LocalCallbackHandler(new DialogCallbackHandler()));
 	}
 }
 

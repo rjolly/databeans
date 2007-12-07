@@ -2,12 +2,15 @@ package persistence;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import javax.security.auth.Subject;
 
 public class AdminImpl extends UnicastRemoteObject implements Admin {
 	StoreImpl store;
+	Subject subject;
 
-	public AdminImpl(StoreImpl store) throws RemoteException {
+	public AdminImpl(StoreImpl store, Subject subject) throws RemoteException {
 		this.store=store;
+		this.subject=subject;
 	}
 
 	public PersistentSystem getSystem() {

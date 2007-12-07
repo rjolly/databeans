@@ -26,7 +26,7 @@ public class ConnectionImpl extends UnicastRemoteObject implements Connection {
 		try {
 			clientHost=RemoteServer.getClientHost();
 		} catch (ServerNotActiveException e) {}
-		if(level!=TRANSACTION_NONE) transaction=store.getTransaction(subject.toString()+"@"+clientHost);
+		if(level!=TRANSACTION_NONE) transaction=store.getTransaction(subject+"@"+clientHost);
 		open();
 	}
 
