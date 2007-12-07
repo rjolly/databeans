@@ -47,6 +47,7 @@
       <sysproperty key="java.rmi.server.codebase" value="http://localhost:2001/"/>
       <sysproperty key="java.security.manager" value=""/>
       <sysproperty key="java.security.policy" value="policy"/>
+      <sysproperty key="java.security.auth.login.config" value="login.config"/>
     </java>
   </target>
 
@@ -58,6 +59,7 @@
       <sysproperty key="java.rmi.server.codebase" value="http://localhost:2001/"/>
       <sysproperty key="java.security.manager" value=""/>
       <sysproperty key="java.security.policy" value="policy"/>
+      <sysproperty key="java.security.auth.login.config" value="login.config"/>
       <jvmarg value="-Xdebug"/>
       <jvmarg value="-Xnoagent"/>
       <jvmarg value="-Djava.compiler=none"/>
@@ -104,10 +106,7 @@
   <target name="bundle">
     <zip destfile="../databeans.zip"
          basedir=".."
-         includes="databeans/**"
-         excludes="databeans/nbproject/private/
-	           databeans/sample/client/nbproject/private/
-	           databeans/sample/server/nbproject/private/"/>
+         includes="databeans/**"/>
   </target>
 
   <target name="admin">

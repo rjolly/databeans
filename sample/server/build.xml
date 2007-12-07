@@ -33,6 +33,7 @@
       <sysproperty key="java.rmi.server.codebase" value="http://localhost:2001/"/>
       <sysproperty key="java.security.manager" value=""/>
       <sysproperty key="java.security.policy" value="policy"/>
+      <sysproperty key="java.security.auth.login.config" value="login.config"/>
     </java>
   </target>
 
@@ -44,6 +45,7 @@
       <sysproperty key="java.rmi.server.codebase" value="http://localhost:2001/"/>
       <sysproperty key="java.security.manager" value=""/>
       <sysproperty key="java.security.policy" value="policy"/>
+      <sysproperty key="java.security.auth.login.config" value="login.config"/>
       <jvmarg value="-Xdebug"/>
       <jvmarg value="-Xnoagent"/>
       <jvmarg value="-Djava.compiler=none"/>
