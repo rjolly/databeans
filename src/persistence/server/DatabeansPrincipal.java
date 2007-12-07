@@ -19,7 +19,7 @@ public class DatabeansPrincipal implements Principal, Serializable {
 	}
 
 	public String toString() {
-		return("User:  " + name);
+		return("DatabeansPrincipal:  " + name);
 	}
 
 	public boolean equals(Object o) {

@@ -13,7 +13,6 @@ import javax.security.auth.login.FailedLoginException;
 import javax.security.auth.login.LoginException;
 import javax.security.auth.spi.LoginModule;
 import persistence.Store;
-import persistence.User;
 
 public class DatabeansLoginModule implements LoginModule {
 
@@ -36,7 +35,7 @@ public class DatabeansLoginModule implements LoginModule {
 	private char[] password;
 
 	// testUser's SamplePrincipal
-	private User userPrincipal;
+	private DatabeansPrincipal userPrincipal;
 
 	public void initialize(Subject subject, CallbackHandler callbackHandler,
 						Map sharedState, Map options) {
@@ -146,13 +145,13 @@ public class DatabeansLoginModule implements LoginModule {
 			// to the Subject
 
 			// assume the user we authenticated is the SamplePrincipal
-			userPrincipal = new User(username);
+			userPrincipal = new DatabeansPrincipal(username);
 			if (!subject.getPrincipals().contains(userPrincipal))
 				subject.getPrincipals().add(userPrincipal);
 
 			if (debug) {
 				System.out.println("\t\t[DatabeansLoginModule] " +
-								"added User to Subject");
+								"added DatabeansPrincipal to Subject");
 			}
 
 			// in any case, clean out state
