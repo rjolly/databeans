@@ -1,7 +1,6 @@
 package persistence;
 
 import java.io.Serializable;
-import java.rmi.RemoteException;
 
 public class MethodCall implements Serializable {
 	PersistentObject target;
@@ -16,21 +15,25 @@ public class MethodCall implements Serializable {
 		this.args=args;
 	}
 
-	MethodCall detach() throws RemoteException {
-		return new MethodCall(target.accessor.object(),method,types,detach(args));
+	MethodCall attach(StoreImpl store) {
+		return new MethodCall(attach(store,target),method,types,attach(store,args));
 	}
 
-	static Object attach(Connection connection, Object obj) throws RemoteException {
-		return obj instanceof PersistentObject?((PersistentObject)obj).accessor.object(connection):obj;
+	static Object attach(Connection connection, Object obj) {
+		return obj instanceof PersistentObject?((PersistentObject)obj).attach(connection):obj;
 	}
 
-	static Object detach(Object obj) throws RemoteException {
-		return obj instanceof PersistentObject?((PersistentObject)obj).accessor.object():obj;
+	static Object attach(StoreImpl store, Object obj) {
+		return obj instanceof PersistentObject?attach(store,(PersistentObject)obj):obj;
 	}
 
-	static Object[] detach(Object obj[]) throws RemoteException {
+	static PersistentObject attach(StoreImpl store, PersistentObject obj) {
+		return obj.attach(store);
+	}
+
+	static Object[] attach(StoreImpl store, Object obj[]) {
 		Object a[]=new Object[obj.length];
-		for(int i=0;i<obj.length;i++) a[i]=detach(obj[i]);
+		for(int i=0;i<obj.length;i++) a[i]=attach(store,obj[i]);
 		return a;
 	}
 

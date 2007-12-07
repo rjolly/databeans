@@ -96,36 +96,32 @@ public class PersistentObject implements Cloneable, Serializable {
 		}
 	}
 
+	AccessorImpl accessor() {
+		return (AccessorImpl)accessor;
+	}
+
+	PersistentObject attach(StoreImpl store) {
+		return store.get(base()).object();
+	}
+
+	PersistentObject attach(Connection connection) {
+		return accessor().object(connection);
+	}
+
 	Object call(String method, Class types[], Object args[]) {
-		try {
-			return accessor.call(method,types,args);
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
+		return accessor().call(method,types,args);
 	}
 
 	void lock(Transaction transaction) {
-		try {
-			accessor.lock(transaction.accessor);
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
+		accessor().lock(transaction.accessor());
 	}
 
 	void unlock() {
-		try {
-			accessor.unlock();
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
+		accessor().unlock();
 	}
 
 	void kick() {
-		try {
-			accessor.kick();
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
+		accessor().kick();
 	}
 
 	public int hashCode() {

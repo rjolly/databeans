@@ -3,7 +3,7 @@ package persistence;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
-public interface Admin extends Remote {
+public interface Admin extends Connection {
 	PersistentSystem getSystem() throws RemoteException;
 	void createUser(String username, String password) throws RemoteException;
 	void inport(String name) throws RemoteException;

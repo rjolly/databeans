@@ -112,7 +112,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 
 	void createSystem() {
 		system=(PersistentSystem)systemConnection.create(PersistentSystem.class);
-		incRefCount(boot=system.base().longValue());
+		incRefCount(boot=((AccessorImpl)system.accessor).base.longValue());
 		heap.setBoot(boot);
 	}
 
@@ -126,8 +126,8 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		transactions=system.getTransactions();
 	}
 
-	PersistentSystem getSystem(ConnectionImpl connection) throws RemoteException {
-		return (PersistentSystem)system.accessor.object(connection);
+	PersistentSystem getSystem(Connection connection) {
+		return (PersistentSystem)system.attach(connection);
 	}
 
 	Transaction getTransaction(String client) {
@@ -153,7 +153,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 
 	AccessorImpl cache(AccessorImpl obj) {
 		synchronized(cache) {
-			Long base=obj.base();
+			Long base=obj.base;
 			hold(base.longValue());
 			cache.put(base,new WeakReference(obj));
 			return obj;
@@ -175,7 +175,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 
 	void release(AccessorImpl accessor) {
 		synchronized(cache) {
-			Long base=accessor.base();
+			Long base=accessor.base;
 			AccessorImpl obj=get(base);
 			if(obj==null) release(base.longValue());
 			else if(obj==accessor) {
@@ -183,10 +183,6 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 				release(base.longValue());
 			}
 		}
-	}
-
-	public PersistentSystem getSystem() {
-		return system;
 	}
 
 	public void createUser(String username, String password) {
@@ -491,18 +487,10 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	void setReference(long base, Field field, Object value) {
 		synchronized(heap) {
 			long src=((Long)field.get(heap,base)).longValue();
-			long dst=value==null?0:value instanceof Accessor?base((Accessor)value).longValue():writeObject(value);
+			long dst=value==null?0:value instanceof AccessorImpl?((AccessorImpl)value).base.longValue():writeObject(value);
 			if(dst!=0) incRefCount(dst);
 			field.set(heap,base,new Long(dst));
 			if(src!=0) decRefCount(src);
-		}
-	}
-
-	Long base(Accessor accessor) {
-		try {
-			return accessor.base();
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
 		}
 	}
 
@@ -535,8 +523,8 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		return ptr==0?null:instantiate(new Long(ptr));
 	}
 
-	void setLock(long base, Accessor transaction) {
-		Field.LOCK.set(heap,base,transaction==null?new Long(0):base(transaction));
+	void setLock(long base, AccessorImpl transaction) {
+		Field.LOCK.set(heap,base,transaction==null?new Long(0):transaction.base);
 	}
 
 	Object readObject(long base) {

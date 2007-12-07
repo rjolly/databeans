@@ -1,20 +1,11 @@
 package persistence;
 
 import java.rmi.RemoteException;
-import java.rmi.server.UnicastRemoteObject;
 import javax.security.auth.Subject;
 
-public class AdminImpl extends UnicastRemoteObject implements Admin {
-	StoreImpl store;
-	Subject subject;
-
+public class AdminImpl extends ConnectionImpl implements Admin {
 	public AdminImpl(StoreImpl store, Subject subject) throws RemoteException {
-		this.store=store;
-		this.subject=subject;
-	}
-
-	public PersistentSystem getSystem() {
-		return store.getSystem();
+		super(store,Connection.TRANSACTION_NONE,subject);
 	}
 
 	public void createUser(String username, String password) {
@@ -29,7 +20,7 @@ public class AdminImpl extends UnicastRemoteObject implements Admin {
 		store.export(name);
 	}
 
-	public void close() throws RemoteException {
+	public void close() {
 		store.close();
 	}
 

@@ -72,12 +72,16 @@ public class ConnectionImpl extends UnicastRemoteObject implements Connection {
 		}
 	}
 
+	public PersistentSystem getSystem() {
+		return store.getSystem(this);
+	}
+
 	public Object getRoot() throws RemoteException {
-		return store.getSystem(this).getRoot();
+		return getSystem().getRoot();
 	}
 
 	public void setRoot(Object obj) throws RemoteException {
-		store.getSystem(this).setRoot(obj);
+		getSystem().setRoot(obj);
 	}
 
 	public int getTransactionIsolation() {
@@ -104,12 +108,12 @@ public class ConnectionImpl extends UnicastRemoteObject implements Connection {
 		this.readOnly=readOnly;
 	}
 
-	public Object execute(MethodCall call) throws RemoteException {
-		return MethodCall.attach(this,execute(call.detach(),null,0,true));
+	public Object execute(MethodCall call) {
+		return MethodCall.attach(this,execute(call.attach(store),null,0,true));
 	}
 
-	public Object execute(MethodCall call, MethodCall undo, int index) throws RemoteException {
-		return MethodCall.attach(this,execute(call.detach(),undo.detach(),index,false));
+	public Object execute(MethodCall call, MethodCall undo, int index) {
+		return MethodCall.attach(this,execute(call.attach(store),undo.attach(store),index,false));
 	}
 
 	synchronized Object execute(MethodCall call, MethodCall undo, int index, boolean read) {
