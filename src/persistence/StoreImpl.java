@@ -16,6 +16,9 @@ import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -23,7 +26,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Random;
 import java.util.WeakHashMap;
+import javax.security.auth.callback.CallbackHandler;
+import javax.security.auth.login.LoginContext;
+import javax.security.auth.login.LoginException;
 import persistence.beans.XMLDecoder;
 import persistence.beans.XMLEncoder;
 import persistence.storage.Collector;
@@ -32,8 +39,6 @@ import persistence.storage.Heap;
 import persistence.storage.MemoryModel;
 
 public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
-	static final User none=new User("none","");
-	static final User anonymous=new User("anonymous","");
 	final Heap heap;
 	Map users;
 	Map classes;
@@ -51,7 +56,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		} catch (FileNotFoundException e) {
 			throw new RuntimeException(e);
 		}
-		systemConnection=new SystemConnection(this,none);
+		systemConnection=new SystemConnection(this);
 		if((boot=heap.boot())==0) {
 			heap.mount(true);
 			create();
@@ -102,8 +107,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 
 	void createUsers() {
 		Map users=system.getUsers();
-		users.put(none.getName(),none);
-		users.put(anonymous.getName(),anonymous);
+		users.put("admin",crypt(""));
 	}
 
 	void createSystem() {
@@ -185,23 +189,98 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		return system;
 	}
 
-	public void createUser(String username, byte[] password) {
+	public void createUser(String username, String password) {
 		synchronized(users) {
 			if(users.containsKey(username)) throw new PersistentException("the user "+username+" already exists");
-			else users.put(username, new User(username,password));
+			else users.put(username,crypt(password));
 		}
 	}
 
-	public synchronized Connection getConnection(String username, byte[] password) throws RemoteException {
-		if(closing) throw new PersistentException("store closing");
-		User s=(User)users.get(username);
-		if(s!=null && !s.equals(none) && Arrays.equals(s.password,password)) return new ConnectionImpl(this,Connection.TRANSACTION_READ_UNCOMMITTED,s);
-		else throw new PersistentException("permission denied");
+	public boolean authenticate(String username, char[] password) {
+		byte pw[]=(byte[])users.get(username);
+		return Arrays.equals(pw,crypt(new String(password),salt(pw)));
 	}
 
-	public char salt(String username) {
-		User s=(User)users.get(username);
-		return s==null?0:(char)((s.password[0] << 8) | s.password[1]);
+	static char salt(byte pw[]) {
+		return (char)((pw[0] << 8) | pw[1]);
+	}
+
+	static byte[] crypt(String password) {
+		Random r=new SecureRandom();
+		byte b[]=new byte[2];
+		r.nextBytes(b);
+		return crypt(password,(char)((b[0] << 8) | b[1]));
+	}
+
+	static byte[] crypt(String password, char salt) {
+		byte b[]=password.getBytes();
+		byte a[]=new byte[2+b.length];
+		a[0]=(byte)(salt >> 8);
+		a[1]=(byte)(salt & 0xff);
+		System.arraycopy(b,0,a,2,b.length);
+		try {
+			b=MessageDigest.getInstance("MD5").digest(a);
+			byte c[]=new byte[2+b.length];
+			System.arraycopy(a,0,c,0,2);
+			System.arraycopy(b,0,c,2,b.length);
+			return c;
+		} catch (NoSuchAlgorithmException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public synchronized Connection getConnection(CallbackHandler handler) throws RemoteException {
+		if(closing) throw new PersistentException("store closing");
+
+		// Obtain a LoginContext, needed for authentication. Tell it
+		// to use the LoginModule implementation specified by the
+		// entry named "Sample" in the JAAS login configuration
+		// file and to also use the specified CallbackHandler.
+		LoginContext lc = null;
+		try {
+			lc = new LoginContext("Databeans", handler);
+		} catch (LoginException le) {
+			System.err.println("Cannot create LoginContext. "
+				+ le.getMessage());
+			System.exit(-1);
+		} catch (SecurityException se) {
+			System.err.println("Cannot create LoginContext. "
+				+ se.getMessage());
+			System.exit(-1);
+		}
+
+		// the user has 3 attempts to authenticate successfully
+		int i;
+		for (i = 0; i < 3; i++) {
+			try {
+
+				// attempt authentication
+				lc.login();
+
+				// if we return with no exception, authentication succeeded
+				break;
+
+			} catch (LoginException le) {
+
+				System.err.println("Authentication failed:");
+				System.err.println("  " + le.getMessage());
+				try {
+					Thread.currentThread().sleep(3000);
+				} catch (Exception e) {
+					// ignore
+				}
+
+			}
+		}
+
+		// did they fail three times?
+		if (i == 3) {
+			System.out.println("Sorry");
+			throw new PersistentException("permission denied");
+		}
+
+		System.out.println("Authentication succeeded!");
+		return new ConnectionImpl(this,Connection.TRANSACTION_READ_UNCOMMITTED,lc.getSubject());
 	}
 
 	public void inport(String name) {
