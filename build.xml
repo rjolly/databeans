@@ -29,7 +29,8 @@
     <mkdir dir="classes"/>
     <javac srcdir="src" destdir="classes"/>
     <rmic base="classes"
-          includes="persistence/*Impl.class"
+          includes="persistence/*Impl.class
+                    persistence/server/*Impl.class"
     />
   </target>
 
@@ -38,7 +39,8 @@
     <javac debug="on" srcdir="src" destdir="classes"/>
     <rmic debug="on"
           base="classes"
-          includes="persistence/*Impl.class"
+          includes="persistence/*Impl.class
+                    persistence/server/*Impl.class"
     />
   </target>
 

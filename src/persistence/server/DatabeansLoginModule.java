@@ -48,11 +48,10 @@ public class DatabeansLoginModule implements LoginModule {
 		// initialize any configured options
 		debug = "true".equalsIgnoreCase((String)options.get("debug"));
 		try {
-			store=(Store)Naming.lookup(options.containsKey("store")?(String)options.get("store"):"//localhost/store");
+			store=(Store)Naming.lookup((String)options.get("store"));
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
-//		return store.getConnection(username,crypt(password,store.salt(username)));
 	}
 
 	public boolean login() throws LoginException {
@@ -62,11 +61,11 @@ public class DatabeansLoginModule implements LoginModule {
 			throw new LoginException("Error: no CallbackHandler available " +
 						"to garner authentication information from the user");
 
-		Callback[] callbacks = new Callback[2];
-		callbacks[0] = new NameCallback("user name: ");
-		callbacks[1] = new PasswordCallback("password: ", false);
-
 		try {
+			Callback[] callbacks = new Callback[2];
+			callbacks[0] = new LocalNameCallback("user name: ");
+			callbacks[1] = new LocalPasswordCallback("password: ", false);
+
 			callbackHandler.handle(callbacks);
 			username = ((NameCallback)callbacks[0]).getName();
 			char[] tmpPassword = ((PasswordCallback)callbacks[1]).getPassword();

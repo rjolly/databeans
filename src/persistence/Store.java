@@ -2,8 +2,9 @@ package persistence;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import javax.security.auth.callback.CallbackHandler;
 
 public interface Store extends Remote {
-	Connection getConnection(String username, byte[] password) throws RemoteException;
-	char salt(String username) throws RemoteException;
+	boolean authenticate(String username, char[] password) throws RemoteException;
+	Connection getConnection(CallbackHandler handler) throws RemoteException;
 }

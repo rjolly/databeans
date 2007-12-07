@@ -15,7 +15,7 @@ public class AdminImpl extends UnicastRemoteObject implements Admin {
 	}
 
 	public void createUser(String username, String password) {
-		store.createUser(username,Connections.crypt(password));
+		store.createUser(username,password);
 	}
 
 	public void inport(String name) {

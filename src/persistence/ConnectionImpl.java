@@ -5,7 +5,7 @@ import java.rmi.RemoteException;
 import java.rmi.server.RemoteServer;
 import java.rmi.server.ServerNotActiveException;
 import java.rmi.server.UnicastRemoteObject;
-import java.security.Principal;
+import javax.security.auth.Subject;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 
@@ -15,17 +15,18 @@ public class ConnectionImpl extends UnicastRemoteObject implements Connection {
 	boolean autoCommit;
 	boolean readOnly;
 	boolean closed;
-	String name;
 	int level;
+	Subject subject;
+	String clientHost="";
 
-	ConnectionImpl(StoreImpl store, int level, Principal user) throws RemoteException {
+	ConnectionImpl(StoreImpl store, int level, Subject subject) throws RemoteException {
 		this.store=store;
 		this.level=level;
-		name=user.getName();
+		this.subject=subject;
 		try {
-			name+="@"+RemoteServer.getClientHost();
+			clientHost=RemoteServer.getClientHost();
 		} catch (ServerNotActiveException e) {}
-		if(level!=TRANSACTION_NONE) transaction=store.getTransaction(name);
+		if(level!=TRANSACTION_NONE) transaction=store.getTransaction(subject.toString()+"@"+clientHost);
 		open();
 	}
 
