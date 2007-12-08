@@ -4,7 +4,7 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Iterator;
 
-public abstract class AccessorImpl extends UnicastRemoteObject implements Accessor {
+abstract class AccessorImpl extends UnicastRemoteObject implements Accessor {
 	static final int TIMEOUT=60000;
 	PersistentClass clazz;
 	StoreImpl store;
@@ -123,6 +123,18 @@ public abstract class AccessorImpl extends UnicastRemoteObject implements Access
 		} catch (RemoteException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	public int hashCode() {
+		return base.hashCode();
+	}
+
+	public boolean equals(Object obj) {
+		return PersistentObject.this == obj;
+	}
+
+	public String toHexString() {
+		return clazz.getName()+"@"+Long.toHexString(base.longValue());
 	}
 
 	public String toString() {
