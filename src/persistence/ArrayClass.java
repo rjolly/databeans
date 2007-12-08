@@ -52,6 +52,6 @@ public class ArrayClass extends PersistentClass {
 	}
 
 	public String dump() {
-		return "["+length+" "+typeCode+"]";
+		return typeCode==0?"":"["+length+" "+typeCode+"]";
 	}
 }
