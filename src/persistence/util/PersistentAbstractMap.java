@@ -14,7 +14,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import persistence.MethodCall;
 import persistence.PersistentObject;
 
 public abstract class PersistentAbstractMap extends PersistentObject implements Map {
@@ -23,7 +22,7 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 	}
 
 	protected class Accessor extends PersistentObject.Accessor {
-		protected Accessor() throws RemoteException {}
+		public Accessor() throws RemoteException {}
 
 		public Object get(Object key) {
 			Iterator i = entrySet().iterator();
@@ -75,6 +74,28 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 			}
 			return oldValue;
 		}
+
+		public String toString() {
+			StringBuffer buf = new StringBuffer();
+			buf.append("{");
+
+			Iterator i = entrySet().iterator();
+			boolean hasNext = i.hasNext();
+			while (hasNext) {
+				Entry e = (Entry) (i.next());
+				Object key = e.getKey();
+				Object value = e.getValue();
+				buf.append((key == PersistentAbstractMap.this ?  "(this Map)" : key) + "=" +
+					(value == PersistentAbstractMap.this ? "(this Map)": value));
+
+				hasNext = i.hasNext();
+				if (hasNext)
+					buf.append(", ");
+			}
+
+			buf.append("}");
+			return buf.toString();
+		}
 	}
 
 	// Query Operations
@@ -125,22 +146,22 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 
 	public Object get(Object key) {
 		return execute(
-			new MethodCall(this,"get",new Class[] {Object.class},new Object[] {key}));
+			new MethodCall("get",new Class[] {Object.class},new Object[] {key}));
 	}
 
 	// Modification Operations
 
 	public Object put(Object key, Object value) {
 		Object obj=execute(
-			new MethodCall(this,"put",new Class[] {Object.class,Object.class},new Object[] {key,value}),
-			new MethodCall(this,"put",new Class[] {Object.class,Object.class},new Object[] {key,null}),1);
+			new MethodCall("put",new Class[] {Object.class,Object.class},new Object[] {key,value}),
+			new MethodCall("put",new Class[] {Object.class,Object.class},new Object[] {key,null}),1);
 		return obj==NULL?null:obj;
 	}
 
 	public Object remove(Object key) {
 		Object obj=execute(
-			new MethodCall(this,"put",new Class[] {Object.class,Object.class},new Object[] {key,NULL}),
-			new MethodCall(this,"put",new Class[] {Object.class,Object.class},new Object[] {key,null}),1);
+			new MethodCall("put",new Class[] {Object.class,Object.class},new Object[] {key,NULL}),
+			new MethodCall("put",new Class[] {Object.class,Object.class},new Object[] {key,null}),1);
 		return obj==NULL?null:obj;
 	}
 
@@ -265,28 +286,6 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 		while (i.hasNext())
 			h += i.next().hashCode();
 		return h;
-	}
-
-	public String toString() {
-		StringBuffer buf = new StringBuffer();
-		buf.append("{");
-
-		Iterator i = entrySet().iterator();
-		boolean hasNext = i.hasNext();
-		while (hasNext) {
-			Entry e = (Entry) (i.next());
-			Object key = e.getKey();
-			Object value = e.getValue();
-			buf.append((key == this ?  "(this Map)" : key) + "=" + 
-					   (value == this ? "(this Map)": value));
-
-			hasNext = i.hasNext();
-			if (hasNext)
-				buf.append(", ");
-		}
-
-		buf.append("}");
-		return buf.toString();
 	}
 
 	static class SimpleEntry implements Entry {

@@ -2,7 +2,6 @@ package persistence;
 
 import java.io.Serializable;
 import java.rmi.RemoteException;
-import java.util.Iterator;
 
 public class PersistentObject implements Cloneable, Serializable {
 	persistence.Accessor accessor;
@@ -15,9 +14,9 @@ public class PersistentObject implements Cloneable, Serializable {
 	}
 
 	protected class Accessor extends AccessorImpl {
-		protected Accessor() throws RemoteException {}
+		public Accessor() throws RemoteException {}
 
-		public final PersistentObject object() {
+		PersistentObject object() {
 			return PersistentObject.this;
 		}
 	}
@@ -71,13 +70,13 @@ public class PersistentObject implements Cloneable, Serializable {
 
 	protected final Object get(String name) {
 		return execute(
-			new MethodCall(this,"get",new Class[] {String.class},new Object[] {name}));
+			new MethodCall("get",new Class[] {String.class},new Object[] {name}));
 	}
 
 	protected final Object set(String name, Object value) {
 		return execute(
-			new MethodCall(this,"set",new Class[] {String.class,Object.class},new Object[] {name,value}),
-			new MethodCall(this,"set",new Class[] {String.class,Object.class},new Object[] {name,null}),1);
+			new MethodCall("set",new Class[] {String.class,Object.class},new Object[] {name,value}),
+			new MethodCall("set",new Class[] {String.class,Object.class},new Object[] {name,null}),1);
 	}
 
 	protected final Object execute(MethodCall call) {
@@ -96,11 +95,68 @@ public class PersistentObject implements Cloneable, Serializable {
 		}
 	}
 
+	protected final class MethodCall implements Serializable {
+		String method;
+		Class types[];
+		Object args[];
+
+		public MethodCall(String method, Class types[], Object args[]) {
+			this.method=method;
+			this.types=types;
+			this.args=args;
+		}
+
+		PersistentObject target() {
+			return PersistentObject.this;
+		}
+
+		MethodCall attach(StoreImpl store) {
+			return PersistentObject.this.attach(store).new MethodCall(method,types,PersistentObject.attach(store,args));
+		}
+
+		Object execute() {
+			return execute(PersistentObject.this);
+		}
+
+		Object execute(PersistentObject target) {
+			return target.call(method,types,args);
+		}
+
+		public String toString() {
+			return toHexString()+"."+method+java.util.Arrays.asList(args);
+		}
+	}
+
+	static Object attach(Connection connection, Object obj) {
+		return obj instanceof PersistentObject?((PersistentObject)obj).attach(connection):obj;
+	}
+
+	static Object attach(StoreImpl store, Object obj) {
+		return obj instanceof PersistentObject?((PersistentObject)obj).attach(store):obj;
+	}
+
+	static Object[] attach(StoreImpl store, Object obj[]) {
+		Object a[]=new Object[obj.length];
+		for(int i=0;i<obj.length;i++) a[i]=attach(store,obj[i]);
+		return a;
+	}
+
+	static Object execute(PersistentMethodCall call) {
+		Array t=call.getTypes();
+		Array a=call.getArgs();
+		Class types[]=new Class[t.length()];
+		Object args[]=new Object[a.length()];
+		Arrays.copy(t,0,types,0,types.length);
+		Arrays.copy(a,0,args,0,args.length);
+		return call.getTarget().new MethodCall(call.getMethod(),types,args).execute();
+	}
+
 	AccessorImpl accessor() {
 		return (AccessorImpl)accessor;
 	}
 
 	PersistentObject attach(StoreImpl store) {
+		if(!store.equals(store())) throw new PersistentException("not the same store");
 		return store.get(base()).object();
 	}
 
@@ -132,20 +188,11 @@ public class PersistentObject implements Cloneable, Serializable {
 		return this == obj || (obj instanceof PersistentObject && base().equals(((PersistentObject)obj).base()));
 	}
 
-	public String toString() {
-		StringBuffer s=new StringBuffer();
-		s.append("[");
-		Iterator t=persistentClass().fieldIterator();
-		while(t.hasNext()) {
-			Field field=(Field)t.next();
-			Object obj=get(field.name);
-			s.append(field.name+"="+(equals(obj)?"this":obj)+(t.hasNext()?", ":""));
-		}
-		s.append("]");
-		return s.toString();
+	public String toHexString() {
+		return persistentClass().getName()+"@"+Long.toHexString(base().longValue());
 	}
 
-	public final Long base() {
+	final Long base() {
 		try {
 			return base==null?base=accessor.base():base;
 		} catch (RemoteException e) {
@@ -161,11 +208,25 @@ public class PersistentObject implements Cloneable, Serializable {
 		}
 	}
 
-	private transient PersistentClass clazz;
+	final Store store() {
+		try {
+			return store==null?store=accessor.store():store;
+		} catch (RemoteException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	private transient Long base;
+	private transient PersistentClass clazz;
+	private transient Store store;
+
+	public String toString() {
+		return (String)execute(
+			new MethodCall("toString",new Class[] {},new Object[] {}));
+	}
 
 	public Object clone() {
 		return execute(
-			new MethodCall(this,"copy",new Class[] {},new Object[] {}));
+			new MethodCall("copy",new Class[] {},new Object[] {}));
 	}
 }

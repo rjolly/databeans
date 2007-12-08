@@ -9,7 +9,6 @@ package persistence.util;
 import java.rmi.RemoteException;
 import java.util.Collection;
 import java.util.Iterator;
-import persistence.MethodCall;
 import persistence.PersistentObject;
 
 public abstract class PersistentAbstractCollection extends PersistentObject implements Collection {
@@ -18,7 +17,7 @@ public abstract class PersistentAbstractCollection extends PersistentObject impl
 	}
 
 	protected class Accessor extends PersistentObject.Accessor {
-		protected Accessor() throws RemoteException {}
+		public Accessor() throws RemoteException {}
 
 		public boolean add(Object o, boolean b) {
 			return b?add0(o):false;
@@ -50,6 +49,26 @@ public abstract class PersistentAbstractCollection extends PersistentObject impl
 				}
 			}
 			return false;
+		}
+
+		//  String conversion
+
+		public String toString() {
+			StringBuffer buf = new StringBuffer();
+			buf.append("[");
+
+			Iterator i = iterator();
+			boolean hasNext = i.hasNext();
+			while (hasNext) {
+				Object o = i.next();
+				buf.append(o == PersistentAbstractCollection.this ? "(this Collection)" : String.valueOf(o));
+				hasNext = i.hasNext();
+				if (hasNext)
+					buf.append(", ");
+			}
+
+			buf.append("]");
+			return buf.toString();
 		}
 	}
 
@@ -105,14 +124,14 @@ public abstract class PersistentAbstractCollection extends PersistentObject impl
 
 	public boolean add(Object o) {
 		return ((Boolean)execute(
-			new MethodCall(this,"add",new Class[] {Object.class,boolean.class},new Object[] {o,new Boolean(true)}),
-			new MethodCall(this,"remove",new Class[] {Object.class,boolean.class},new Object[] {o,null}),1)).booleanValue();
+			new MethodCall("add",new Class[] {Object.class,boolean.class},new Object[] {o,new Boolean(true)}),
+			new MethodCall("remove",new Class[] {Object.class,boolean.class},new Object[] {o,null}),1)).booleanValue();
 	}
 
 	public boolean remove(Object o) {
 		return ((Boolean)execute(
-			new MethodCall(this,"remove",new Class[] {Object.class,boolean.class},new Object[] {o,new Boolean(true)}),
-			new MethodCall(this,"add",new Class[] {Object.class,boolean.class},new Object[] {o,null}),1)).booleanValue();
+			new MethodCall("remove",new Class[] {Object.class,boolean.class},new Object[] {o,new Boolean(true)}),
+			new MethodCall("add",new Class[] {Object.class,boolean.class},new Object[] {o,null}),1)).booleanValue();
 	}
 
 	// Bulk Operations
@@ -166,25 +185,5 @@ public abstract class PersistentAbstractCollection extends PersistentObject impl
 			e.next();
 			e.remove();
 		}
-	}
-
-	//  String conversion
-
-	public String toString() {
-		StringBuffer buf = new StringBuffer();
-		buf.append("[");
-
-		Iterator i = iterator();
-		boolean hasNext = i.hasNext();
-		while (hasNext) {
-			Object o = i.next();
-			buf.append(o == this ? "(this Collection)" : String.valueOf(o));
-			hasNext = i.hasNext();
-			if (hasNext)
-				buf.append(", ");
-		}
-
-		buf.append("]");
-		return buf.toString();
 	}
 }

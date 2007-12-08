@@ -22,7 +22,7 @@ public class PersistentArrayList extends PersistentAbstractList
 	}
 
 	protected class Accessor extends PersistentAbstractList.Accessor {
-		protected Accessor() throws RemoteException {}
+		public Accessor() throws RemoteException {}
 
 		public Object get(int index) {
 			RangeCheck(index);

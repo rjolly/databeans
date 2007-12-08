@@ -26,7 +26,7 @@ public class PersistentClass extends UnicastSerializedObject {
 		try {
 			info=Introspector.getBeanInfo(clazz);
 		} catch (IntrospectionException e) {
-			throw new PersistentException("introspection error");
+			throw new RuntimeException(e);
 		}
 		PropertyDescriptor desc[]=info.getPropertyDescriptors();
 		Collection c=new ArrayList();
@@ -34,7 +34,6 @@ public class PersistentClass extends UnicastSerializedObject {
 			PropertyDescriptor d=desc[i];
 			if(d instanceof IndexedPropertyDescriptor) continue;
 			if(d.getName().equals("class")) continue;
-			if(d.getName().equals("ref")) continue;
 			c.add(new Field(d));
 		}
 		c.toArray(fields=new Field[c.size()]);
@@ -71,9 +70,16 @@ public class PersistentClass extends UnicastSerializedObject {
 		}
 	}
 
+	public String getName() {
+		return name;
+	}
+
 	public String toString() {
+		return name+"("+Long.toHexString(base)+")";
+	}
+
+	public String dump() {
 		StringBuffer s=new StringBuffer();
-		s.append(Long.toHexString(base));
 		s.append("[");
 		for(int i=0;i<fields.length;i++) s.append((i==0?"":", ")+fields[i]);
 		s.append("]");

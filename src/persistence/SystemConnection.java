@@ -1,6 +1,7 @@
 package persistence;
 
 import java.rmi.RemoteException;
+import persistence.PersistentObject.MethodCall;
 
 class SystemConnection extends ConnectionImpl {
 	SystemConnection(StoreImpl store) throws RemoteException {

@@ -42,7 +42,7 @@ public abstract class AccessorImpl extends UnicastRemoteObject implements Access
 		return set(clazz.getField(name),value);
 	}
 
-	public Object copy() {
+	public PersistentObject copy() {
 		return ((AccessorImpl)clone()).object();
 	}
 
@@ -105,12 +105,12 @@ public abstract class AccessorImpl extends UnicastRemoteObject implements Access
 		return base;
 	}
 
-	public final String toString() {
-		return Long.toHexString(base.longValue());
-	}
-
 	public final PersistentClass persistentClass() {
 		return clazz;
+	}
+
+	public final Store store() {
+		return store;
 	}
 
 	static AccessorImpl newInstance(Long base, PersistentClass clazz, StoreImpl store) {
@@ -123,6 +123,19 @@ public abstract class AccessorImpl extends UnicastRemoteObject implements Access
 		} catch (RemoteException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	public String toString() {
+		StringBuffer s=new StringBuffer();
+		s.append("[");
+		Iterator t=clazz.fieldIterator();
+		while(t.hasNext()) {
+			Field field=(Field)t.next();
+			Object obj=get(field.name);
+			s.append(field.name+"="+(obj==object()?"this":obj)+(t.hasNext()?", ":""));
+		}
+		s.append("]");
+		return s.toString();
 	}
 
 	public final Object clone() {

@@ -2,7 +2,7 @@ package persistence;
 
 public class PersistentMethodCall extends PersistentObject {
 	public void init(MethodCall call) {
-		setTarget(call.target);
+		setTarget(call.target());
 		setMethod(call.method);
 		setTypes(create(call.types));
 		setArgs(create(call.args));
@@ -41,6 +41,6 @@ public class PersistentMethodCall extends PersistentObject {
 	}
 
 	public String toString() {
-		return getMethod();
+		return toHexString()+"."+getMethod()+getArgs();
 	}
 }

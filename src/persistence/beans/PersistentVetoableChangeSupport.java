@@ -18,7 +18,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import persistence.MethodCall;
 import persistence.PersistentObject;
 import persistence.util.PersistentArrayList;
 import persistence.util.PersistentHashMap;
@@ -102,22 +101,22 @@ public class PersistentVetoableChangeSupport extends PersistentObject {
 
 	public void addVetoableChangeListener(VetoableChangeListener listener) {
 		execute(
-			new MethodCall(this,"addVetoableChangeListener",new Class[] {VetoableChangeListener.class},new Object[] {listener}));
+			new MethodCall("addVetoableChangeListener",new Class[] {VetoableChangeListener.class},new Object[] {listener}));
 	}
 
 	public void removeVetoableChangeListener(VetoableChangeListener listener) {
 		execute(
-			new MethodCall(this,"removeVetoableChangeListener",new Class[] {VetoableChangeListener.class},new Object[] {listener}));
+			new MethodCall("removeVetoableChangeListener",new Class[] {VetoableChangeListener.class},new Object[] {listener}));
 	}
 
 	public void addVetoableChangeListener(String propertyName, VetoableChangeListener listener) {
 		execute(
-			new MethodCall(this,"addVetoableChangeListener",new Class[] {String.class,VetoableChangeListener.class},new Object[] {propertyName,listener}));
+			new MethodCall("addVetoableChangeListener",new Class[] {String.class,VetoableChangeListener.class},new Object[] {propertyName,listener}));
 	}
 
 	public void removeVetoableChangeListener(String propertyName, VetoableChangeListener listener) {
 		execute(
-			new MethodCall(this,"removeVetoableChangeListener",new Class[] {String.class,VetoableChangeListener.class},new Object[] {propertyName,listener}));
+			new MethodCall("removeVetoableChangeListener",new Class[] {String.class,VetoableChangeListener.class},new Object[] {propertyName,listener}));
 	}
 
 	public void fireVetoableChange(String propertyName, Object oldValue, Object newValue) throws PropertyVetoException {

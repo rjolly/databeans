@@ -16,7 +16,6 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import persistence.Array;
-import persistence.MethodCall;
 import persistence.PersistentObject;
 
 public class PersistentHashMap extends PersistentAbstractMap implements Map, Cloneable
@@ -30,7 +29,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 	}
 
 	protected class Accessor extends PersistentAbstractMap.Accessor {
-		protected Accessor() throws RemoteException {}
+		public Accessor() throws RemoteException {}
 
 		public Entry getEntry(Object key) {
 			Object k = maskNull(key);
@@ -238,7 +237,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 
 	Entry getEntry(Object key) {
 		return (Entry)execute(
-			new MethodCall(this,"getEntry",new Class[] {Object.class},new Object[] {key}));
+			new MethodCall("getEntry",new Class[] {Object.class},new Object[] {key}));
 	}
 
 	public Object put(Object key, Object value) {
@@ -341,14 +340,14 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 
 	Map.Entry putMapping(Object key, Object value) {
 		return (Map.Entry)execute(
-			new MethodCall(this,"putMapping",new Class[] {Object.class,Object.class},new Object[] {key,value}),
-			new MethodCall(this,"removeMapping",new Class[] {Map.Entry.class},new Object[] {null}),0);
+			new MethodCall("putMapping",new Class[] {Object.class,Object.class},new Object[] {key,value}),
+			new MethodCall("removeMapping",new Class[] {Map.Entry.class},new Object[] {null}),0);
 	}
 
 	Map.Entry removeMapping(Map.Entry entry) {
 		return (Map.Entry)execute(
-			new MethodCall(this,"removeMapping",new Class[] {Map.Entry.class},new Object[] {entry}),
-			new MethodCall(this,"putMapping",new Class[] {Map.Entry.class},new Object[] {null}),0);
+			new MethodCall("removeMapping",new Class[] {Map.Entry.class},new Object[] {entry}),
+			new MethodCall("putMapping",new Class[] {Map.Entry.class},new Object[] {null}),0);
 	}
 
 //	public void clear() {
@@ -490,7 +489,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 
 	Entry nextEntry(Entry entry) {
 		return (Entry)execute(
-			new MethodCall(this,"nextEntry",new Class[] {Entry.class},new Object[] {entry}));
+			new MethodCall("nextEntry",new Class[] {Entry.class},new Object[] {entry}));
 	}
 
 	private abstract class HashIterator implements Iterator {

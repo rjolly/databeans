@@ -17,7 +17,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import persistence.MethodCall;
 import persistence.PersistentObject;
 import persistence.util.PersistentArrayList;
 import persistence.util.PersistentHashMap;
@@ -101,22 +100,22 @@ public class PersistentPropertyChangeSupport extends PersistentObject {
 
 	public void addPropertyChangeListener(PropertyChangeListener listener) {
 		execute(
-			new MethodCall(this,"addPropertyChangeListener",new Class[] {PropertyChangeListener.class},new Object[] {listener}));
+			new MethodCall("addPropertyChangeListener",new Class[] {PropertyChangeListener.class},new Object[] {listener}));
 	}
 
 	public void removePropertyChangeListener(PropertyChangeListener listener) {
 		execute(
-			new MethodCall(this,"removePropertyChangeListener",new Class[] {PropertyChangeListener.class},new Object[] {listener}));
+			new MethodCall("removePropertyChangeListener",new Class[] {PropertyChangeListener.class},new Object[] {listener}));
 	}
 
 	public void addPropertyChangeListener(String propertyName, PropertyChangeListener listener) {
 		execute(
-			new MethodCall(this,"addPropertyChangeListener",new Class[] {String.class,PropertyChangeListener.class},new Object[] {propertyName,listener}));
+			new MethodCall("addPropertyChangeListener",new Class[] {String.class,PropertyChangeListener.class},new Object[] {propertyName,listener}));
 	}
 
 	public void removePropertyChangeListener(String propertyName, PropertyChangeListener listener) {
 		execute(
-			new MethodCall(this,"removePropertyChangeListener",new Class[] {String.class,PropertyChangeListener.class},new Object[] {propertyName,listener}));
+			new MethodCall("removePropertyChangeListener",new Class[] {String.class,PropertyChangeListener.class},new Object[] {propertyName,listener}));
 	}
 
 	public void firePropertyChange(String propertyName, Object oldValue, Object newValue) {

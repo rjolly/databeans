@@ -14,12 +14,10 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
 import java.util.RandomAccess;
-import persistence.MethodCall;
-import persistence.PersistentObject;
 
 public abstract class PersistentAbstractList extends PersistentAbstractCollection implements List {
 	protected abstract class Accessor extends PersistentAbstractCollection.Accessor {
-		protected Accessor() throws RemoteException {}
+		public Accessor() throws RemoteException {}
 
 		abstract public Object get(int index);
 
@@ -43,25 +41,25 @@ public abstract class PersistentAbstractList extends PersistentAbstractCollectio
 
 	public Object get(int index) {
 		return execute(
-			new MethodCall(this,"get",new Class[] {int.class},new Object[] {new Integer(index)}));
+			new MethodCall("get",new Class[] {int.class},new Object[] {new Integer(index)}));
 	}
 
 	public Object set(int index, Object element) {
 		return execute(
-			new MethodCall(this,"set",new Class[] {int.class,Object.class},new Object[] {new Integer(index),element}),
-			new MethodCall(this,"set",new Class[] {int.class,Object.class},new Object[] {new Integer(index),null}),1);
+			new MethodCall("set",new Class[] {int.class,Object.class},new Object[] {new Integer(index),element}),
+			new MethodCall("set",new Class[] {int.class,Object.class},new Object[] {new Integer(index),null}),1);
 	}
 
 	public void add(int index, Object element) {
 		execute(
-			new MethodCall(this,"add",new Class[] {int.class,Object.class},new Object[] {new Integer(index),element}),
-			new MethodCall(this,"remove",new Class[] {int.class},new Object[] {null}),0);
+			new MethodCall("add",new Class[] {int.class,Object.class},new Object[] {new Integer(index),element}),
+			new MethodCall("remove",new Class[] {int.class},new Object[] {null}),0);
 	}
 
 	public Object remove(int index) {
 		return execute(
-			new MethodCall(this,"remove",new Class[] {int.class},new Object[] {new Integer(index)}),
-			new MethodCall(this,"add",new Class[] {int.class,Object.class},new Object[] {new Integer(index),null}),1);
+			new MethodCall("remove",new Class[] {int.class},new Object[] {new Integer(index)}),
+			new MethodCall("add",new Class[] {int.class,Object.class},new Object[] {new Integer(index),null}),1);
 	}
 
 	// Search Operations

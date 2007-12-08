@@ -1,6 +1,7 @@
 package persistence;
 
 import java.rmi.RemoteException;
+import persistence.PersistentObject.MethodCall;
 
 public final class PersistentArray extends PersistentObject implements Array {
 	public void init(Object component[]) {
@@ -12,7 +13,7 @@ public final class PersistentArray extends PersistentObject implements Array {
 	}
 
 	protected class Accessor extends PersistentObject.Accessor {
-		protected Accessor() throws RemoteException {}
+		public Accessor() throws RemoteException {}
 
 		public Object get(int index) {
 			return get(((ArrayClass)clazz).getField(index));
@@ -20,6 +21,15 @@ public final class PersistentArray extends PersistentObject implements Array {
 
 		public Object set(int index, Object value) {
 			return set(((ArrayClass)clazz).getField(index),value);
+		}
+
+		public String toString() {
+			StringBuffer s=new StringBuffer();
+			s.append("{");
+			int n=length();
+			for(int i=0;i<n;i++) s.append((i==0?"":", ")+get(i));
+			s.append("}");
+			return s.toString();
 		}
 	}
 
@@ -105,21 +115,12 @@ public final class PersistentArray extends PersistentObject implements Array {
 
 	public Object get(int index) {
 		return execute(
-			new MethodCall(this,"get",new Class[] {int.class},new Object[] {new Integer(index)}));
+			new MethodCall("get",new Class[] {int.class},new Object[] {new Integer(index)}));
 	}
 
 	public void set(int index, Object value) {
 		execute(
-			new MethodCall(this,"set",new Class[] {int.class,Object.class},new Object[] {new Integer(index),value}),
-			new MethodCall(this,"set",new Class[] {int.class,Object.class},new Object[] {new Integer(index),null}),1);
-	}
-
-	public String toString() {
-		StringBuffer s=new StringBuffer();
-		s.append("{");
-		int n=length();
-		for(int i=0;i<n;i++) s.append((i==0?"":", ")+get(i));
-		s.append("}");
-		return s.toString();
+			new MethodCall("set",new Class[] {int.class,Object.class},new Object[] {new Integer(index),value}),
+			new MethodCall("set",new Class[] {int.class,Object.class},new Object[] {new Integer(index),null}),1);
 	}
 }

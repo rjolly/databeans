@@ -3,6 +3,7 @@ package persistence;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import javax.transaction.xa.XAResource;
+import persistence.PersistentObject.MethodCall;
 
 public interface Connection extends Remote {
 	static final int TRANSACTION_NONE = 0;

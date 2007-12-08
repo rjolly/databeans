@@ -13,7 +13,7 @@ public abstract class NotifiedObject extends PersistentObject {
 	}
 
 	protected class Accessor extends PersistentObject.Accessor {
-		protected Accessor() throws RemoteException {}
+		public Accessor() throws RemoteException {}
 
 		Object set(Field field, Object value) {
 			Object oldValue=get(field);

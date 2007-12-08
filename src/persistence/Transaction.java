@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import persistence.PersistentObject.MethodCall;
 import persistence.storage.MemoryModel;
 import persistence.util.PersistentArrayList;
 import persistence.util.PersistentHashMap;
@@ -70,7 +71,7 @@ public class Transaction extends PersistentObject {
 	void commit() {
 		List l=getCalls();
 		for(ListIterator it=l.listIterator(0);it.hasNext();it.remove()) {
-			MethodCall.execute(((PersistentMethodCall)it.next()));
+			PersistentObject.execute(((PersistentMethodCall)it.next()));
 		}
 		getUndos().clear();
 		unlock();
@@ -79,7 +80,7 @@ public class Transaction extends PersistentObject {
 	void rollback() {
 		List l=getUndos();
 		for(ListIterator it=l.listIterator(l.size());it.hasPrevious();it.remove()) {
-			MethodCall.execute((PersistentMethodCall)it.previous());
+			PersistentObject.execute((PersistentMethodCall)it.previous());
 		}
 		getCalls().clear();
 		unlock();

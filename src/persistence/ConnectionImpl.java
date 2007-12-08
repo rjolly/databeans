@@ -8,6 +8,7 @@ import java.rmi.server.UnicastRemoteObject;
 import javax.security.auth.Subject;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
+import persistence.PersistentObject.MethodCall;
 
 public class ConnectionImpl extends UnicastRemoteObject implements Connection {
 	final StoreImpl store;
@@ -109,11 +110,11 @@ public class ConnectionImpl extends UnicastRemoteObject implements Connection {
 	}
 
 	public Object execute(MethodCall call) {
-		return MethodCall.attach(this,execute(call.attach(store),null,0,true));
+		return PersistentObject.attach(this,execute(call.attach(store),null,0,true));
 	}
 
 	public Object execute(MethodCall call, MethodCall undo, int index) {
-		return MethodCall.attach(this,execute(call.attach(store),undo.attach(store),index,false));
+		return PersistentObject.attach(this,execute(call.attach(store),undo.attach(store),index,false));
 	}
 
 	synchronized Object execute(MethodCall call, MethodCall undo, int index, boolean read) {
@@ -121,7 +122,7 @@ public class ConnectionImpl extends UnicastRemoteObject implements Connection {
 		if(!read && readOnly) throw new PersistentException("read only");
 		Object obj;
 		if(transaction!=null) {
-			obj=call.execute(transaction.copy(call.target,level,read,readOnly));
+			obj=call.execute(transaction.copy(call.target(),level,read,readOnly));
 			if(!read) {
 				undo.args[index]=obj;
 				transaction.record(call,undo,level);
