@@ -130,7 +130,7 @@ abstract class AccessorImpl extends UnicastRemoteObject implements Accessor {
 	}
 
 	public boolean equals(Object obj) {
-		return PersistentObject.this == obj;
+		return obj == object();
 	}
 
 	public String toHexString() {

@@ -156,8 +156,12 @@ public class PersistentObject implements Cloneable, Serializable {
 	}
 
 	PersistentObject attach(StoreImpl store) {
-		if(!store.equals(store())) throw new PersistentException("not the same store");
-		return store.get(base()).object();
+		try {
+			if(!store.equals(accessor.store())) throw new PersistentException("not the same store");
+			return store.get(accessor.base()).object();
+		} catch (RemoteException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	PersistentObject attach(Connection connection) {
@@ -180,26 +184,6 @@ public class PersistentObject implements Cloneable, Serializable {
 		accessor().kick();
 	}
 
-	public int hashCode() {
-		return base().hashCode();
-	}
-
-	public boolean equals(Object obj) {
-		return this == obj || (obj instanceof PersistentObject && base().equals(((PersistentObject)obj).base()));
-	}
-
-	public String toHexString() {
-		return persistentClass().getName()+"@"+Long.toHexString(base().longValue());
-	}
-
-	final Long base() {
-		try {
-			return base==null?base=accessor.base():base;
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
 	public final PersistentClass persistentClass() {
 		try {
 			return clazz==null?clazz=accessor.persistentClass():clazz;
@@ -208,17 +192,22 @@ public class PersistentObject implements Cloneable, Serializable {
 		}
 	}
 
-	final Store store() {
-		try {
-			return store==null?store=accessor.store():store;
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
+	private transient PersistentClass clazz;
+
+	public int hashCode() {
+		return ((Integer)execute(
+			new MethodCall("hashCode",new Class[] {},new Object[] {}))).intValue();
 	}
 
-	private transient Long base;
-	private transient PersistentClass clazz;
-	private transient Store store;
+	public boolean equals(Object obj) {
+		return ((Boolean)execute(
+			new MethodCall("equals",new Class[] {Object.class},new Object[] {obj}))).booleanValue();
+	}
+
+	public String toHexString() {
+		return (String)execute(
+			new MethodCall("toHexString",new Class[] {},new Object[] {}));
+	}
 
 	public String toString() {
 		return (String)execute(

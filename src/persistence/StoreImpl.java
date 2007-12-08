@@ -112,7 +112,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 
 	void createSystem() {
 		system=(PersistentSystem)systemConnection.create(PersistentSystem.class);
-		incRefCount(boot=((AccessorImpl)system.accessor).base.longValue());
+		incRefCount(boot=system.accessor().base.longValue());
 		heap.setBoot(boot);
 	}
 

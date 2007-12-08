@@ -75,6 +75,49 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 			return oldValue;
 		}
 
+		// Comparison and hashing
+
+		public boolean equals(Object o) {
+			if (o == PersistentAbstractMap.this)
+				return true;
+
+			if (!(o instanceof Map))
+				return false;
+			Map t = (Map) o;
+			if (t.size() != size())
+				return false;
+
+			try {
+				Iterator i = entrySet().iterator();
+				while (i.hasNext()) {
+					Entry e = (Entry) i.next();
+					Object key = e.getKey();
+					Object value = e.getValue();
+					if (value == null) {
+						if (!(t.get(key)==null && t.containsKey(key)))
+							return false;
+					} else {
+						if (!value.equals(t.get(key)))
+							return false;
+					}
+				}
+			} catch(ClassCastException unused)   {
+				return false;
+			} catch(NullPointerException unused) {
+				return false;
+			}
+
+			return true;
+		}
+
+		public int hashCode() {
+			int h = 0;
+			Iterator i = entrySet().iterator();
+			while (i.hasNext())
+				h += i.next().hashCode();
+			return h;
+		}
+
 		public String toString() {
 			StringBuffer buf = new StringBuffer();
 			buf.append("{");
@@ -244,49 +287,6 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 	}
 
 	public abstract Set entrySet();
-
-	// Comparison and hashing
-
-	public boolean equals(Object o) {
-		if (o == this)
-			return true;
-
-		if (!(o instanceof Map))
-			return false;
-		Map t = (Map) o;
-		if (t.size() != size())
-			return false;
-
-		try {
-			Iterator i = entrySet().iterator();
-			while (i.hasNext()) {
-				Entry e = (Entry) i.next();
-				Object key = e.getKey();
-				Object value = e.getValue();
-				if (value == null) {
-					if (!(t.get(key)==null && t.containsKey(key)))
-						return false;
-				} else {
-					if (!value.equals(t.get(key)))
-						return false;
-				}
-			}
-		} catch(ClassCastException unused)   {
-			return false;
-		} catch(NullPointerException unused) {
-			return false;
-		}
-
-		return true;
-	}
-
-	public int hashCode() {
-		int h = 0;
-		Iterator i = entrySet().iterator();
-		while (i.hasNext())
-			h += i.next().hashCode();
-		return h;
-	}
 
 	static class SimpleEntry implements Entry {
 		Object key;

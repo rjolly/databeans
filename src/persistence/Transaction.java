@@ -38,7 +38,7 @@ public class Transaction extends PersistentObject {
 		Array pair;
 		Map map=getPairs();
 //		Long base=obj.base();
-		Number base=MemoryModel.model.toNumber(obj.base().longValue());
+		Number base=MemoryModel.model.toNumber(obj.accessor().base.longValue());
 		if(map.containsKey(base)) pair=(Array)map.get(base);
 		else {
 			pair=(Array)create(new Object[] {obj,obj.clone()});

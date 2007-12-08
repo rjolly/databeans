@@ -98,6 +98,17 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 			
 			return e;
 		}
+
+		public PersistentObject copy() {
+			PersistentHashMap result = (PersistentHashMap)super.copy();
+			result.setTable(create(Entry.class,getTable().length()));
+			result.setModCount(0);
+			result.setSize(0);
+//			result.putAllForCreate(this);
+			result.putAll(PersistentHashMap.this);
+			
+			return result;
+		}
 	}
 
 	public Array getTable() {
@@ -378,17 +389,6 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 //					return true;
 //		return false;
 //	}
-
-	public Object clone() {
-		PersistentHashMap result = (PersistentHashMap)super.clone();
-		result.setTable(create(Entry.class,getTable().length()));
-		result.setModCount(0);
-		result.setSize(0);
-//		result.putAllForCreate(this);
-		result.putAll(this);
-
-		return result;
-	}
 
 	public static class Entry extends PersistentObject implements Map.Entry {
 		public Object getKey() {

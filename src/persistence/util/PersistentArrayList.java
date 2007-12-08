@@ -65,6 +65,14 @@ public class PersistentArrayList extends PersistentAbstractList
 			
 			return oldValue;
 		}
+
+		public PersistentObject copy() {
+			PersistentArrayList v = (PersistentArrayList)super.copy();
+			v.setElementData(create(Object.class,getSize()));
+			Arrays.copy(getElementData(), 0, v.getElementData(), 0, getSize());
+			v.setModCount(0);
+			return v;
+		}
 	}
 
 	public Array getElementData() {
@@ -168,14 +176,6 @@ public class PersistentArrayList extends PersistentAbstractList
 					return i;
 		}
 		return -1;
-	}
-
-	public Object clone() {
-		PersistentArrayList v = (PersistentArrayList)super.clone();
-		v.setElementData(create(Object.class,getSize()));
-		Arrays.copy(getElementData(), 0, v.getElementData(), 0, getSize());
-		v.setModCount(0);
-		return v;
 	}
 
 	public Object[] toArray() {

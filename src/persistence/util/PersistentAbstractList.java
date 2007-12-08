@@ -32,6 +32,35 @@ public abstract class PersistentAbstractList extends PersistentAbstractCollectio
 		public Object remove(int index) {
 			throw new UnsupportedOperationException();
 		}
+
+		// Comparison and hashing
+
+		public boolean equals(Object o) {
+			if (o == PersistentAbstractList.this)
+				return true;
+			if (!(o instanceof List))
+				return false;
+
+			ListIterator e1 = listIterator();
+			ListIterator e2 = ((List) o).listIterator();
+			while(e1.hasNext() && e2.hasNext()) {
+				Object o1 = e1.next();
+				Object o2 = e2.next();
+				if (!(o1==null ? o2==null : o1.equals(o2)))
+					return false;
+			}
+			return !(e1.hasNext() || e2.hasNext());
+		}
+
+		public int hashCode() {
+			int hashCode = 1;
+			Iterator i = iterator();
+			while (i.hasNext()) {
+				Object obj = i.next();
+				hashCode = 31*hashCode + (obj==null ? 0 : obj.hashCode());
+			}
+			return hashCode;
+		}
 	}
 
 	public boolean add(Object o) {
@@ -228,35 +257,6 @@ public abstract class PersistentAbstractList extends PersistentAbstractCollectio
 		return (this instanceof RandomAccess ?
 				new RandomAccessSubList(this, fromIndex, toIndex) :
 				new SubList(this, fromIndex, toIndex));
-	}
-
-	// Comparison and hashing
-
-	public boolean equals(Object o) {
-		if (o == this)
-			return true;
-		if (!(o instanceof List))
-			return false;
-
-		ListIterator e1 = listIterator();
-		ListIterator e2 = ((List) o).listIterator();
-		while(e1.hasNext() && e2.hasNext()) {
-			Object o1 = e1.next();
-			Object o2 = e2.next();
-			if (!(o1==null ? o2==null : o1.equals(o2)))
-				return false;
-		}
-		return !(e1.hasNext() || e2.hasNext());
-	}
-
-	public int hashCode() {
-		int hashCode = 1;
-		Iterator i = iterator();
-	 		while (i.hasNext()) {
-			Object obj = i.next();
-			hashCode = 31*hashCode + (obj==null ? 0 : obj.hashCode());
-		}
-		return hashCode;
 	}
 
 	protected void removeRange(int fromIndex, int toIndex) {
