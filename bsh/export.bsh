@@ -1,4 +1,3 @@
-import java.io.*;
 import persistence.*;
 admin=Connections.getAdmin("//localhost/store");
-admin.export(new File("data.xml").getAbsolutePath());
+admin.export("data.xml");

@@ -1,6 +1,5 @@
 package persistence;
 
-import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 public interface Admin extends Connection {
