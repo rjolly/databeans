@@ -41,6 +41,6 @@ public class PersistentMethodCall extends PersistentObject {
 	}
 
 	public String toString() {
-		return toHexString()+"."+getMethod()+getArgs();
+		return getTarget().toHexString()+"."+getMethod()+getArgs();
 	}
 }

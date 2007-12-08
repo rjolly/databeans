@@ -74,6 +74,10 @@ public class PersistentClass extends UnicastSerializedObject {
 		return name;
 	}
 
+	public String toString() {
+		return "("+Long.toHexString(base)+")";
+	}
+
 	public String dump() {
 		StringBuffer s=new StringBuffer();
 		s.append("[");

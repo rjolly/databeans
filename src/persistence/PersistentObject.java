@@ -123,7 +123,7 @@ public class PersistentObject implements Cloneable, Serializable {
 		}
 
 		public String toString() {
-			return toHexString()+"."+method+java.util.Arrays.asList(args);
+			return PersistentObject.this.toHexString()+"."+method+java.util.Arrays.asList(args);
 		}
 	}
 
