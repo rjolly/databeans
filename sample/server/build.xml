@@ -11,21 +11,12 @@
     <mkdir dir="classes"/>
     <unzip src="databeans.jar" dest="classes" overwrite="false"/>
     <javac srcdir="src" destdir="classes"/>
-    <rmic base="classes"
-          includes="DepartmentImpl.class
-                    EmployeeImpl.class"
-    />
   </target>
 
   <target name="compile-debug">
     <mkdir dir="classes"/>
     <unzip src="databeans.jar" dest="classes" overwrite="false"/>
     <javac debug="on" srcdir="src" destdir="classes"/>
-    <rmic debug="on"
-          base="classes"
-          includes="DepartmentImpl.class
-                    EmployeeImpl.class"
-    />
   </target>
 
   <target name="run" depends="compile">
