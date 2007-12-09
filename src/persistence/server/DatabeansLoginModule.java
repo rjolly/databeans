@@ -67,6 +67,9 @@ public class DatabeansLoginModule implements LoginModule {
 			callbacks[1] = new LocalPasswordCallback("password: ", false);
 
 			callbackHandler.handle(callbacks);
+
+			((LocalNameCallback)callbacks[0]).unexport();
+			((LocalPasswordCallback)callbacks[1]).unexport();
 			username = ((NameCallback)callbacks[0]).getName();
 			char[] tmpPassword = ((PasswordCallback)callbacks[1]).getPassword();
 			if (tmpPassword == null) {

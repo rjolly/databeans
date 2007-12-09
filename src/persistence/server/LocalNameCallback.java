@@ -49,6 +49,10 @@ public class LocalNameCallback extends NameCallback {
 			throw new RuntimeException(e);
 		}
 	}
+
+	boolean unexport() throws RemoteException {
+		return UnicastRemoteObject.unexportObject(callback,false);
+	}
 }
 
 interface RemoteNameCallback extends Remote {
