@@ -1,10 +1,12 @@
+import java.awt.Frame;
 import java.util.Collection;
 import persistence.Connection;
 import persistence.Connections;
 
 public class Sample {
 	public static void main(String args[]) throws Exception {
-		Connection conn=Connections.getConnection("//localhost/store");
+		Frame frame=new Frame();
+		Connection conn=Connections.getConnection(frame,"//localhost/store");
 		Department d=(Department)conn.create("Department");
 		d.setName("Research");
 		Employee e=(Employee)conn.create("Employee");
@@ -29,5 +31,6 @@ public class Sample {
 		System.out.println(conn.getRoot());
 		conn.commit();
 		conn.close();
+		frame.dispose();
 	}
 }
