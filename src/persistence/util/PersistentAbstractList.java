@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
 import java.util.RandomAccess;
+import persistence.PersistentObject;
 
 public abstract class PersistentAbstractList extends PersistentAbstractCollection implements List {
 	protected abstract class Accessor extends PersistentAbstractCollection.Accessor {
@@ -35,7 +36,7 @@ public abstract class PersistentAbstractList extends PersistentAbstractCollectio
 
 		// Comparison and hashing
 
-		public boolean equals(Object o) {
+		public boolean remoteEquals(PersistentObject o) {
 			if (o == PersistentAbstractList.this)
 				return true;
 			if (!(o instanceof List))
@@ -52,7 +53,7 @@ public abstract class PersistentAbstractList extends PersistentAbstractCollectio
 			return !(e1.hasNext() || e2.hasNext());
 		}
 
-		public int hashCode() {
+		public int remoteHashCode() {
 			int hashCode = 1;
 			Iterator i = iterator();
 			while (i.hasNext()) {

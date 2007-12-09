@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.RandomAccess;
 import persistence.Array;
 import persistence.Arrays;
+import persistence.Connection;
 import persistence.PersistentObject;
 
 public class PersistentArrayList extends PersistentAbstractList
@@ -66,8 +67,8 @@ public class PersistentArrayList extends PersistentAbstractList
 			return oldValue;
 		}
 
-		public PersistentObject copy() {
-			PersistentArrayList v = (PersistentArrayList)super.copy();
+		public PersistentObject remoteClone(Connection connection) {
+			PersistentArrayList v = (PersistentArrayList)super.remoteClone(connection);
 			v.setElementData(create(Object.class,getSize()));
 			Arrays.copy(getElementData(), 0, v.getElementData(), 0, getSize());
 			v.setModCount(0);

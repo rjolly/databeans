@@ -53,7 +53,7 @@ public abstract class PersistentAbstractCollection extends PersistentObject impl
 
 		//  String conversion
 
-		public String toString() {
+		public String remoteToString() {
 			StringBuffer buf = new StringBuffer();
 			buf.append("[");
 

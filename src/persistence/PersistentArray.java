@@ -23,7 +23,7 @@ public final class PersistentArray extends PersistentObject implements Array {
 			return set(((ArrayClass)clazz).getField(index),value);
 		}
 
-		public String toString() {
+		public String remoteToString() {
 			StringBuffer s=new StringBuffer();
 			s.append("{");
 			int n=length();

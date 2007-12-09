@@ -42,10 +42,6 @@ abstract class AccessorImpl extends UnicastRemoteObject implements Accessor {
 		return set(clazz.getField(name),value);
 	}
 
-	public PersistentObject copy() {
-		return ((AccessorImpl)clone()).object();
-	}
-
 	Object get(Field field) {
 		return attach(store.get(base.longValue(),field));
 	}
@@ -125,32 +121,36 @@ abstract class AccessorImpl extends UnicastRemoteObject implements Accessor {
 		}
 	}
 
-	public int hashCode() {
+	public int remoteHashCode() {
 		return base.hashCode();
 	}
 
-	public boolean equals(Object obj) {
+	public boolean remoteEquals(PersistentObject obj) {
 		return obj == object();
 	}
 
-	public String toHexString() {
+	public String remoteToString() {
 		return clazz.getName()+"@"+Long.toHexString(base.longValue());
 	}
 
-	public String toString() {
+	String dump() {
 		StringBuffer s=new StringBuffer();
 		s.append("[");
 		Iterator t=clazz.fieldIterator();
 		while(t.hasNext()) {
 			Field field=(Field)t.next();
 			Object obj=get(field.name);
-			s.append(field.name+"="+(obj==object()?"this":obj)+(t.hasNext()?", ":""));
+			s.append(field.name+"="+obj+(t.hasNext()?", ":""));
 		}
 		s.append("]");
 		return s.toString();
 	}
 
-	public final Object clone() {
+	public PersistentObject remoteClone(Connection connection) {
+		return ((AccessorImpl)clone()).object(connection);
+	}
+
+	public synchronized final Object clone() {
 		AccessorImpl obj=store.create(clazz);
 		Iterator t=clazz.fieldIterator();
 		while(t.hasNext()) {

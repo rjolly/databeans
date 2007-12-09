@@ -77,7 +77,7 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 
 		// Comparison and hashing
 
-		public boolean equals(Object o) {
+		public boolean remoteEquals(PersistentObject o) {
 			if (o == PersistentAbstractMap.this)
 				return true;
 
@@ -110,7 +110,7 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 			return true;
 		}
 
-		public int hashCode() {
+		public int remoteHashCode() {
 			int h = 0;
 			Iterator i = entrySet().iterator();
 			while (i.hasNext())
@@ -118,7 +118,7 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 			return h;
 		}
 
-		public String toString() {
+		public String remoteToString() {
 			StringBuffer buf = new StringBuffer();
 			buf.append("{");
 

@@ -131,4 +131,8 @@ public class Transaction extends PersistentObject {
 	public void setPairs(Map map) {
 		set("pairs",map);
 	}
+
+	public String toString() {
+		return "["+getClient()+", "+getCalls()+", "+getUndos()+", "+getPairs()+"]";
+	}
 }

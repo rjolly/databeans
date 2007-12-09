@@ -51,7 +51,7 @@ public class ArrayClass extends PersistentClass {
 		};
 	}
 
-	public String dump() {
-		return typeCode==0?"":"["+length+" "+typeCode+"]";
+	public String toString() {
+		return typeCode==0?"":Long.toHexString(base)+"["+length+" "+typeCode+"]";
 	}
 }

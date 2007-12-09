@@ -121,10 +121,6 @@ public class PersistentObject implements Cloneable, Serializable {
 		Object execute(PersistentObject target) {
 			return target.call(method,types,args);
 		}
-
-		public String toString() {
-			return PersistentObject.this.toHexString()+"."+method+java.util.Arrays.asList(args);
-		}
 	}
 
 	static Object attach(Connection connection, Object obj) {
@@ -186,36 +182,41 @@ public class PersistentObject implements Cloneable, Serializable {
 
 	public final PersistentClass persistentClass() {
 		try {
-			return clazz==null?clazz=accessor.persistentClass():clazz;
+			return accessor.persistentClass();
 		} catch (RemoteException e) {
 			throw new RuntimeException(e);
 		}
 	}
 
-	private transient PersistentClass clazz;
-
 	public int hashCode() {
-		return ((Integer)execute(
-			new MethodCall("hashCode",new Class[] {},new Object[] {}))).intValue();
+		try {
+			return accessor.remoteHashCode();
+		} catch (RemoteException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	public boolean equals(Object obj) {
-		return ((Boolean)execute(
-			new MethodCall("equals",new Class[] {Object.class},new Object[] {obj}))).booleanValue();
-	}
-
-	public String toHexString() {
-		return (String)execute(
-			new MethodCall("toHexString",new Class[] {},new Object[] {}));
+		try {
+			return obj instanceof PersistentObject?accessor.remoteEquals((PersistentObject)obj):false;
+		} catch (RemoteException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	public String toString() {
-		return (String)execute(
-			new MethodCall("toString",new Class[] {},new Object[] {}));
+		try {
+			return accessor.remoteToString();
+		} catch (RemoteException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	public Object clone() {
-		return execute(
-			new MethodCall("copy",new Class[] {},new Object[] {}));
+		try {
+			return accessor.remoteClone(connection);
+		} catch (RemoteException e) {
+			throw new RuntimeException(e);
+		}
 	}
 }
