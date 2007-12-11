@@ -299,7 +299,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		closing=true;
 		synchronized(connections) {
 			for(Iterator it=new ArrayList(connections).iterator();it.hasNext();) {
-				((Connection) it.next()).connection.close(true);
+				((RemoteConnectionImpl)it.next()).close(true);
 			}
 		}
 		systemConnection.close();
@@ -311,7 +311,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		while(true) {
 			try {
 				for(Iterator it=cache.keySet().iterator();it.hasNext();it.remove()) {
-					Accessor obj=get((Long)it.next());
+					AccessorImpl obj=get((Long)it.next());
 					if(obj!=null) {
 						while(!UnicastRemoteObject.unexportObject(obj,false)) {
 							try {

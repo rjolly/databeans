@@ -977,10 +977,6 @@ class MetaData {
 
 // Transient properties
 
-  // persistence
-
-		removeProperty("persistence.PersistentObject", "ref");
-
   // awt
 
 	// Infinite graphs.

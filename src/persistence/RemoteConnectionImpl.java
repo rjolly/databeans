@@ -6,6 +6,7 @@ import java.rmi.server.ServerNotActiveException;
 import java.rmi.server.UnicastRemoteObject;
 import javax.security.auth.Subject;
 import persistence.PersistentObject.MethodCall;
+import persistence.server.DatabeansPrincipal;
 
 public class RemoteConnectionImpl extends UnicastRemoteObject implements RemoteConnection {
 	final StoreImpl store;
@@ -23,7 +24,7 @@ public class RemoteConnectionImpl extends UnicastRemoteObject implements RemoteC
 		try {
 			clientHost=RemoteServer.getClientHost();
 		} catch (ServerNotActiveException e) {}
-		if(level!=Connection.TRANSACTION_NONE) transaction=store.getTransaction(subject+"@"+clientHost);
+		if(level!=Connection.TRANSACTION_NONE) transaction=store.getTransaction(subject.getPrincipals(DatabeansPrincipal.class)+"@"+clientHost);
 		open();
 	}
 

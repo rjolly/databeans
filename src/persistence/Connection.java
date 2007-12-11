@@ -1,5 +1,8 @@
 package persistence;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
@@ -19,8 +22,8 @@ public class Connection implements Serializable {
 	static final int TRANSACTION_SERIALIZABLE = 4;
 
 	RemoteConnection connection;
-	transient Map cache;
 	transient boolean closed;
+	transient Map cache;
 
 	Connection(StoreImpl store, int level, Subject subject) throws RemoteException {
 		this(new RemoteConnectionImpl(store,level,subject));
@@ -28,6 +31,11 @@ public class Connection implements Serializable {
 
 	Connection(RemoteConnection connection) {
 		this.connection=connection;
+		init();
+	}
+
+	private void init() {
+		cache=new WeakHashMap();
 	}
 
 	public PersistentObject create(String name) {
@@ -133,13 +141,13 @@ public class Connection implements Serializable {
 	}
 
 	PersistentObject attach(PersistentObject obj) {
-		if(cache==null) cache=new WeakHashMap();
 		synchronized(cache) {
 			Accessor accessor=obj.accessor;
-			if(get(accessor)==null) {
+			PersistentObject b=get(accessor);
+			if(b==null) {
 				obj.connection=this;
 				cache.put(accessor,new WeakReference(obj));
-			}
+			} else obj=b;
 			return obj;
 		}
 	}
@@ -204,6 +212,15 @@ public class Connection implements Serializable {
 
 	public XAResource getXAResource() {
 		return new ConnectionXAResource(this);
+	}
+
+	private void writeObject(ObjectOutputStream s) throws IOException {
+		s.defaultWriteObject();
+	}
+
+	private void readObject(ObjectInputStream s) throws ClassNotFoundException, IOException {
+		s.defaultReadObject();
+		init();
 	}
 }
 
