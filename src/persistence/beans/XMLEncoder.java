@@ -6,12 +6,14 @@
  */
 package persistence.beans;
 
-import java.io.*;
-import java.util.*;
-import java.lang.reflect.*;
-
 import java.beans.Introspector;
-
+import java.io.IOException;
+import java.io.OutputStream;
+import java.lang.reflect.Array;
+import java.lang.reflect.Field;
+import java.util.IdentityHashMap;
+import java.util.Map;
+import java.util.Vector;
 import persistence.Connection;
 import persistence.PersistentArray;
 

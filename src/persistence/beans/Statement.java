@@ -6,15 +6,16 @@
  */
 package persistence.beans;
 
-import java.lang.reflect.*;
-import java.util.*;
-import sun.reflect.misc.MethodUtil;
-
 import java.beans.ExceptionListener;
-
-import persistence.PersistentObject;
-import persistence.PersistentArray;
+import java.lang.reflect.AccessibleObject;
+import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import persistence.Connection;
+import persistence.PersistentArray;
+import persistence.PersistentObject;
+import sun.reflect.misc.MethodUtil;
 
 public class Statement {
 	Connection connection;

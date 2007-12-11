@@ -1,6 +1,7 @@
 package persistence.server;
 
 import java.rmi.Naming;
+import java.rmi.RemoteException;
 import persistence.StoreImpl;
 
 public class Server {
@@ -12,7 +13,11 @@ public class Server {
 			System.out.println("store bound in registry");
 			Runtime.getRuntime().addShutdownHook(new Thread() {
 				public void run() {
-					store.close();
+					try {
+						store.close();
+					} catch (RemoteException e) {
+						throw new RuntimeException(e);
+					}
 				}
 			});
 		} catch (Exception e) {

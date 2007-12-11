@@ -8,12 +8,12 @@ import javax.security.auth.callback.NameCallback;
 public class LocalNameCallback extends NameCallback {
 	RemoteNameCallback callback;
 
-	public LocalNameCallback(String prompt) throws RemoteException {
+	LocalNameCallback(String prompt) throws RemoteException {
 		super(prompt);
 		callback=new RemoteNameCallbackImpl(prompt);
 	}
 
-	public LocalNameCallback(String prompt, String defaultName) throws RemoteException {
+	LocalNameCallback(String prompt, String defaultName) throws RemoteException {
 		super(prompt,defaultName);
 		callback=new RemoteNameCallbackImpl(prompt,defaultName);
 	}

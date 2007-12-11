@@ -1,11 +1,18 @@
 package persistence;
 
 import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
 import persistence.PersistentObject.MethodCall;
 
-class SystemConnection extends ConnectionImpl {
+class SystemConnection extends Connection {
 	SystemConnection(StoreImpl store) throws RemoteException {
-		super(store,TRANSACTION_NONE,null);
+		super(new SystemConnectionImpl(store));
+	}
+}
+
+class SystemConnectionImpl extends RemoteConnectionImpl {
+	SystemConnectionImpl(StoreImpl store) throws RemoteException {
+		super(store,Transaction.TRANSACTION_NONE,null);
 	}
 
 	void open() {}
@@ -19,21 +26,15 @@ class SystemConnection extends ConnectionImpl {
 	}
 
 	synchronized Object execute(MethodCall call, MethodCall undo, int index, boolean read) {
-		if(closed) throw new PersistentException("connection closed");
 		if(!read && readOnly) throw new PersistentException("read only");
 		return call.execute();
 	}
 
-	public synchronized void commit() {
-		if(closed) throw new PersistentException("connection closed");
-	}
+	public void commit() {}
 
-	public synchronized void rollback() {
-		if(closed) throw new PersistentException("connection closed");
-	}
+	public void rollback() {}
 
-	synchronized void close(boolean force) {
-		if(closed) throw new PersistentException("connection closed");
-		closed=true;
+	public synchronized void close(boolean force) throws RemoteException {
+		UnicastRemoteObject.unexportObject(this,true);
 	}
 }

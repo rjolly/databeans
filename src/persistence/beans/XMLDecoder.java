@@ -6,19 +6,19 @@
  */
 package persistence.beans;
 
-import java.io.*;
-import java.util.*;
-
-import org.xml.sax.*;
-
-import javax.xml.parsers.SAXParserFactory;
+import java.beans.ExceptionListener;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Vector;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
-
-import java.beans.ExceptionListener;
-
+import javax.xml.parsers.SAXParserFactory;
+import org.xml.sax.AttributeList;
+import org.xml.sax.HandlerBase;
+import org.xml.sax.SAXException;
 import persistence.Connection;
-import persistence.PersistentArray;
 
 public class XMLDecoder {
 	Connection connection;

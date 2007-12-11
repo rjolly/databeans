@@ -6,8 +6,6 @@
  */
 package persistence.beans;
 
-import java.io.*;
-
 import persistence.Connection;
 
 public abstract class PersistenceDelegate {

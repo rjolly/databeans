@@ -10,5 +10,5 @@ public interface Accessor extends Remote {
 	int remoteHashCode() throws RemoteException;
 	boolean remoteEquals(PersistentObject obj) throws RemoteException;
 	String remoteToString() throws RemoteException;
-	PersistentObject remoteClone(Connection connection) throws RemoteException;
+	PersistentObject remoteClone() throws RemoteException;
 }

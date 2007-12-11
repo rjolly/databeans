@@ -40,22 +40,6 @@ public class Connections {
 		local.unexport();
 		return connection;
 	}
-
-	public static Admin getAdmin(String name) throws NotBoundException, MalformedURLException, RemoteException {
-		return getAdmin(new MyCallbackHandler(),name);
-	}
-
-	public static Admin getAdmin(Window window, String name) throws NotBoundException, MalformedURLException, RemoteException {
-		return getAdmin(new DialogCallbackHandler(window),name);
-	}
-
-	static Admin getAdmin(CallbackHandler handler, String name) throws NotBoundException, MalformedURLException, RemoteException {
-		LocalCallbackHandler local=new LocalCallbackHandler(handler);
-		Store store=(Store)Naming.lookup(name);
-		Admin admin=store.getAdmin(local);
-		local.unexport();
-		return admin;
-	}
 }
 
 class LocalCallbackHandler implements CallbackHandler, Serializable {

@@ -16,7 +16,6 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import persistence.Array;
-import persistence.Connection;
 import persistence.PersistentObject;
 
 public class PersistentHashMap extends PersistentAbstractMap implements Map, Cloneable
@@ -100,8 +99,8 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 			return e;
 		}
 
-		public PersistentObject remoteClone(Connection connection) {
-			PersistentHashMap result = (PersistentHashMap)super.remoteClone(connection);
+		public PersistentObject remoteClone() {
+			PersistentHashMap result = (PersistentHashMap)super.remoteClone();
 			result.setTable(create(Entry.class,getTable().length()));
 			result.setModCount(0);
 			result.setSize(0);

@@ -6,11 +6,10 @@
  */
 package persistence.beans;
 
-import java.io.*;
-import java.util.*;
-
 import java.beans.ExceptionListener;
-
+import java.util.HashMap;
+import java.util.IdentityHashMap;
+import java.util.Map;
 import persistence.Connection;
 
 public class Encoder {

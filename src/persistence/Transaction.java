@@ -11,6 +11,12 @@ import persistence.util.PersistentArrayList;
 import persistence.util.PersistentHashMap;
 
 public class Transaction extends PersistentObject {
+	static final int TRANSACTION_NONE = 0;
+	static final int TRANSACTION_READ_UNCOMMITTED = 1;
+	static final int TRANSACTION_READ_COMMITTED = 2;
+	static final int TRANSACTION_REPEATABLE_READ = 3;
+	static final int TRANSACTION_SERIALIZABLE = 4;
+
 	public void init(String client) {
 		setClient(client);
 		setCalls((List)create(PersistentArrayList.class));
@@ -18,15 +24,25 @@ public class Transaction extends PersistentObject {
 		setPairs((Map)create(PersistentHashMap.class));
 	}
 
+	Object execute(MethodCall call, MethodCall undo, int index, int level, boolean read, boolean readOnly) {
+		PersistentObject target=copy(call.target(),level,read,readOnly);
+		Object obj=call.execute(target);
+		if(!read) {
+			undo.args[index]=obj;
+			record(call,undo,level);
+		}
+		return obj;
+	}
+
 	PersistentObject copy(PersistentObject obj, int level, boolean read, boolean readOnly) {
 		switch(level) {
-		case Connection.TRANSACTION_READ_UNCOMMITTED:
+		case TRANSACTION_READ_UNCOMMITTED:
 			return obj;
-		case Connection.TRANSACTION_READ_COMMITTED:
+		case TRANSACTION_READ_COMMITTED:
 			return read?obj:copy(obj);
-		case Connection.TRANSACTION_REPEATABLE_READ:
+		case TRANSACTION_REPEATABLE_READ:
 			return copy(obj);
-		case Connection.TRANSACTION_SERIALIZABLE:
+		case TRANSACTION_SERIALIZABLE:
 			if(!readOnly) obj.lock(this);
 			return copy(obj);
 		default:
@@ -51,12 +67,12 @@ public class Transaction extends PersistentObject {
 		List calls=getCalls();
 		List undos=getUndos();
 		switch(level) {
-		case Connection.TRANSACTION_READ_UNCOMMITTED:
+		case TRANSACTION_READ_UNCOMMITTED:
 			undos.add(call(undo));
 			break;
-		case Connection.TRANSACTION_READ_COMMITTED:
-		case Connection.TRANSACTION_REPEATABLE_READ:
-		case Connection.TRANSACTION_SERIALIZABLE:
+		case TRANSACTION_READ_COMMITTED:
+		case TRANSACTION_REPEATABLE_READ:
+		case TRANSACTION_SERIALIZABLE:
 			calls.add(call(call));
 			break;
 		default:
@@ -71,7 +87,7 @@ public class Transaction extends PersistentObject {
 	void commit() {
 		List l=getCalls();
 		for(ListIterator it=l.listIterator(0);it.hasNext();it.remove()) {
-			PersistentObject.execute(((PersistentMethodCall)it.next()));
+			((PersistentMethodCall)it.next()).call().execute();
 		}
 		getUndos().clear();
 		unlock();
@@ -80,7 +96,7 @@ public class Transaction extends PersistentObject {
 	void rollback() {
 		List l=getUndos();
 		for(ListIterator it=l.listIterator(l.size());it.hasPrevious();it.remove()) {
-			PersistentObject.execute((PersistentMethodCall)it.previous());
+			((PersistentMethodCall)it.previous()).call().execute();
 		}
 		getCalls().clear();
 		unlock();

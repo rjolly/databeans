@@ -3,9 +3,9 @@ package persistence;
 import java.rmi.RemoteException;
 import javax.security.auth.Subject;
 
-public class AdminImpl extends ConnectionImpl implements Admin {
-	public AdminImpl(StoreImpl store, Subject subject) throws RemoteException {
-		super(store,Connection.TRANSACTION_NONE,subject);
+public class RemoteAdminImpl extends RemoteConnectionImpl implements RemoteAdmin {
+	public RemoteAdminImpl(StoreImpl store, Subject subject) throws RemoteException {
+		super(store,Transaction.TRANSACTION_NONE,subject);
 	}
 
 	public void createUser(String username, String password) {
@@ -20,7 +20,7 @@ public class AdminImpl extends ConnectionImpl implements Admin {
 		store.export(name);
 	}
 
-	public void close() {
+	public void close() throws RemoteException {
 		store.close();
 	}
 

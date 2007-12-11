@@ -20,12 +20,6 @@ abstract class AccessorImpl extends UnicastRemoteObject implements Accessor {
 
 	abstract PersistentObject object();
 
-	PersistentObject object(Connection connection) {
-		PersistentObject obj=clazz.newInstance();
-		obj.init(this,connection);
-		return obj;
-	}
-
 	synchronized Object call(String method, Class types[], Object args[]) {
 		try {
 			return getClass().getMethod(method,types).invoke(this,args);
@@ -146,8 +140,8 @@ abstract class AccessorImpl extends UnicastRemoteObject implements Accessor {
 		return s.toString();
 	}
 
-	public PersistentObject remoteClone(Connection connection) {
-		return ((AccessorImpl)clone()).object(connection);
+	public PersistentObject remoteClone() {
+		return ((AccessorImpl)clone()).object();
 	}
 
 	public synchronized final Object clone() {

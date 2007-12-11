@@ -6,13 +6,16 @@
  */
 package persistence.beans;
 
-import java.util.*;
-import java.lang.reflect.*;
-import java.beans.*;
-import java.io.*;
-import sun.reflect.misc.*;
-
+import java.beans.BeanInfo;
+import java.beans.EventSetDescriptor;
+import java.beans.PropertyDescriptor;
+import java.lang.reflect.Array;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.EventListener;
 import persistence.Connection;
+import sun.reflect.misc.MethodUtil;
 
 public class DefaultPersistenceDelegate extends PersistenceDelegate {
 	private String[] constructor;

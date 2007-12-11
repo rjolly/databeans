@@ -6,7 +6,9 @@
  */
 package persistence.beans;
 
-import java.util.*; 
+import java.util.HashMap;
+import java.util.IdentityHashMap;
+import java.util.Map;
 
 class NameGenerator { 
 

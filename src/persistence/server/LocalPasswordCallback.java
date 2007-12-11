@@ -8,7 +8,7 @@ import javax.security.auth.callback.PasswordCallback;
 public class LocalPasswordCallback extends PasswordCallback {
 	RemotePasswordCallback callback;
 
-	public LocalPasswordCallback(String prompt, boolean echoOn) throws RemoteException {
+	LocalPasswordCallback(String prompt, boolean echoOn) throws RemoteException {
 		super(prompt,echoOn);
 		callback=new RemotePasswordCallbackImpl(prompt,echoOn);
 	}

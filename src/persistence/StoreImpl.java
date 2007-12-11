@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -31,6 +32,7 @@ import java.util.WeakHashMap;
 import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
+import persistence.PersistentObject.MethodCall;
 import persistence.beans.XMLDecoder;
 import persistence.beans.XMLEncoder;
 import persistence.storage.Collector;
@@ -44,7 +46,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	Map classes;
 	Collection transactions;
 	PersistentSystem system;
-	final SystemConnection systemConnection;
+	final Connection systemConnection;
 	final Collection connections=Collections.synchronizedCollection(new ArrayList());
 	final Map cache=new WeakHashMap();
 	boolean closing;
@@ -126,12 +128,27 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		transactions=system.getTransactions();
 	}
 
-	PersistentSystem getSystem(Connection connection) {
-		return (PersistentSystem)system.attach(connection);
-	}
-
 	Transaction getTransaction(String client) {
 		return (Transaction)systemConnection.create(Transaction.class,new Class[] {String.class},new Object[] {client});
+	}
+
+	MethodCall attach(MethodCall call) {
+		return attach(call.target()).new MethodCall(call.method,call.types,attach(call.args));
+	}
+
+	Object attach(Object obj) {
+		return obj instanceof PersistentObject?attach((PersistentObject)obj):obj;
+	}
+
+	Object[] attach(Object obj[]) {
+		Object a[]=new Object[obj.length];
+		for(int i=0;i<obj.length;i++) a[i]=attach(obj[i]);
+		return a;
+	}
+
+	PersistentObject attach(PersistentObject obj) {
+		if(!equals(obj.store())) throw new PersistentException("not the same store");
+		return get(obj.base()).object();
 	}
 
 	AccessorImpl create(PersistentClass clazz) {
@@ -227,12 +244,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 
 	public synchronized Connection getConnection(CallbackHandler handler) throws RemoteException {
 		if(closing) throw new PersistentException("store closing");
-		return new ConnectionImpl(this,Connection.TRANSACTION_READ_UNCOMMITTED,login(handler).getSubject());
-	}
-
-	public synchronized Admin getAdmin(CallbackHandler handler) throws RemoteException {
-		if(closing) throw new PersistentException("store closing");
-		return new AdminImpl(this,login(handler).getSubject());
+		return new Connection(this,Transaction.TRANSACTION_READ_UNCOMMITTED,login(handler).getSubject());
 	}
 
 	static LoginContext login(CallbackHandler handler) {
@@ -308,15 +320,35 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		}
 	}
 
-	public synchronized void close() {
+	public synchronized void close() throws RemoteException {
 		if(closing) throw new PersistentException("store closing");
 		closing=true;
 		synchronized(connections) {
-			for(Iterator it=connections.iterator();it.hasNext();) ((ConnectionImpl)it.next()).kick();
-			for(Iterator it=new ArrayList(connections).iterator();it.hasNext();) ((ConnectionImpl)it.next()).close(true);
+			for(Iterator it=new ArrayList(connections).iterator();it.hasNext();) {
+				((Connection) it.next()).connection.close(true);
+			}
 		}
 		systemConnection.close();
+		closeAccessors();
 		heap.mount(false);
+	}
+
+	void closeAccessors() throws RemoteException {
+		while(true) {
+			try {
+				for(Iterator it=cache.keySet().iterator();it.hasNext();it.remove()) {
+					Accessor obj=get((Long)it.next());
+					if(obj!=null) {
+						while(!UnicastRemoteObject.unexportObject(obj,false)) {
+							try {
+								Thread.currentThread().sleep(1000);
+							} catch (InterruptedException e) {}
+						}
+					}
+				}
+				break;
+			} catch (ConcurrentModificationException e) {}
+		}
 	}
 
 	public synchronized void gc() {
@@ -502,19 +534,23 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		long ptr=((Long)Field.CLASS.get(heap,base)).longValue();
 		if(ptr==0) return null;
 		else {
-			PersistentClass c=(PersistentClass)readObject(ptr);
-			if(c instanceof ArrayClass) ((ArrayClass)c).init(((Character)c.getField("typeCode").get(heap,base)).charValue(),((Integer)c.getField("length").get(heap,base)).intValue());
-			return c;
+			PersistentClass clazz=(PersistentClass)readObject(ptr);
+			if(clazz instanceof ArrayClass) {
+				ArrayClass c=(ArrayClass)clazz;
+				c.init(((Character)c.getField("typeCode").get(heap,base)).charValue(),((Integer)c.getField("length").get(heap,base)).intValue());
+			}
+			return clazz;
 		}
 	}
 
-	void setClass(long base, PersistentClass c) {
-		long ptr=writeObject(c);
+	void setClass(long base, PersistentClass clazz) {
+		long ptr=writeObject(clazz);
 		incRefCount(ptr);
 		Field.CLASS.set(heap,base,new Long(ptr));
-		if(c instanceof ArrayClass) {
-			c.getField("typeCode").set(heap,base,new Character(((ArrayClass)c).typeCode));
-			c.getField("length").set(heap,base,new Integer(((ArrayClass)c).length));
+		if(clazz instanceof ArrayClass) {
+			ArrayClass c=(ArrayClass)clazz;
+			c.getField("typeCode").set(heap,base,new Character(c.typeCode));
+			c.getField("length").set(heap,base,new Integer(c.length));
 		}
 	}
 

@@ -6,8 +6,6 @@
  */
 package persistence.beans;
 
-import java.lang.reflect.*;
-
 import persistence.Connection;
 
 public class Expression extends Statement {
