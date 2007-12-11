@@ -1,26 +1,31 @@
 package persistence;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 public class ArrayClass extends PersistentClass {
-	transient char typeCode;
-	transient int length;
 	transient int header;
+	char typeCode;
+	int length;
 
 	ArrayClass(Class componentType, int length) {
 		super(PersistentArray.class);
-		init(new Field("element",componentType),length);
-	}
-
-	void init(Field element, int length) {
+		Field element=new Field("element",componentType);
 		typeCode=element.typeCode;
 		this.length=length;
+		init(element,length);
+	}
+
+	private void init(Field element, int length) {
 		header=size;
 		size+=element.size*length;
 	}
 
 	void init(char typeCode, int length) {
+		size=header;
 		init(new Field("element",typeCode),length);
 	}
 
@@ -52,6 +57,15 @@ public class ArrayClass extends PersistentClass {
 	}
 
 	public String toString() {
-		return Long.toHexString(base)+(typeCode==0?"":"["+length+" "+typeCode+"]");
+		return Long.toHexString(base)+"["+length+" "+typeCode+"]";
+	}
+
+	private void writeObject(ObjectOutputStream s) throws IOException {
+		s.defaultWriteObject();
+	}
+
+	private void readObject(ObjectInputStream s) throws ClassNotFoundException, IOException {
+		s.defaultReadObject();
+		init(new Field("element",typeCode),length);
 	}
 }
