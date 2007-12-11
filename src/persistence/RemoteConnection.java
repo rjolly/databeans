@@ -6,9 +6,7 @@ import persistence.PersistentObject.MethodCall;
 
 public interface RemoteConnection extends Remote {
 	PersistentObject create(PersistentClass clazz, Class types[], Object args[]) throws RemoteException;
-
-	Object getRoot() throws RemoteException;
-	void setRoot(Object obj) throws RemoteException;
+	PersistentSystem getSystem() throws RemoteException;
 
 	int getTransactionIsolation() throws RemoteException;
 	void setTransactionIsolation(int level) throws RemoteException;

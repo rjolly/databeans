@@ -12,9 +12,15 @@ import javax.transaction.xa.Xid;
 import persistence.PersistentObject.MethodCall;
 
 public class Connection implements Serializable {
+	static final int TRANSACTION_NONE = 0;
+	static final int TRANSACTION_READ_UNCOMMITTED = 1;
+	static final int TRANSACTION_READ_COMMITTED = 2;
+	static final int TRANSACTION_REPEATABLE_READ = 3;
+	static final int TRANSACTION_SERIALIZABLE = 4;
+
 	RemoteConnection connection;
-	final Map cache=new WeakHashMap();
-	boolean closed;
+	transient Map cache;
+	transient boolean closed;
 
 	Connection(StoreImpl store, int level, Subject subject) throws RemoteException {
 		this(new RemoteConnectionImpl(store,level,subject));
@@ -58,20 +64,20 @@ public class Connection implements Serializable {
 		}
 	}
 
-	public Object getRoot() {
+	PersistentSystem getSystem() {
 		try {
-			return attach(connection.getRoot());
+			return (PersistentSystem)attach(connection.getSystem());
 		} catch (RemoteException e) {
 			throw new RuntimeException(e);
 		}
 	}
 
+	public Object getRoot() {
+		return getSystem().getRoot();
+	}
+
 	public void setRoot(Object obj) {
-		try {
-			connection.setRoot(obj);
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
+		getSystem().setRoot(obj);
 	}
 
 	public int getTransactionIsolation() {
@@ -127,6 +133,7 @@ public class Connection implements Serializable {
 	}
 
 	PersistentObject attach(PersistentObject obj) {
+		if(cache==null) cache=new WeakHashMap();
 		synchronized(cache) {
 			Accessor accessor=obj.accessor;
 			if(get(accessor)==null) {

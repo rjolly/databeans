@@ -1,21 +1,12 @@
 package persistence;
 
 import java.rmi.RemoteException;
-import java.rmi.server.UnicastRemoteObject;
 import persistence.PersistentObject.MethodCall;
 
 class SystemConnection extends Connection {
 	SystemConnection(StoreImpl store) throws RemoteException {
-		super(new SystemConnectionImpl(store));
+		super(store,Connection.TRANSACTION_NONE,null);
 	}
-}
-
-class SystemConnectionImpl extends RemoteConnectionImpl {
-	SystemConnectionImpl(StoreImpl store) throws RemoteException {
-		super(store,Transaction.TRANSACTION_NONE,null);
-	}
-
-	void open() {}
 
 	public Object execute(MethodCall call) {
 		return execute(call,null,0,true);
@@ -26,7 +17,7 @@ class SystemConnectionImpl extends RemoteConnectionImpl {
 	}
 
 	synchronized Object execute(MethodCall call, MethodCall undo, int index, boolean read) {
-		if(!read && readOnly) throw new PersistentException("read only");
+//		if(!read && readOnly) throw new PersistentException("read only");
 		return call.execute();
 	}
 
@@ -34,7 +25,7 @@ class SystemConnectionImpl extends RemoteConnectionImpl {
 
 	public void rollback() {}
 
-	public synchronized void close(boolean force) throws RemoteException {
-		UnicastRemoteObject.unexportObject(this,true);
+	public void close() {
+		closed=true;
 	}
 }

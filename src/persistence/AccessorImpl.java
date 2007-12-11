@@ -127,19 +127,6 @@ abstract class AccessorImpl extends UnicastRemoteObject implements Accessor {
 		return clazz.getName()+"@"+Long.toHexString(base.longValue());
 	}
 
-	String dump() {
-		StringBuffer s=new StringBuffer();
-		s.append("[");
-		Iterator t=clazz.fieldIterator();
-		while(t.hasNext()) {
-			Field field=(Field)t.next();
-			Object obj=get(field.name);
-			s.append(field.name+"="+obj+(t.hasNext()?", ":""));
-		}
-		s.append("]");
-		return s.toString();
-	}
-
 	public PersistentObject remoteClone() {
 		return ((AccessorImpl)clone()).object();
 	}

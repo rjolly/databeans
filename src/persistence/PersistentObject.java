@@ -2,6 +2,7 @@ package persistence;
 
 import java.io.Serializable;
 import java.rmi.RemoteException;
+import java.util.Iterator;
 
 public class PersistentObject implements Cloneable, Serializable {
 	persistence.Accessor accessor;
@@ -157,6 +158,19 @@ public class PersistentObject implements Cloneable, Serializable {
 		} catch (RemoteException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	public String dump() {
+		StringBuffer s=new StringBuffer();
+		s.append("[");
+		Iterator t=persistentClass().fieldIterator();
+		while(t.hasNext()) {
+			Field field=(Field)t.next();
+			Object obj=get(field.name);
+			s.append(field.name+"="+obj+(t.hasNext()?", ":""));
+		}
+		s.append("]");
+		return s.toString();
 	}
 
 	public Object clone() {

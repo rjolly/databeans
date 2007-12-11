@@ -1,21 +1,25 @@
 package persistence;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.rmi.RemoteException;
 import javax.security.auth.Subject;
+import persistence.beans.XMLDecoder;
+import persistence.beans.XMLEncoder;
 
 public class Admin extends Connection {
 	RemoteAdmin admin;
 
 	Admin(StoreImpl store, Subject subject) throws RemoteException {
 		super(new RemoteAdminImpl(store,subject));
+		admin=(RemoteAdmin)connection;
 	}
 
 	public PersistentSystem getSystem() {
-		try {
-			return admin.getSystem();
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
+		return super.getSystem();
 	}
 
 	public void createUser(String username, String password) {
@@ -28,16 +32,20 @@ public class Admin extends Connection {
 
 	public void inport(String name) {
 		try {
-			admin.inport(name);
-		} catch (RemoteException e) {
+			XMLDecoder d = new XMLDecoder(this,new BufferedInputStream(new FileInputStream(name)));
+			setRoot(d.readObject());
+			d.close();
+		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
 	}
 
 	public void export(String name) {
 		try {
-			admin.export(name);
-		} catch (RemoteException e) {
+			XMLEncoder e = new XMLEncoder(this,new BufferedOutputStream(new FileOutputStream(name)));
+			e.writeObject(getRoot());
+			e.close();
+		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
 	}

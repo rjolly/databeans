@@ -1,13 +1,9 @@
 package persistence;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -33,8 +29,6 @@ import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 import persistence.PersistentObject.MethodCall;
-import persistence.beans.XMLDecoder;
-import persistence.beans.XMLEncoder;
 import persistence.storage.Collector;
 import persistence.storage.FileHeap;
 import persistence.storage.Heap;
@@ -244,7 +238,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 
 	public synchronized Connection getConnection(CallbackHandler handler) throws RemoteException {
 		if(closing) throw new PersistentException("store closing");
-		return new Connection(this,Transaction.TRANSACTION_READ_UNCOMMITTED,login(handler).getSubject());
+		return new Connection(this,Connection.TRANSACTION_READ_UNCOMMITTED,login(handler).getSubject());
 	}
 
 	static LoginContext login(CallbackHandler handler) {
@@ -298,26 +292,6 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 
 		System.out.println("Authentication succeeded!");
 		return lc;
-	}
-
-	public void inport(String name) {
-		try {
-			XMLDecoder d = new XMLDecoder(systemConnection,new BufferedInputStream(new FileInputStream(name)));
-			system.setRoot(d.readObject());
-			d.close();
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	public void export(String name) {
-		try {
-			XMLEncoder e = new XMLEncoder(systemConnection,new BufferedOutputStream(new FileOutputStream(name)));
-			e.writeObject(system.getRoot());
-			e.close();
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
 	}
 
 	public synchronized void close() throws RemoteException {

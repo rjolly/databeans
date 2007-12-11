@@ -1,6 +1,5 @@
-import java.awt.*;
 import persistence.*;
-frame=new Frame();
+frame=new java.awt.Frame();
 admin=Connections.getAdmin(frame,"//localhost/store");
 admin.inport("data.xml");
 frame.dispose();

@@ -23,7 +23,7 @@ public class RemoteConnectionImpl extends UnicastRemoteObject implements RemoteC
 		try {
 			clientHost=RemoteServer.getClientHost();
 		} catch (ServerNotActiveException e) {}
-		if(level!=Transaction.TRANSACTION_NONE) transaction=store.getTransaction(subject+"@"+clientHost);
+		if(level!=Connection.TRANSACTION_NONE) transaction=store.getTransaction(subject+"@"+clientHost);
 		open();
 	}
 
@@ -44,14 +44,6 @@ public class RemoteConnectionImpl extends UnicastRemoteObject implements RemoteC
 
 	public PersistentSystem getSystem() {
 		return store.system;
-	}
-
-	public Object getRoot() throws RemoteException {
-		return getSystem().getRoot();
-	}
-
-	public void setRoot(Object obj) throws RemoteException {
-		getSystem().setRoot(store.attach(obj));
 	}
 
 	public int getTransactionIsolation() {
