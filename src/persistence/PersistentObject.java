@@ -120,17 +120,17 @@ public class PersistentObject implements Cloneable, Serializable {
 		}
 	}
 
-	public final PersistentClass persistentClass() {
+	Store store() {
 		try {
-			return accessor.persistentClass();
+			return accessor.store();
 		} catch (RemoteException e) {
 			throw new RuntimeException(e);
 		}
 	}
 
-	Store store() {
+	public final PersistentClass persistentClass() {
 		try {
-			return accessor.store();
+			return accessor.persistentClass();
 		} catch (RemoteException e) {
 			throw new RuntimeException(e);
 		}

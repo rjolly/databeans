@@ -9,20 +9,21 @@ import javax.security.auth.Subject;
 import persistence.PersistentObject.MethodCall;
 import persistence.server.DatabeansPrincipal;
 
-public class RemoteConnectionImpl extends UnicastRemoteObject implements RemoteConnection {
+abstract class RemoteConnectionImpl extends UnicastRemoteObject implements RemoteConnection {
 	final StoreImpl store;
 	Transaction transaction;
-	boolean autoCommit;
-	boolean readOnly;
 	int level;
+	boolean readOnly;
+	boolean autoCommit;
 	Subject subject;
 
-	RemoteConnectionImpl(StoreImpl store, int level, Subject subject) throws RemoteException {
+	RemoteConnectionImpl(StoreImpl store, int level, boolean readOnly, Subject subject) throws RemoteException {
 		this.store=store;
 		this.level=level;
+		this.readOnly=readOnly;
 		this.subject=subject;
 		if(level!=Connection.TRANSACTION_NONE) transaction=store.getTransaction(clientName()+"@"+clientHost());
-		open();
+		store.connections.put(this,null);
 	}
 
 	String clientName() {
@@ -37,10 +38,7 @@ public class RemoteConnectionImpl extends UnicastRemoteObject implements RemoteC
 		return host;
 	}
 
-	void open() {
-		if(transaction!=null) store.transactions.add(transaction);
-		store.connections.add(this);
-	}
+	abstract Connection connection();
 
 	public synchronized PersistentObject create(PersistentClass clazz, Class types[], Object args[]) {
 		try {
@@ -64,20 +62,20 @@ public class RemoteConnectionImpl extends UnicastRemoteObject implements RemoteC
 		this.level=level;
 	}
 
-	public boolean isAutoCommit() {
-		return autoCommit;
-	}
-
-	public void setAutoCommit(boolean autoCommit) {
-		this.autoCommit=autoCommit;
-	}
-
 	public boolean isReadOnly() {
 		return readOnly;
 	}
 
 	public void setReadOnly(boolean readOnly) {
 		this.readOnly=readOnly;
+	}
+
+	public boolean isAutoCommit() {
+		return autoCommit;
+	}
+
+	public void setAutoCommit(boolean autoCommit) {
+		this.autoCommit=autoCommit;
 	}
 
 	public Object execute(MethodCall call) {
@@ -103,13 +101,13 @@ public class RemoteConnectionImpl extends UnicastRemoteObject implements RemoteC
 		if(transaction!=null) transaction.rollback();
 	}
 
-	public synchronized void close(boolean force) throws RemoteException {
-		if(!force) rollback();
-		store.connections.remove(this);
-		if(transaction!=null) {
-			transaction.kick();
-			store.transactions.remove(transaction);
-		}
+	void close() throws RemoteException {
+		if(transaction!=null) transaction.kick();
 		UnicastRemoteObject.unexportObject(this,true);
+		connection().close();
+	}
+
+	protected final void finalize() {
+		if(transaction!=null) store.release(transaction);
 	}
 }

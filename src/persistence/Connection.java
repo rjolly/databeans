@@ -1,8 +1,5 @@
 package persistence;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
@@ -21,21 +18,23 @@ public class Connection implements Serializable {
 	static final int TRANSACTION_REPEATABLE_READ = 3;
 	static final int TRANSACTION_SERIALIZABLE = 4;
 
-	RemoteConnection connection;
-	transient boolean closed;
+	persistence.RemoteConnection connection;
 	transient Map cache;
 
+	Connection() {}
+
 	Connection(StoreImpl store, int level, Subject subject) throws RemoteException {
-		this(new RemoteConnectionImpl(store,level,subject));
+		connection=new RemoteConnection(store,level,subject);
 	}
 
-	Connection(RemoteConnection connection) {
-		this.connection=connection;
-		init();
-	}
+	class RemoteConnection extends RemoteConnectionImpl {
+		RemoteConnection(StoreImpl store, int level, Subject subject) throws RemoteException {
+			super(store,level,false,subject);
+		}
 
-	private void init() {
-		cache=new WeakHashMap();
+		Connection connection() {
+			return Connection.this;
+		}
 	}
 
 	public PersistentObject create(String name) {
@@ -104,22 +103,6 @@ public class Connection implements Serializable {
 		}
 	}
 
-	public boolean isAutoCommit() {
-		try {
-			return connection.isAutoCommit();
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	public void setAutoCommit(boolean autoCommit) {
-		try {
-			connection.setAutoCommit(autoCommit);
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
 	public boolean isReadOnly() {
 		try {
 			return connection.isReadOnly();
@@ -136,11 +119,28 @@ public class Connection implements Serializable {
 		}
 	}
 
+	public boolean isAutoCommit() {
+		try {
+			return connection.isAutoCommit();
+		} catch (RemoteException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public void setAutoCommit(boolean autoCommit) {
+		try {
+			connection.setAutoCommit(autoCommit);
+		} catch (RemoteException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	Object attach(Object obj) {
 		return obj instanceof PersistentObject?attach((PersistentObject)obj):obj;
 	}
 
 	PersistentObject attach(PersistentObject obj) {
+		if(cache==null) cache=new WeakHashMap();
 		synchronized(cache) {
 			Accessor accessor=obj.accessor;
 			PersistentObject b=get(accessor);
@@ -190,29 +190,15 @@ public class Connection implements Serializable {
 	}
 
 	public void close() {
-		try {
-			connection.close(false);
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
-		closed=true;
+		connection=null;
 	}
 
 	public boolean isClosed() {
-		return closed;
+		return connection==null;
 	}
 
 	public XAResource getXAResource() {
 		return new ConnectionXAResource(this);
-	}
-
-	private void writeObject(ObjectOutputStream s) throws IOException {
-		s.defaultWriteObject();
-	}
-
-	private void readObject(ObjectInputStream s) throws ClassNotFoundException, IOException {
-		s.defaultReadObject();
-		init();
 	}
 }
 

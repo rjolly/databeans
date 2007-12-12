@@ -33,6 +33,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 			if((space=space())==0) setSpace(space=minSpace);
 			root=root();
 		}
+		for(Chunk c=first();c!=null;c=c.next()) if(c.status()) allocatedSpace+=c.size;
 	}
 
 	public long boot() {

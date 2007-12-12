@@ -91,16 +91,21 @@ abstract class AccessorImpl extends UnicastRemoteObject implements Accessor {
 		store.setLock(base.longValue(),transaction);
 	}
 
+	void close() throws RemoteException {
+		UnicastRemoteObject.unexportObject(this,true);
+		object().accessor=null;
+	}
+
 	public final Long base() {
 		return base;
 	}
 
-	public final PersistentClass persistentClass() {
-		return clazz;
-	}
-
 	public final Store store() {
 		return store;
+	}
+
+	public final PersistentClass persistentClass() {
+		return clazz;
 	}
 
 	static AccessorImpl newInstance(Long base, PersistentClass clazz, StoreImpl store) {

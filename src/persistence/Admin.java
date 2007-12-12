@@ -11,11 +11,21 @@ import persistence.beans.XMLDecoder;
 import persistence.beans.XMLEncoder;
 
 public class Admin extends Connection {
-	RemoteAdmin admin;
+	persistence.RemoteAdmin admin;
 
-	Admin(StoreImpl store, Subject subject) throws RemoteException {
-		super(new RemoteAdminImpl(store,subject));
-		admin=(RemoteAdmin)connection;
+	Admin(StoreImpl store, boolean readOnly, Subject subject) throws RemoteException {
+		connection=new RemoteAdmin(store,readOnly,subject);
+		admin=(persistence.RemoteAdmin)connection;
+	}
+
+	class RemoteAdmin extends RemoteAdminImpl {
+		public RemoteAdmin(StoreImpl store, boolean readOnly, Subject subject) throws RemoteException {
+			super(store,readOnly,subject);
+		}
+
+		Connection connection() {
+			return Admin.this;
+		}
 	}
 
 	public PersistentSystem getSystem() {
