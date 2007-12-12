@@ -4,6 +4,7 @@ import java.rmi.RemoteException;
 import java.rmi.server.RemoteServer;
 import java.rmi.server.ServerNotActiveException;
 import java.rmi.server.UnicastRemoteObject;
+import java.security.Principal;
 import javax.security.auth.Subject;
 import persistence.PersistentObject.MethodCall;
 import persistence.server.DatabeansPrincipal;
@@ -15,17 +16,25 @@ public class RemoteConnectionImpl extends UnicastRemoteObject implements RemoteC
 	boolean readOnly;
 	int level;
 	Subject subject;
-	String clientHost="";
 
 	RemoteConnectionImpl(StoreImpl store, int level, Subject subject) throws RemoteException {
 		this.store=store;
 		this.level=level;
 		this.subject=subject;
-		try {
-			clientHost=RemoteServer.getClientHost();
-		} catch (ServerNotActiveException e) {}
-		if(level!=Connection.TRANSACTION_NONE) transaction=store.getTransaction(subject.getPrincipals(DatabeansPrincipal.class)+"@"+clientHost);
+		if(level!=Connection.TRANSACTION_NONE) transaction=store.getTransaction(clientName()+"@"+clientHost());
 		open();
+	}
+
+	String clientName() {
+		return ((Principal)subject.getPrincipals(DatabeansPrincipal.class).iterator().next()).getName();
+	}
+
+	String clientHost() {
+		String host="";
+		try {
+			host=RemoteServer.getClientHost();
+		} catch (ServerNotActiveException e) {}
+		return host;
 	}
 
 	void open() {
@@ -102,9 +111,5 @@ public class RemoteConnectionImpl extends UnicastRemoteObject implements RemoteC
 			store.transactions.remove(transaction);
 		}
 		UnicastRemoteObject.unexportObject(this,true);
-	}
-
-	public Admin getAdmin() throws RemoteException {
-		return new Admin(store,subject);
 	}
 }

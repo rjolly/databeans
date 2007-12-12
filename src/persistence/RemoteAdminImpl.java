@@ -12,7 +12,7 @@ public class RemoteAdminImpl extends RemoteConnectionImpl implements RemoteAdmin
 		store.createUser(username,password);
 	}
 
-	public void close() throws RemoteException {
+	public void closeStore() throws RemoteException {
 		store.close();
 	}
 

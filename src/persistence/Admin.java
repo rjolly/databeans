@@ -50,9 +50,9 @@ public class Admin extends Connection {
 		}
 	}
 
-	public void close() {
+	public void closeStore() {
 		try {
-			admin.close();
+			admin.closeStore();
 		} catch (RemoteException e) {
 			throw new RuntimeException(e);
 		}

@@ -241,6 +241,11 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		return new Connection(this,Connection.TRANSACTION_READ_UNCOMMITTED,login(handler).getSubject());
 	}
 
+	public synchronized Admin getAdmin(CallbackHandler handler) throws RemoteException {
+		if(closing) throw new PersistentException("store closing");
+		return new Admin(this,login(handler).getSubject());
+	}
+
 	static LoginContext login(CallbackHandler handler) {
 
 		// Obtain a LoginContext, needed for authentication. Tell it

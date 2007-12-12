@@ -33,15 +33,36 @@ public class Connections {
 
 	static Connection getConnection(CallbackHandler handler, String name) throws Exception {
 		LocalCallbackHandler local=new LocalCallbackHandler(handler);
-		Connection connection;
+		Connection conn;
 		try {
-			connection=((Store)Naming.lookup(name)).getConnection(local);
+			conn=((Store)Naming.lookup(name)).getConnection(local);
 			local.unexport();
 		} catch (Exception e) {
 			local.unexport();
 			throw e;
 		}
-		return connection;
+		return conn;
+	}
+
+	public static Admin getAdmin(String name) throws Exception {
+		return getAdmin(new MyCallbackHandler(),name);
+	}
+
+	public static Admin getAdmin(Window window, String name) throws Exception {
+		return getAdmin(new DialogCallbackHandler(window),name);
+	}
+
+	static Admin getAdmin(CallbackHandler handler, String name) throws Exception {
+		LocalCallbackHandler local=new LocalCallbackHandler(handler);
+		Admin admin;
+		try {
+			admin=((Store)Naming.lookup(name)).getAdmin(local);
+			local.unexport();
+		} catch (Exception e) {
+			local.unexport();
+			throw e;
+		}
+		return admin;
 	}
 }
 

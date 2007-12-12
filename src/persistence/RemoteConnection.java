@@ -21,6 +21,4 @@ public interface RemoteConnection extends Remote {
 	void commit() throws RemoteException;
 	void rollback() throws RemoteException;
 	void close(boolean force) throws RemoteException;
-
-	Admin getAdmin() throws RemoteException;
 }

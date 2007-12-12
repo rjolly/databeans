@@ -202,14 +202,6 @@ public class Connection implements Serializable {
 		return closed;
 	}
 
-	public Admin getAdmin() {
-		try {
-			return connection.getAdmin();
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
 	public XAResource getXAResource() {
 		return new ConnectionXAResource(this);
 	}
