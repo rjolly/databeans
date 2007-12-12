@@ -108,7 +108,12 @@
     <javadoc sourcepath="src" destdir="api" packagenames="*"/>
   </target>
 
-  <target name="bundle">
+  <target name="bundle" depends="jar">
+    <antcall target="clean"/>
+    <antcall target="clean_sample"/>
+    <delete file="heapspace" quiet="true"/>
+    <delete file="sample/server/heapspace" quiet="true"/>
+    <antcall target="javadoc"/>
     <zip destfile="../databeans.zip"
          basedir=".."
          includes="databeans/**"/>
