@@ -8,9 +8,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PushbackInputStream;
 import java.io.Serializable;
-import java.net.MalformedURLException;
 import java.rmi.Naming;
-import java.rmi.NotBoundException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
@@ -25,19 +23,24 @@ import javax.security.auth.callback.UnsupportedCallbackException;
 public class Connections {
 	private Connections() {}
 
-	public static Connection getConnection(String name) throws NotBoundException, MalformedURLException, RemoteException {
+	public static Connection getConnection(String name) throws Exception {
 		return getConnection(new MyCallbackHandler(),name);
 	}
 
-	public static Connection getConnection(Window window, String name) throws NotBoundException, MalformedURLException, RemoteException {
+	public static Connection getConnection(Window window, String name) throws Exception {
 		return getConnection(new DialogCallbackHandler(window),name);
 	}
 
-	static Connection getConnection(CallbackHandler handler, String name) throws NotBoundException, MalformedURLException, RemoteException {
+	static Connection getConnection(CallbackHandler handler, String name) throws Exception {
 		LocalCallbackHandler local=new LocalCallbackHandler(handler);
-		Store store=(Store)Naming.lookup(name);
-		Connection connection=store.getConnection(local);
-		local.unexport();
+		Connection connection;
+		try {
+			connection=((Store)Naming.lookup(name)).getConnection(local);
+			local.unexport();
+		} catch (Exception e) {
+			local.unexport();
+			throw e;
+		}
 		return connection;
 	}
 }

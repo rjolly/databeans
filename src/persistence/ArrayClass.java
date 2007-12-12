@@ -25,6 +25,8 @@ public class ArrayClass extends PersistentClass {
 	}
 
 	void init(char typeCode, int length) {
+		this.typeCode=typeCode;
+		this.length=length;
 		size=header;
 		init(new Field("element",typeCode),length);
 	}

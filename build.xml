@@ -8,7 +8,7 @@
     </exec>
   </target>
 -->
-  <target name="mkheapspace">
+  <target name="mkheapspace" depends="jar">
     <delete file="heapspace" quiet="true"/>
     <java fork="true" classpath="databeans.jar" classname="persistence.server.MakeHeapSpace">
       <arg value="262144"/>
@@ -38,13 +38,6 @@
     />
   </target>
 
-  <target name="class_file_server" depends="compile">
-    <java fork="true" classpath="classes" classname="persistence.server.ClassFileServer">
-      <arg value="2001"/>
-      <arg value="classes"/>
-    </java>
-  </target>
-
   <target name="run" depends="compile">
     <java fork="true" classpath="classes" classname="persistence.server.Server">
       <sysproperty key="java.rmi.server.codebase" value="http://localhost:2001/"/>
@@ -69,6 +62,13 @@
       <jvmarg value="-Djava.compiler=none"/>
       <jvmarg value="-Xrunjdwp:transport=dt_socket,address=${jpda.address}"/>
       <arg value="store"/>
+    </java>
+  </target>
+
+  <target name="class_file_server" depends="jar">
+    <java fork="true" classpath="databeans.jar" classname="persistence.server.ClassFileServer">
+      <arg value="2001"/>
+      <arg value="classes"/>
     </java>
   </target>
 

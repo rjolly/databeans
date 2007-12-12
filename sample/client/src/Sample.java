@@ -6,7 +6,14 @@ import persistence.Connections;
 public class Sample {
 	public static void main(String args[]) throws Exception {
 		Frame frame=new Frame();
-		Connection conn=Connections.getConnection(frame,"//localhost/store");
+		Connection conn;
+		try {
+			conn=Connections.getConnection(frame,"//localhost/store");
+			frame.dispose();
+		} catch (Exception e) {
+			frame.dispose();
+			throw e;
+		}
 		Department d=(Department)conn.create("Department");
 		d.setName("Research");
 		Employee e=(Employee)conn.create("Employee");
@@ -31,6 +38,5 @@ public class Sample {
 		System.out.println(conn.getRoot());
 		conn.commit();
 		conn.close();
-		frame.dispose();
 	}
 }
