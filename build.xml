@@ -8,7 +8,7 @@
     </exec>
   </target>
 -->
-  <target name="mkheapspace" depends="jar">
+  <target name="mkheapspace">
     <delete file="heapspace" quiet="true"/>
     <java fork="true" classpath="databeans.jar" classname="persistence.server.MakeHeapSpace">
       <arg value="262144"/>
@@ -65,7 +65,7 @@
     </java>
   </target>
 
-  <target name="class_file_server" depends="jar">
+  <target name="class_file_server">
     <java fork="true" classpath="databeans.jar" classname="persistence.server.ClassFileServer">
       <arg value="2001"/>
       <arg value="classes"/>
@@ -84,7 +84,7 @@
     <antcall target="jar"/>
   </target>
 
-  <target name="setup_sample" depends="jar">
+  <target name="setup_sample">
     <copy file="databeans.jar" todir="sample/server"/>
     <copy file="databeans.jar" todir="sample/client"/>
     <copy file="lib/bsh-2.0b4.jar" todir="sample/client"/>
