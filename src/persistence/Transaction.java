@@ -49,25 +49,25 @@ public class Transaction extends PersistentObject {
 		Map map=getPairs();
 //		Long base=obj.base();
 		Number base=MemoryModel.model.toNumber(obj.accessor().base.longValue());
-		if(map.containsKey(base)) pair=(Array)map.get(base);
-		else {
-			pair=(Array)create(new Object[] {obj,obj.clone()});
-			map.put(base,pair);
+		synchronized(map) {
+			if(map.containsKey(base)) pair=(Array)map.get(base);
+			else {
+				pair=(Array)create(new Object[] {obj,obj.clone()});
+				map.put(base,pair);
+			}
 		}
 		return (PersistentObject)pair.get(1);
 	}
 
 	void record(MethodCall call, MethodCall undo, int level) {
-		List calls=getCalls();
-		List undos=getUndos();
 		switch(level) {
 		case Connection.TRANSACTION_READ_UNCOMMITTED:
-			undos.add(call(undo));
+			getUndos().add(call(undo));
 			break;
 		case Connection.TRANSACTION_READ_COMMITTED:
 		case Connection.TRANSACTION_REPEATABLE_READ:
 		case Connection.TRANSACTION_SERIALIZABLE:
-			calls.add(call(call));
+			getCalls().add(call(call));
 			break;
 		default:
 			throw new PersistentException("bad transaction isolation level");

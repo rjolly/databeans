@@ -179,7 +179,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		}
 	}
 
-	synchronized void release(AccessorImpl accessor) {
+	void release(AccessorImpl accessor) {
 		if(closing) return;
 		synchronized(cache) {
 			Long base=accessor.base;
@@ -227,6 +227,14 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		}
 	}
 
+	void changePassword(String username, String password) {
+		synchronized(users) {
+			byte pw[]=(byte[])users.get(username);
+			if(pw==null) throw new PersistentException("the user "+username+" doesn't exist");
+			else users.put(username,crypt(password));
+		}
+	}
+
 	void changePassword(String username, String oldPassword, String newPassword) {
 		synchronized(users) {
 			byte pw[]=(byte[])users.get(username);
@@ -238,19 +246,19 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		}
 	}
 
-	public synchronized boolean authenticate(String username, char[] password) {
+	public boolean authenticate(String username, char[] password) {
 		if(closing) throw new PersistentException("store closing");
 		byte pw[]=(byte[])users.get(username);
 		return pw==null?false:Arrays.equals(pw,crypt(new String(password),salt(pw)));
 	}
 
-	public synchronized Connection getConnection(CallbackHandler handler) throws RemoteException {
+	public Connection getConnection(CallbackHandler handler) throws RemoteException {
 		if(closing) throw new PersistentException("store closing");
 		if(readOnly) throw new PersistentException("store in recovery mode");
 		return new Connection(this,Connection.TRANSACTION_READ_UNCOMMITTED,login(handler).getSubject());
 	}
 
-	public synchronized Admin getAdmin(CallbackHandler handler) throws RemoteException {
+	public Admin getAdmin(CallbackHandler handler) throws RemoteException {
 		if(closing) throw new PersistentException("store closing");
 		return new Admin(this,readOnly,login(handler).getSubject());
 	}
@@ -314,16 +322,16 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		return trans;
 	}
 
-	synchronized void release(Transaction transaction) {
+	void release(Transaction transaction) {
 		if(closing) return;
 		transactions.remove(transaction);
 		transaction.rollback();
 	}
 
-	public synchronized void close() throws RemoteException {
+	public void close() throws RemoteException {
 		if(closing) return;
+		else closing=true;
 		UnicastRemoteObject.unexportObject(this,true);
-		closing=true;
 		while(true) {
 			try {
 				for(Iterator it=connections.keySet().iterator();it.hasNext();it.remove()) {
@@ -344,9 +352,9 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		heap.mount(false);
 	}
 
-	public synchronized void gc() {
+	public void gc() {
 		if(closing) throw new PersistentException("store closing");
-		System.runFinalization();
+		System.gc();
 		gc(true);
 	}
 

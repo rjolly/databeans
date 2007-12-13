@@ -71,7 +71,7 @@ public class Connection implements Serializable {
 		}
 	}
 
-	PersistentSystem getSystem() {
+	public PersistentSystem getSystem() {
 		try {
 			return (PersistentSystem)attach(connection.getSystem());
 		} catch (RemoteException e) {

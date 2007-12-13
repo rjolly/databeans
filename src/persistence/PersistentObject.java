@@ -146,7 +146,7 @@ public class PersistentObject implements Cloneable, Serializable {
 
 	public boolean equals(Object obj) {
 		try {
-			return obj instanceof PersistentObject?accessor.remoteEquals((PersistentObject)obj):false;
+			return obj instanceof PersistentObject?((PersistentObject)obj).accessor.remoteEquals(this):false;
 		} catch (RemoteException e) {
 			throw new RuntimeException(e);
 		}

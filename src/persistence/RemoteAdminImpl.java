@@ -8,8 +8,12 @@ abstract class RemoteAdminImpl extends RemoteConnectionImpl implements RemoteAdm
 		super(store,Connection.TRANSACTION_NONE,readOnly,subject);
 	}
 
-	public void changePassword(String username, String oldPassword, String newPassword) {
-		store.changePassword(username,oldPassword,newPassword);
+	public void changePassword(String oldPassword, String newPassword) {
+		store.changePassword(clientName(),oldPassword,newPassword);
+	}
+
+	public void changeUserPassword(String username, String password) {
+		store.changePassword(username,password);
 	}
 
 	public void createUser(String username, String password) {

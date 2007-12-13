@@ -125,7 +125,7 @@ abstract class AccessorImpl extends UnicastRemoteObject implements Accessor {
 	}
 
 	public boolean remoteEquals(PersistentObject obj) {
-		return obj == object();
+		return obj.base().equals(base);
 	}
 
 	public String remoteToString() {

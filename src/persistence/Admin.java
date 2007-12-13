@@ -28,10 +28,6 @@ public class Admin extends Connection {
 		}
 	}
 
-	public PersistentSystem getSystem() {
-		return super.getSystem();
-	}
-
 	public void createUser(String username, String password) {
 		try {
 			admin.createUser(username,password);

@@ -23,7 +23,9 @@ abstract class RemoteConnectionImpl extends UnicastRemoteObject implements Remot
 		this.readOnly=readOnly;
 		this.subject=subject;
 		if(level!=Connection.TRANSACTION_NONE) transaction=store.getTransaction(clientName()+"@"+clientHost());
-		store.connections.put(this,null);
+		synchronized(store.connections) {
+			store.connections.put(this,null);
+		}
 	}
 
 	String clientName() {
@@ -40,7 +42,7 @@ abstract class RemoteConnectionImpl extends UnicastRemoteObject implements Remot
 
 	abstract Connection connection();
 
-	public synchronized PersistentObject create(PersistentClass clazz, Class types[], Object args[]) {
+	public PersistentObject create(PersistentClass clazz, Class types[], Object args[]) {
 		try {
 			PersistentObject obj=store.create(clazz).object();
 			obj.getClass().getMethod("init",types).invoke(obj,args);
@@ -86,18 +88,18 @@ abstract class RemoteConnectionImpl extends UnicastRemoteObject implements Remot
 		return execute(store.attach(call),store.attach(undo),index,false);
 	}
 
-	synchronized Object execute(MethodCall call, MethodCall undo, int index, boolean read) {
+	Object execute(MethodCall call, MethodCall undo, int index, boolean read) {
 		if(!read && readOnly) throw new PersistentException("read only");
 		Object obj=transaction!=null?transaction.execute(call,undo,index,level,read,readOnly):call.execute();
 		if(autoCommit) commit();
 		return obj;
 	}
 
-	public synchronized void commit() {
+	public void commit() {
 		if(transaction!=null) transaction.commit();
 	}
 
-	public synchronized void rollback() {
+	public void rollback() {
 		if(transaction!=null) transaction.rollback();
 	}
 

@@ -16,7 +16,7 @@ class SystemConnection extends Connection {
 		return execute(call,undo,index,false);
 	}
 
-	synchronized Object execute(MethodCall call, MethodCall undo, int index, boolean read) {
+	Object execute(MethodCall call, MethodCall undo, int index, boolean read) {
 		return call.execute();
 	}
 
