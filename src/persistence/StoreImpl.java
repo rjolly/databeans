@@ -221,6 +221,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	}
 
 	void createUser(String username, String password) {
+		if(closing) throw new PersistentException("store closing");
 		synchronized(users) {
 			if(users.containsKey(username)) throw new PersistentException("the user "+username+" already exists");
 			else users.put(username,crypt(password));
@@ -228,6 +229,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	}
 
 	void changePassword(String username, String password) {
+		if(closing) throw new PersistentException("store closing");
 		synchronized(users) {
 			byte pw[]=(byte[])users.get(username);
 			if(pw==null) throw new PersistentException("the user "+username+" doesn't exist");
@@ -236,6 +238,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	}
 
 	void changePassword(String username, String oldPassword, String newPassword) {
+		if(closing) throw new PersistentException("store closing");
 		synchronized(users) {
 			byte pw[]=(byte[])users.get(username);
 			if(pw==null) throw new PersistentException("the user "+username+" doesn't exist");

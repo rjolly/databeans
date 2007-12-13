@@ -5,6 +5,7 @@ import java.rmi.server.RemoteServer;
 import java.rmi.server.ServerNotActiveException;
 import java.rmi.server.UnicastRemoteObject;
 import java.security.Principal;
+import java.security.PrivilegedAction;
 import javax.security.auth.Subject;
 import persistence.PersistentObject.MethodCall;
 import persistence.server.DatabeansPrincipal;
@@ -88,9 +89,13 @@ abstract class RemoteConnectionImpl extends UnicastRemoteObject implements Remot
 		return execute(store.attach(call),store.attach(undo),index,false);
 	}
 
-	Object execute(MethodCall call, MethodCall undo, int index, boolean read) {
+	Object execute(final MethodCall call, final MethodCall undo, final int index, final boolean read) {
 		if(!read && readOnly) throw new PersistentException("read only");
-		Object obj=transaction!=null?transaction.execute(call,undo,index,level,read,readOnly):call.execute();
+		Object obj=Subject.doAsPrivileged(subject,new PrivilegedAction() {
+			public Object run() {
+				return transaction!=null?transaction.execute(call,undo,index,level,read,readOnly):call.execute();
+			}
+		},null);
 		if(autoCommit) commit();
 		return obj;
 	}

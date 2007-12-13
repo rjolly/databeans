@@ -1,6 +1,10 @@
 package persistence;
 
 import java.rmi.RemoteException;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
+import java.security.PrivilegedActionException;
+import java.security.PrivilegedExceptionAction;
 import javax.security.auth.Subject;
 
 abstract class RemoteAdminImpl extends RemoteConnectionImpl implements RemoteAdmin {
@@ -12,20 +16,48 @@ abstract class RemoteAdminImpl extends RemoteConnectionImpl implements RemoteAdm
 		store.changePassword(clientName(),oldPassword,newPassword);
 	}
 
-	public void changeUserPassword(String username, String password) {
-		store.changePassword(username,password);
+	public void changeUserPassword(final String username, final String password) {
+		Subject.doAsPrivileged(subject,new PrivilegedAction() {
+			public Object run() {
+				AccessController.checkPermission(new AdminPermission("changePassword"));
+				store.changePassword(username,password);
+				return null;
+			}
+		},null);
 	}
 
-	public void createUser(String username, String password) {
-		store.createUser(username,password);
+	public void createUser(final String username, final String password) {
+		Subject.doAsPrivileged(subject,new PrivilegedAction() {
+			public Object run() {
+				AccessController.checkPermission(new AdminPermission("createUser"));
+				store.createUser(username,password);
+				return null;
+			}
+		},null);
 	}
 
 	public void closeStore() throws RemoteException {
-		store.close();
+		try {
+			Subject.doAsPrivileged(subject,new PrivilegedExceptionAction() {
+				public Object run() throws RemoteException {
+					AccessController.checkPermission(new AdminPermission("close"));
+					store.close();
+					return null;
+				}
+			},null);
+		} catch (PrivilegedActionException e) {
+			throw (RemoteException)e.getCause();
+		}
 	}
 
 	public void gc() {
-		store.gc();
+		Subject.doAsPrivileged(subject,new PrivilegedAction() {
+			public Object run() {
+				AccessController.checkPermission(new AdminPermission("gc"));
+				store.gc();
+				return null;
+			}
+		},null);
 	}
 
 	public long allocatedSpace() {
