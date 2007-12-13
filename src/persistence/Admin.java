@@ -11,11 +11,8 @@ import persistence.beans.XMLDecoder;
 import persistence.beans.XMLEncoder;
 
 public class Admin extends Connection {
-	persistence.RemoteAdmin admin;
-
 	Admin(StoreImpl store, boolean readOnly, Subject subject) throws RemoteException {
 		connection=new RemoteAdmin(store,readOnly,subject);
-		admin=(persistence.RemoteAdmin)connection;
 	}
 
 	class RemoteAdmin extends RemoteAdminImpl {
@@ -28,9 +25,25 @@ public class Admin extends Connection {
 		}
 	}
 
+	public void changePassword(String oldPassword, String newPassword) {
+		try {
+			((persistence.RemoteAdmin)connection).changePassword(oldPassword,newPassword);
+		} catch (RemoteException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public void changeUserPassword(String username, String password) {
+		try {
+			((persistence.RemoteAdmin)connection).changeUserPassword(username,password);
+		} catch (RemoteException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	public void createUser(String username, String password) {
 		try {
-			admin.createUser(username,password);
+			((persistence.RemoteAdmin)connection).createUser(username,password);
 		} catch (RemoteException e) {
 			throw new RuntimeException(e);
 		}
@@ -58,7 +71,7 @@ public class Admin extends Connection {
 
 	public void closeStore() {
 		try {
-			admin.closeStore();
+			((persistence.RemoteAdmin)connection).closeStore();
 		} catch (RemoteException e) {
 			throw new RuntimeException(e);
 		}
@@ -66,7 +79,7 @@ public class Admin extends Connection {
 
 	public void gc() {
 		try {
-			admin.gc();
+			((persistence.RemoteAdmin)connection).gc();
 		} catch (RemoteException e) {
 			throw new RuntimeException(e);
 		}
@@ -74,7 +87,7 @@ public class Admin extends Connection {
 
 	public long allocatedSpace() {
 		try {
-			return admin.allocatedSpace();
+			return ((persistence.RemoteAdmin)connection).allocatedSpace();
 		} catch (RemoteException e) {
 			throw new RuntimeException(e);
 		}
@@ -82,7 +95,7 @@ public class Admin extends Connection {
 
 	public long maxSpace() {
 		try {
-			return admin.maxSpace();
+			return ((persistence.RemoteAdmin)connection).maxSpace();
 		} catch (RemoteException e) {
 			throw new RuntimeException(e);
 		}

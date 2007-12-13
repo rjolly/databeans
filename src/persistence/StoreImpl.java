@@ -240,7 +240,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 			byte pw[]=(byte[])users.get(username);
 			if(pw==null) throw new PersistentException("the user "+username+" doesn't exist");
 			else {
-				if(!Arrays.equals(pw,crypt(oldPassword))) throw new PersistentException("old password doesn't match");
+				if(!Arrays.equals(pw,crypt(oldPassword,salt(pw)))) throw new PersistentException("old password doesn't match");
 				else users.put(username,crypt(newPassword));
 			}
 		}

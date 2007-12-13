@@ -120,10 +120,7 @@
   </target>
 
   <target name="console">
-    <java classname="bsh.Console" classpath="lib/bsh-2.0b4.jar:databeans.jar" fork="true">
-      <sysproperty key="java.security.manager" value=""/>
-      <sysproperty key="java.security.policy" value="policy"/>
-    </java>
+    <java classname="bsh.Console" classpath="lib/bsh-2.0b4.jar:databeans.jar" fork="true"/>
   </target>
 
 </project>

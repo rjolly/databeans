@@ -1,4 +1,8 @@
-grant {
-	// Allow everything for now
-	permission java.security.AllPermission;
+grant codebase "file:classes/-" {
+	permission java.io.FilePermission "heapspace", "read,write";
+	permission java.net.SocketPermission "localhost:1099", "connect";
+	permission java.net.SocketPermission "localhost:1024-", "accept,connect";
+	permission java.lang.RuntimePermission "shutdownHooks";
+	permission javax.security.auth.AuthPermission "createLoginContext.Databeans";
+	permission javax.security.auth.AuthPermission "modifyPrincipals";
 };
