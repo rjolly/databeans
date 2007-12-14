@@ -10,18 +10,18 @@ import javax.security.auth.Subject;
 import persistence.beans.XMLDecoder;
 import persistence.beans.XMLEncoder;
 
-public class Admin extends Connection {
-	Admin(StoreImpl store, boolean readOnly, Subject subject) throws RemoteException {
+public class AdminConnection extends Connection {
+	AdminConnection(StoreImpl store, boolean readOnly, Subject subject) throws RemoteException {
 		connection=new RemoteAdmin(store,readOnly,subject);
 	}
 
-	class RemoteAdmin extends RemoteAdminImpl {
+	class RemoteAdmin extends RemoteAdminConnectionImpl {
 		public RemoteAdmin(StoreImpl store, boolean readOnly, Subject subject) throws RemoteException {
 			super(store,readOnly,subject);
 		}
 
 		Connection connection() {
-			return Admin.this;
+			return AdminConnection.this;
 		}
 	}
 
@@ -31,7 +31,7 @@ public class Admin extends Connection {
 
 	public void changePassword(String username, String oldPassword, String newPassword) {
 		try {
-			((persistence.RemoteAdmin)connection).changePassword(username,oldPassword,newPassword);
+			((persistence.RemoteAdminConnection)connection).changePassword(username,oldPassword,newPassword);
 		} catch (RemoteException e) {
 			throw new RuntimeException(e);
 		}
@@ -39,7 +39,7 @@ public class Admin extends Connection {
 
 	public void createUser(String username, String password) {
 		try {
-			((persistence.RemoteAdmin)connection).createUser(username,password);
+			((persistence.RemoteAdminConnection)connection).createUser(username,password);
 		} catch (RemoteException e) {
 			throw new RuntimeException(e);
 		}
@@ -67,7 +67,7 @@ public class Admin extends Connection {
 
 	public void closeStore() {
 		try {
-			((persistence.RemoteAdmin)connection).closeStore();
+			((persistence.RemoteAdminConnection)connection).closeStore();
 		} catch (RemoteException e) {
 			throw new RuntimeException(e);
 		}
@@ -75,7 +75,7 @@ public class Admin extends Connection {
 
 	public void gc() {
 		try {
-			((persistence.RemoteAdmin)connection).gc();
+			((persistence.RemoteAdminConnection)connection).gc();
 		} catch (RemoteException e) {
 			throw new RuntimeException(e);
 		}
@@ -83,7 +83,7 @@ public class Admin extends Connection {
 
 	public long allocatedSpace() {
 		try {
-			return ((persistence.RemoteAdmin)connection).allocatedSpace();
+			return ((persistence.RemoteAdminConnection)connection).allocatedSpace();
 		} catch (RemoteException e) {
 			throw new RuntimeException(e);
 		}
@@ -91,7 +91,7 @@ public class Admin extends Connection {
 
 	public long maxSpace() {
 		try {
-			return ((persistence.RemoteAdmin)connection).maxSpace();
+			return ((persistence.RemoteAdminConnection)connection).maxSpace();
 		} catch (RemoteException e) {
 			throw new RuntimeException(e);
 		}

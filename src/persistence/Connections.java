@@ -24,29 +24,20 @@ public class Connections {
 	private Connections() {}
 
 	public static Connection getConnection(String name) throws Exception {
+		return getConnection(name,false);
+	}
+
+	public static Connection getConnection(String name, boolean admin) throws Exception {
 		LocalCallbackHandler local=new LocalCallbackHandler(handler());
 		Connection conn;
 		try {
-			conn=((Store)Naming.lookup(name)).getConnection(local);
+			conn=((Store)Naming.lookup(name)).getConnection(local,admin);
 			local.unexport();
 		} catch (Exception e) {
 			local.unexport();
 			throw e;
 		}
 		return conn;
-	}
-
-	public static Admin getAdmin(String name) throws Exception {
-		LocalCallbackHandler local=new LocalCallbackHandler(handler());
-		Admin admin;
-		try {
-			admin=((Store)Naming.lookup(name)).getAdmin(local);
-			local.unexport();
-		} catch (Exception e) {
-			local.unexport();
-			throw e;
-		}
-		return admin;
 	}
 
 	static CallbackHandler handler() {

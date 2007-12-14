@@ -246,15 +246,10 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		return pw==null?false:Arrays.equals(pw,crypt(new String(password),salt(pw)));
 	}
 
-	public Connection getConnection(CallbackHandler handler) throws RemoteException {
+	public Connection getConnection(CallbackHandler handler, boolean admin) throws RemoteException {
 		if(closing) throw new PersistentException("store closing");
-		if(readOnly) throw new PersistentException("store in recovery mode");
-		return new Connection(this,Connection.TRANSACTION_READ_UNCOMMITTED,login(handler).getSubject());
-	}
-
-	public Admin getAdmin(CallbackHandler handler) throws RemoteException {
-		if(closing) throw new PersistentException("store closing");
-		return new Admin(this,readOnly,login(handler).getSubject());
+		if(!admin && readOnly) throw new PersistentException("store in recovery mode");
+		return !admin?new Connection(this,Connection.TRANSACTION_READ_UNCOMMITTED,login(handler).getSubject()):new AdminConnection(this,readOnly,login(handler).getSubject());
 	}
 
 	static LoginContext login(CallbackHandler handler) {
