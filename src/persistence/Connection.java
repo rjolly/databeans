@@ -4,6 +4,8 @@ import java.io.Serializable;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.rmi.RemoteException;
+import java.util.ConcurrentModificationException;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.WeakHashMap;
 import javax.security.auth.Subject;
@@ -191,6 +193,16 @@ public class Connection implements Serializable {
 
 	public void close() {
 		connection=null;
+		if(cache==null) return;
+		while(true) {
+			try {
+				for(Iterator it=cache.keySet().iterator();it.hasNext();it.remove()) {
+					PersistentObject obj=get((Accessor)it.next());
+					if(obj!=null) obj.close();
+				}
+				break;
+			} catch (ConcurrentModificationException e) {}
+		}
 	}
 
 	public boolean isClosed() {

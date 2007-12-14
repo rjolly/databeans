@@ -95,7 +95,7 @@ public class PersistentArrayList extends PersistentAbstractList
 		super.init();
 		if (initialCapacity < 0)
 			throw new IllegalArgumentException("Illegal Capacity: "+
-											   initialCapacity);
+						   initialCapacity);
 		setElementData(create(Object.class,initialCapacity));
 	}
 

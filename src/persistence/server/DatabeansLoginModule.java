@@ -24,7 +24,6 @@ public class DatabeansLoginModule implements LoginModule {
 
 	// configurable option
 	private boolean debug = false;
-	private boolean disabled = false;
 	private Store store;
 
 	// the authentication status
@@ -48,7 +47,6 @@ public class DatabeansLoginModule implements LoginModule {
 
 		// initialize any configured options
 		debug = "true".equalsIgnoreCase((String)options.get("debug"));
-		disabled = "true".equalsIgnoreCase((String)options.get("disabled"));
 		try {
 			store=(Store)Naming.lookup((String)options.get("store"));
 		} catch (Exception e) {
@@ -57,12 +55,6 @@ public class DatabeansLoginModule implements LoginModule {
 	}
 
 	public boolean login() throws LoginException {
-		if(disabled) {
-			username = "admin";
-			password = new char[0];
-			succeeded = true;
-			return true;
-		}
 		// prompt for a user name and password
 		if (callbackHandler == null)
 			throw new LoginException("Error: no CallbackHandler available " +

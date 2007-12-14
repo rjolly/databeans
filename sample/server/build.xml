@@ -7,15 +7,16 @@
     </java>
   </target>
 
-  <target name="compile">
+  <target name="expand">
     <mkdir dir="classes"/>
     <unzip src="databeans.jar" dest="classes" overwrite="false"/>
+  </target>
+
+  <target name="compile" depends="expand">
     <javac srcdir="src" destdir="classes"/>
   </target>
 
-  <target name="compile-debug">
-    <mkdir dir="classes"/>
-    <unzip src="databeans.jar" dest="classes" overwrite="false"/>
+  <target name="compile-debug" depends="expand">
     <javac debug="on" srcdir="src" destdir="classes"/>
   </target>
 

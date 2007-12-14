@@ -1,7 +1,7 @@
 package persistence;
 
 import com.sun.security.auth.callback.DialogCallbackHandler;
-import java.awt.Window;
+import java.awt.Frame;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,15 +24,7 @@ public class Connections {
 	private Connections() {}
 
 	public static Connection getConnection(String name) throws Exception {
-		return getConnection(new MyCallbackHandler(),name);
-	}
-
-	public static Connection getConnection(Window window, String name) throws Exception {
-		return getConnection(new DialogCallbackHandler(window),name);
-	}
-
-	static Connection getConnection(CallbackHandler handler, String name) throws Exception {
-		LocalCallbackHandler local=new LocalCallbackHandler(handler);
+		LocalCallbackHandler local=new LocalCallbackHandler(handler());
 		Connection conn;
 		try {
 			conn=((Store)Naming.lookup(name)).getConnection(local);
@@ -45,15 +37,7 @@ public class Connections {
 	}
 
 	public static Admin getAdmin(String name) throws Exception {
-		return getAdmin(new MyCallbackHandler(),name);
-	}
-
-	public static Admin getAdmin(Window window, String name) throws Exception {
-		return getAdmin(new DialogCallbackHandler(window),name);
-	}
-
-	static Admin getAdmin(CallbackHandler handler, String name) throws Exception {
-		LocalCallbackHandler local=new LocalCallbackHandler(handler);
+		LocalCallbackHandler local=new LocalCallbackHandler(handler());
 		Admin admin;
 		try {
 			admin=((Store)Naming.lookup(name)).getAdmin(local);
@@ -63,6 +47,11 @@ public class Connections {
 			throw e;
 		}
 		return admin;
+	}
+
+	static CallbackHandler handler() {
+		Frame frames[]=Frame.getFrames();
+		return frames.length>0?(CallbackHandler)new DialogCallbackHandler(frames[0]):new MyCallbackHandler();
 	}
 }
 

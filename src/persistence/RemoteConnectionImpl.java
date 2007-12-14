@@ -4,6 +4,7 @@ import java.rmi.RemoteException;
 import java.rmi.server.RemoteServer;
 import java.rmi.server.ServerNotActiveException;
 import java.rmi.server.UnicastRemoteObject;
+import java.security.AccessController;
 import java.security.Principal;
 import java.security.PrivilegedAction;
 import javax.security.auth.Subject;
@@ -24,6 +25,10 @@ abstract class RemoteConnectionImpl extends UnicastRemoteObject implements Remot
 		this.readOnly=readOnly;
 		this.subject=subject;
 		if(level!=Connection.TRANSACTION_NONE) transaction=store.getTransaction(clientName()+"@"+clientHost());
+		open();
+	}
+
+	void open() {
 		synchronized(store.connections) {
 			store.connections.put(this,null);
 		}
@@ -93,11 +98,20 @@ abstract class RemoteConnectionImpl extends UnicastRemoteObject implements Remot
 		if(!read && readOnly) throw new PersistentException("read only");
 		Object obj=Subject.doAsPrivileged(subject,new PrivilegedAction() {
 			public Object run() {
+				checkPermission(call);
 				return transaction!=null?transaction.execute(call,undo,index,level,read,readOnly):call.execute();
 			}
 		},null);
 		if(autoCommit) commit();
 		return obj;
+	}
+
+	void checkPermission(MethodCall call) {
+		if((call.method.equals("get") || call.method.equals("set")) && call.types.length>0 && call.types[0]==String.class) {
+			AccessController.checkPermission(new PropertyPermission(call.target().persistentClass().getName()+"."+(String)call.args[0]));
+		} else {
+			AccessController.checkPermission(new MethodPermission(call.target().persistentClass().getName()+"."+call.method));
+		}
 	}
 
 	public void commit() {

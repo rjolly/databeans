@@ -25,17 +25,13 @@ public class Admin extends Connection {
 		}
 	}
 
-	public void changePassword(String oldPassword, String newPassword) {
-		try {
-			((persistence.RemoteAdmin)connection).changePassword(oldPassword,newPassword);
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
+	public void changePassword(String username, String password) {
+		changePassword(username,null,password);
 	}
 
-	public void changeUserPassword(String username, String password) {
+	public void changePassword(String username, String oldPassword, String newPassword) {
 		try {
-			((persistence.RemoteAdmin)connection).changeUserPassword(username,password);
+			((persistence.RemoteAdmin)connection).changePassword(username,oldPassword,newPassword);
 		} catch (RemoteException e) {
 			throw new RuntimeException(e);
 		}

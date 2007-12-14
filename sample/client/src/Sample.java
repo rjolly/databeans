@@ -8,7 +8,7 @@ public class Sample {
 		Frame frame=new Frame();
 		Connection conn;
 		try {
-			conn=Connections.getConnection(frame,"//localhost/store");
+			conn=Connections.getConnection("//localhost/store");
 			frame.dispose();
 		} catch (Exception e) {
 			frame.dispose();

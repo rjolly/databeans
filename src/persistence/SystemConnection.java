@@ -1,42 +1,42 @@
 package persistence;
 
 import java.rmi.RemoteException;
-import java.security.PrivilegedAction;
-import java.util.HashSet;
-import java.util.Set;
-import javax.security.auth.Subject;
 import persistence.PersistentObject.MethodCall;
-import persistence.server.DatabeansPrincipal;
 
 class SystemConnection extends Connection {
-	static Subject systemSubject;
-	static {
-		Set s=new HashSet();
-		s.add(new DatabeansPrincipal("system"));
-		systemSubject=new Subject(true,s,new HashSet(),new HashSet());
-	}
-	
 	SystemConnection(StoreImpl store) throws RemoteException {
-		super(store,TRANSACTION_NONE,systemSubject);
+		connection=new RemoteSystemConnection(store);
 	}
 
-	public Object execute(MethodCall call) {
-		return execute(call,null,0,true);
+	class RemoteSystemConnection extends RemoteConnectionImpl {
+		RemoteSystemConnection(StoreImpl store) throws RemoteException {
+			super(store,Connection.TRANSACTION_NONE,false,null);
+		}
+
+		void open() {}
+
+		public Object execute(MethodCall call) {
+			return execute(call,null,0,true);
+		}
+
+		public Object execute(MethodCall call, MethodCall undo, int index) {
+			return execute(call,undo,index,false);
+		}
+
+		Object execute(final MethodCall call, final MethodCall undo, final int index, final boolean read) {
+			return call.execute();
+		}
+
+		public void commit() {}
+
+		public void rollback() {}
+
+		Connection connection() {
+			return SystemConnection.this;
+		}
 	}
 
-	public Object execute(MethodCall call, MethodCall undo, int index) {
-		return execute(call,undo,index,false);
+	PersistentObject attach(PersistentObject obj) {
+		return obj;
 	}
-
-	Object execute(final MethodCall call, MethodCall undo, int index, boolean read) {
-		return Subject.doAsPrivileged(systemSubject,new PrivilegedAction() {
-			public Object run() {
-				return call.execute();
-			}
-		},null);
-	}
-
-	public void commit() {}
-
-	public void rollback() {}
 }

@@ -228,23 +228,14 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		}
 	}
 
-	void changePassword(String username, String password) {
-		if(closing) throw new PersistentException("store closing");
-		synchronized(users) {
-			byte pw[]=(byte[])users.get(username);
-			if(pw==null) throw new PersistentException("the user "+username+" doesn't exist");
-			else users.put(username,crypt(password));
-		}
-	}
-
 	void changePassword(String username, String oldPassword, String newPassword) {
 		if(closing) throw new PersistentException("store closing");
 		synchronized(users) {
 			byte pw[]=(byte[])users.get(username);
 			if(pw==null) throw new PersistentException("the user "+username+" doesn't exist");
 			else {
-				if(!Arrays.equals(pw,crypt(oldPassword,salt(pw)))) throw new PersistentException("old password doesn't match");
-				else users.put(username,crypt(newPassword));
+				if(oldPassword==null || Arrays.equals(pw,crypt(oldPassword,salt(pw)))) users.put(username,crypt(newPassword));
+				else throw new PersistentException("old password doesn't match");
 			}
 		}
 	}
@@ -343,6 +334,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 				break;
 			} catch (ConcurrentModificationException e) {}
 		}
+		((RemoteConnectionImpl)systemConnection.connection).close();
 		while(true) {
 			try {
 				for(Iterator it=cache.keySet().iterator();it.hasNext();it.remove()) {

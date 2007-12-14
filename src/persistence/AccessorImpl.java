@@ -2,7 +2,6 @@ package persistence;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
-import java.security.AccessController;
 import java.util.Iterator;
 
 abstract class AccessorImpl extends UnicastRemoteObject implements Accessor {
@@ -22,7 +21,6 @@ abstract class AccessorImpl extends UnicastRemoteObject implements Accessor {
 	abstract PersistentObject object();
 
 	synchronized Object call(String method, Class types[], Object args[]) {
-		if(!method.equals("get") && !method.equals("set")) AccessController.checkPermission(new MethodPermission(clazz.getName()+"."+method));
 		try {
 			return getClass().getMethod(method,types).invoke(this,args);
 		} catch (Exception e) {
@@ -31,12 +29,10 @@ abstract class AccessorImpl extends UnicastRemoteObject implements Accessor {
 	}
 
 	public Object get(String name) {
-		AccessController.checkPermission(new PropertyPermission(clazz.getName()+"."+name));
 		return get(clazz.getField(name));
 	}
 
 	public Object set(String name, Object value) {
-		AccessController.checkPermission(new PropertyPermission(clazz.getName()+"."+name));
 		return set(clazz.getField(name),value);
 	}
 
@@ -97,7 +93,7 @@ abstract class AccessorImpl extends UnicastRemoteObject implements Accessor {
 
 	void close() throws RemoteException {
 		UnicastRemoteObject.unexportObject(this,true);
-		object().accessor=null;
+		object().close();
 	}
 
 	public final Long base() {
