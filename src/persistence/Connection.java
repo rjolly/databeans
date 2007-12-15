@@ -73,20 +73,20 @@ public class Connection implements Serializable {
 		}
 	}
 
-	public PersistentSystem getSystem() {
+	public PersistentSystem system() {
 		try {
-			return (PersistentSystem)attach(connection.getSystem());
+			return (PersistentSystem)attach(connection.system());
 		} catch (RemoteException e) {
 			throw new RuntimeException(e);
 		}
 	}
 
 	public Object root() {
-		return getSystem().root();
+		return system().root();
 	}
 
 	public void setRoot(Object obj) {
-		getSystem().setRoot(obj);
+		system().setRoot(obj);
 	}
 
 	public int getTransactionIsolation() {

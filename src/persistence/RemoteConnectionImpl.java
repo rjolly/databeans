@@ -57,7 +57,7 @@ abstract class RemoteConnectionImpl extends UnicastRemoteObject implements Remot
 		}
 	}
 
-	public PersistentSystem getSystem() {
+	public PersistentSystem system() {
 		return store.system;
 	}
 

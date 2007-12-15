@@ -35,7 +35,7 @@ public class Sample {
 		e.setManager(m);
 		e.setJob("Clerk");
 		employees.add(e);
-		System.out.println(conn.getRoot());
+		System.out.println(conn.root());
 		conn.commit();
 		conn.close();
 	}

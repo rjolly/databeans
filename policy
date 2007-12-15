@@ -1,7 +1,6 @@
-grant codebase "file:classes/-" {
+grant codebase "file:databeans.jar" {
 	permission java.io.FilePermission "heapspace", "read,write";
 	permission java.net.SocketPermission "localhost:1024-", "accept,connect";
-	permission java.lang.RuntimePermission "shutdownHooks";
 	permission javax.security.auth.AuthPermission "createLoginContext.Databeans";
 	permission javax.security.auth.AuthPermission "modifyPrincipals";
 	permission javax.security.auth.AuthPermission "doAsPrivileged";

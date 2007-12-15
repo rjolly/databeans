@@ -38,8 +38,20 @@
     />
   </target>
 
-  <target name="run" depends="compile">
-    <java fork="true" classpath="classes" classname="persistence.server.Server">
+  <target name="jar" depends="compile">
+    <zip destfile="databeans.jar"
+         basedir="classes"
+         compress="false"
+         includes="**/*.class"
+    />
+  </target>
+
+  <target name="jar-debug" depends="compile-debug">
+    <antcall target="jar"/>
+  </target>
+
+  <target name="run">
+    <java fork="true" classpath="databeans.jar" classname="persistence.server.Server">
       <sysproperty key="java.rmi.server.codebase" value="http://localhost:2001/"/>
       <sysproperty key="java.security.manager" value=""/>
       <sysproperty key="java.security.policy" value="policy"/>
@@ -48,11 +60,11 @@
     </java>
   </target>
 
-  <target name="debug" depends="compile-debug">
+  <target name="debug">
     <nbjpdastart name="server" addressproperty="jpda.address" transport="dt_socket">
-      <classpath path="classes"/>
+      <classpath path="databeans.jar"/>
     </nbjpdastart>
-    <java fork="true" classpath="classes" classname="persistence.server.Server">
+    <java fork="true" classpath="databeans.jar" classname="persistence.server.Server">
       <sysproperty key="java.rmi.server.codebase" value="http://localhost:2001/"/>
       <sysproperty key="java.security.manager" value=""/>
       <sysproperty key="java.security.policy" value="policy"/>
@@ -66,22 +78,14 @@
   </target>
 
   <target name="class_file_server">
-    <java fork="true" classpath="databeans.jar" classname="persistence.server.ClassFileServer">
+    <java fork="true" classpath="databeans.jar" classname="persistence.server.ClassFileJarServer">
       <arg value="2001"/>
-      <arg value="classes"/>
+      <arg value="databeans.jar"/>
     </java>
   </target>
 
-  <target name="jar" depends="compile">
-    <zip destfile="databeans.jar"
-         basedir="classes"
-         compress="false"
-         includes="**/*.class"
-    />
-  </target>
-
-  <target name="jar-debug" depends="compile-debug">
-    <antcall target="jar"/>
+  <target name="clean">
+    <delete dir="classes" quiet="true"/>
   </target>
 
   <target name="setup_sample">
@@ -96,10 +100,6 @@
     <delete file="sample/client/bsh-2.0b4.jar" quiet="true"/>
     <ant dir="sample/client" target="clean"/>
     <ant dir="sample/server" target="clean"/>
-  </target>
-
-  <target name="clean">
-    <delete dir="classes" quiet="true"/>
   </target>
 
   <target name="javadoc">
@@ -117,6 +117,12 @@
     <zip destfile="../databeans.zip"
          basedir=".."
          includes="databeans/**"/>
+  </target>
+
+  <target name="close">
+    <java classname="bsh.Interpreter" classpath="lib/bsh-2.0b4.jar:databeans.jar" fork="true">
+      <arg value="bsh/close.bsh"/>
+    </java>
   </target>
 
   <target name="console">
