@@ -23,10 +23,8 @@ public abstract class NotifiedObject extends PersistentObject {
 			} catch (PropertyVetoException e) {
 				throw new RuntimeException(e);
 			}
-			{
-				PersistentPropertyChangeSupport support=getPropertyChangeSupport();
-				if(support!=null) support.firePropertyChange(field.name,oldValue,value);
-			}
+			PersistentPropertyChangeSupport support=getPropertyChangeSupport();
+			if(support!=null) support.firePropertyChange(field.name,oldValue,value);
 			return super.set(field,value);
 		}
 	}

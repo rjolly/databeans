@@ -62,6 +62,10 @@ public abstract class PersistentAbstractList extends PersistentAbstractCollectio
 			}
 			return hashCode;
 		}
+
+		public int modCount() {
+			return getModCount();
+		}
 	}
 
 	public boolean add(Object o) {
@@ -155,10 +159,15 @@ public abstract class PersistentAbstractList extends PersistentAbstractCollectio
 		return new ListItr(index);
 	}
 
+	int modCount() {
+		return ((Integer)execute(
+			new MethodCall("modCount",new Class[] {},new Object[] {}))).intValue();
+	}
+
 	private class Itr implements Iterator {
 		int cursor = 0;
 		int lastRet = -1;
-		int expectedModCount = getModCount();
+		int expectedModCount = modCount();
 
 		public boolean hasNext() {
 			return cursor != size();
@@ -186,14 +195,14 @@ public abstract class PersistentAbstractList extends PersistentAbstractCollectio
 				if (lastRet < cursor)
 					cursor--;
 				lastRet = -1;
-				expectedModCount = getModCount();
+				expectedModCount = modCount();
 			} catch(IndexOutOfBoundsException e) {
 				throw new ConcurrentModificationException();
 			}
 		}
 
 		final void checkForComodification() {
-			if (getModCount() != expectedModCount)
+			if (modCount() != expectedModCount)
 				throw new ConcurrentModificationException();
 		}
 	}
@@ -235,7 +244,7 @@ public abstract class PersistentAbstractList extends PersistentAbstractCollectio
 
 			try {
 				PersistentAbstractList.this.set(lastRet, o);
-				expectedModCount = getModCount();
+				expectedModCount = modCount();
 			} catch(IndexOutOfBoundsException e) {
 				throw new ConcurrentModificationException();
 			}
@@ -247,7 +256,7 @@ public abstract class PersistentAbstractList extends PersistentAbstractCollectio
 			try {
 				PersistentAbstractList.this.add(cursor++, o);
 				lastRet = -1;
-				expectedModCount = getModCount();
+				expectedModCount = modCount();
 			} catch(IndexOutOfBoundsException e) {
 				throw new ConcurrentModificationException();
 			}

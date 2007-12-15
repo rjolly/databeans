@@ -37,9 +37,17 @@ public class AdminConnection extends Connection {
 		}
 	}
 
-	public void createUser(String username, String password) {
+	public void addUser(String username, String password) {
 		try {
-			((persistence.RemoteAdminConnection)connection).createUser(username,password);
+			((persistence.RemoteAdminConnection)connection).addUser(username,password);
+		} catch (RemoteException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public void deleteUser(String username) {
+		try {
+			((persistence.RemoteAdminConnection)connection).deleteUser(username);
 		} catch (RemoteException e) {
 			throw new RuntimeException(e);
 		}
@@ -58,7 +66,7 @@ public class AdminConnection extends Connection {
 	public void export(String name) {
 		try {
 			XMLEncoder e = new XMLEncoder(this,new BufferedOutputStream(new FileOutputStream(name)));
-			e.writeObject(getRoot());
+			e.writeObject(root());
 			e.close();
 		} catch (IOException e) {
 			throw new RuntimeException(e);

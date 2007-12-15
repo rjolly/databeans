@@ -4,7 +4,6 @@ import java.rmi.RemoteException;
 import java.rmi.server.RemoteServer;
 import java.rmi.server.ServerNotActiveException;
 import java.rmi.server.UnicastRemoteObject;
-import java.security.AccessController;
 import java.security.Principal;
 import java.security.PrivilegedAction;
 import javax.security.auth.Subject;
@@ -98,7 +97,6 @@ abstract class RemoteConnectionImpl extends UnicastRemoteObject implements Remot
 		if(!read && readOnly) throw new PersistentException("read only");
 		Object obj=Subject.doAsPrivileged(subject,new PrivilegedAction() {
 			public Object run() {
-				checkPermission(call);
 				return transaction!=null?transaction.execute(call,undo,index,level,read,readOnly):call.execute();
 			}
 		},null);
@@ -106,20 +104,22 @@ abstract class RemoteConnectionImpl extends UnicastRemoteObject implements Remot
 		return obj;
 	}
 
-	void checkPermission(MethodCall call) {
-		if((call.method.equals("get") || call.method.equals("set")) && call.types.length>0 && call.types[0]==String.class) {
-			AccessController.checkPermission(new PropertyPermission(call.target().persistentClass().getName()+"."+(String)call.args[0]));
-		} else {
-			AccessController.checkPermission(new MethodPermission(call.target().persistentClass().getName()+"."+call.method));
-		}
-	}
-
 	public void commit() {
-		if(transaction!=null) transaction.commit();
+		Subject.doAsPrivileged(subject,new PrivilegedAction() {
+			public Object run() {
+				if(transaction!=null) transaction.commit();
+				return null;
+			}
+		},null);
 	}
 
 	public void rollback() {
-		if(transaction!=null) transaction.rollback();
+		Subject.doAsPrivileged(subject,new PrivilegedAction() {
+			public Object run() {
+				if(transaction!=null) transaction.rollback();
+				return null;
+			}
+		},null);
 	}
 
 	void close() throws RemoteException {

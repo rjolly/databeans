@@ -81,8 +81,8 @@ public class Connection implements Serializable {
 		}
 	}
 
-	public Object getRoot() {
-		return getSystem().getRoot();
+	public Object root() {
+		return getSystem().root();
 	}
 
 	public void setRoot(Object obj) {

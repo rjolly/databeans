@@ -1,7 +1,9 @@
 package persistence;
 
+import java.rmi.RemoteException;
 import java.util.Collection;
 import java.util.Map;
+import persistence.PersistentObject.MethodCall;
 import persistence.util.PersistentArrayList;
 import persistence.util.PersistentHashMap;
 
@@ -10,6 +12,18 @@ public class PersistentSystem extends PersistentObject {
 		setUsers((Map)create(PersistentHashMap.class));
 		setClasses((Map)create(PersistentHashMap.class));
 		setTransactions((Collection)create(PersistentArrayList.class));
+	}
+
+	protected PersistentObject.Accessor createAccessor() throws RemoteException {
+		return new Accessor();
+	}
+
+	protected class Accessor extends PersistentObject.Accessor {
+		public Accessor() throws RemoteException {}
+
+		public Object root() {
+			return getRoot();
+		}
 	}
 
 	public Map getUsers() {
@@ -42,5 +56,10 @@ public class PersistentSystem extends PersistentObject {
 
 	public void setRoot(Object obj) {
 		set("root",obj);
+	}
+
+	public Object root() {
+		return execute(
+			new MethodCall("root",new Class[] {},new Object[] {}));
 	}
 }

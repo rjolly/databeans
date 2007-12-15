@@ -15,6 +15,14 @@ public final class PersistentArray extends PersistentObject implements Array {
 	protected class Accessor extends PersistentObject.Accessor {
 		public Accessor() throws RemoteException {}
 
+		public int length() {
+			return getLength();
+		}
+
+		public char typeCode() {
+			return getTypeCode();
+		}
+
 		public Object get(int index) {
 			return get(((ArrayClass)clazz).getField(index));
 		}
@@ -29,20 +37,14 @@ public final class PersistentArray extends PersistentObject implements Array {
 	}
 
 	public int length() {
-		return getLength();
+		return ((Integer)execute(
+			new MethodCall("length",new Class[] {},new Object[] {}))).intValue();
 	}
 
 	public char typeCode() {
-		return getTypeCode();
+		return ((Character)execute(
+			new MethodCall("typeCode",new Class[] {},new Object[] {}))).charValue();
 	}
-
-	public char getTypeCode() {
-		return ((Character)get("typeCode")).charValue();
-	}
-
-//	public void setTypeCode(char c) {
-//		set("typeCode",new Character(c));
-//	}
 
 	public int getLength() {
 		return ((Integer)get("length")).intValue();
@@ -50,6 +52,14 @@ public final class PersistentArray extends PersistentObject implements Array {
 
 //	public void setLength(int n) {
 //		set("length",new Integer(n));
+//	}
+
+	public char getTypeCode() {
+		return ((Character)get("typeCode")).charValue();
+	}
+
+//	public void setTypeCode(char c) {
+//		set("typeCode",new Character(c));
 //	}
 
 	public boolean getBoolean(int index) {

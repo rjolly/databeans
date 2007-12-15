@@ -1,7 +1,6 @@
 package persistence;
 
 import java.rmi.RemoteException;
-import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
@@ -15,18 +14,25 @@ abstract class RemoteAdminConnectionImpl extends RemoteConnectionImpl implements
 	public void changePassword(final String username, final String oldPassword, final String newPassword) {
 		Subject.doAsPrivileged(subject,new PrivilegedAction() {
 			public Object run() {
-				if(oldPassword==null) AccessController.checkPermission(new AdminPermission("changePassword"));
 				store.changePassword(username,oldPassword,newPassword);
 				return null;
 			}
 		},null);
 	}
 
-	public void createUser(final String username, final String password) {
+	public void addUser(final String username, final String password) {
 		Subject.doAsPrivileged(subject,new PrivilegedAction() {
 			public Object run() {
-				AccessController.checkPermission(new AdminPermission("createUser"));
-				store.createUser(username,password);
+				store.addUser(username,password);
+				return null;
+			}
+		},null);
+	}
+
+	public void deleteUser(final String username) {
+		Subject.doAsPrivileged(subject,new PrivilegedAction() {
+			public Object run() {
+				store.deleteUser(username);
 				return null;
 			}
 		},null);
@@ -36,8 +42,7 @@ abstract class RemoteAdminConnectionImpl extends RemoteConnectionImpl implements
 		try {
 			Subject.doAsPrivileged(subject,new PrivilegedExceptionAction() {
 				public Object run() throws RemoteException {
-					AccessController.checkPermission(new AdminPermission("close"));
-					store.close();
+					store.checkedClose();
 					return null;
 				}
 			},null);
@@ -49,18 +54,17 @@ abstract class RemoteAdminConnectionImpl extends RemoteConnectionImpl implements
 	public void gc() {
 		Subject.doAsPrivileged(subject,new PrivilegedAction() {
 			public Object run() {
-				AccessController.checkPermission(new AdminPermission("gc"));
-				store.gc();
+				store.checkedGc();
 				return null;
 			}
 		},null);
 	}
 
 	public long allocatedSpace() {
-		return store.heap.allocatedSpace();
+		return store.allocatedSpace();
 	}
 
 	public long maxSpace() {
-		return store.heap.maxSpace();
+		return store.maxSpace();
 	}
 }

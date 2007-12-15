@@ -1,16 +1,18 @@
 package persistence;
 
 import java.rmi.RemoteException;
+import java.security.PrivilegedAction;
+import javax.security.auth.Subject;
 import persistence.PersistentObject.MethodCall;
 
 class SystemConnection extends Connection {
-	SystemConnection(StoreImpl store) throws RemoteException {
-		connection=new RemoteSystemConnection(store);
+	SystemConnection(StoreImpl store, Subject subject) throws RemoteException {
+		connection=new RemoteSystemConnection(store,subject);
 	}
 
 	class RemoteSystemConnection extends RemoteConnectionImpl {
-		RemoteSystemConnection(StoreImpl store) throws RemoteException {
-			super(store,Connection.TRANSACTION_NONE,false,null);
+		RemoteSystemConnection(StoreImpl store, Subject subject) throws RemoteException {
+			super(store,Connection.TRANSACTION_NONE,false,subject);
 		}
 
 		void open() {}
@@ -23,8 +25,12 @@ class SystemConnection extends Connection {
 			return execute(call,undo,index,false);
 		}
 
-		Object execute(final MethodCall call, final MethodCall undo, final int index, final boolean read) {
-			return call.execute();
+		Object execute(final MethodCall call, MethodCall undo, int index, boolean read) {
+			return Subject.doAsPrivileged(subject,new PrivilegedAction() {
+				public Object run() {
+					return call.execute();
+				}
+			},null);
 		}
 
 		public void commit() {}

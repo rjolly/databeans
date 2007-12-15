@@ -34,7 +34,7 @@ class SubList extends AbstractList {
 	}
 
 	static int modCount(List l) {
-		return l instanceof PersistentAbstractList?((PersistentAbstractList)l).getModCount():((AbstractList)l).modCount;
+		return l instanceof PersistentAbstractList?((PersistentAbstractList)l).modCount():((AbstractList)l).modCount;
 	}
 
 	public Object set(int index, Object element) {

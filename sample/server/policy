@@ -1,6 +1,5 @@
 grant codebase "file:classes/-" {
 	permission java.io.FilePermission "heapspace", "read,write";
-	permission java.net.SocketPermission "localhost:1099", "connect";
 	permission java.net.SocketPermission "localhost:1024-", "accept,connect";
 	permission java.lang.RuntimePermission "shutdownHooks";
 	permission javax.security.auth.AuthPermission "createLoginContext.Databeans";
@@ -8,15 +7,18 @@ grant codebase "file:classes/-" {
 	permission javax.security.auth.AuthPermission "doAsPrivileged";
 };
 
+grant Principal persistence.server.DatabeansPrincipal "system" {
+	permission persistence.MethodPermission "*";
+	permission persistence.PropertyPermission "*";
+};
+
 grant Principal persistence.server.DatabeansPrincipal "admin" {
 	permission persistence.AdminPermission "*";
-	permission persistence.MethodPermission "*";
 	permission persistence.PropertyPermission "*";
 };
 
 grant {
 	permission persistence.MethodPermission "persistence.*";
-	permission persistence.PropertyPermission "persistence.*";
 
 	permission persistence.PropertyPermission "Department.*";
 	permission persistence.PropertyPermission "Employee.*";

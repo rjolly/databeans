@@ -24,6 +24,96 @@ public class PersistentArrayList extends PersistentAbstractList
 	protected class Accessor extends PersistentAbstractList.Accessor {
 		public Accessor() throws RemoteException {}
 
+		public void init(int initialCapacity) {
+			PersistentArrayList.super.init();
+			if (initialCapacity < 0)
+				throw new IllegalArgumentException("Illegal Capacity: "+
+					initialCapacity);
+			setElementData(create(Object.class,initialCapacity));
+		}
+
+		public void init(Collection c) {
+			PersistentArrayList.super.init();
+			setSize(c.size());
+			// Allow 10% room for growth
+			Object elementData[] = new Object[
+				(int)Math.min((getSize()*110L)/100,Integer.MAX_VALUE)];
+			c.toArray(elementData);
+			setElementData(create(elementData));
+		}
+
+		public void trimToSize() {
+			setModCount(getModCount()+1);
+			int oldCapacity = getElementData().length();
+			if (getSize() < oldCapacity) {
+				Array oldData = getElementData();
+				setElementData(create(Object.class,getSize()));
+				Arrays.copy(oldData, 0, getElementData(), 0, getSize());
+			}
+		}
+
+		public void ensureCapacity(int minCapacity) {
+			setModCount(getModCount()+1);
+			int oldCapacity = getElementData().length();
+			if (minCapacity > oldCapacity) {
+				Array oldData = getElementData();
+				int newCapacity = (oldCapacity * 3)/2 + 1;
+				if (newCapacity < minCapacity)
+					newCapacity = minCapacity;
+				setElementData(create(Object.class,newCapacity));
+				Arrays.copy(oldData, 0, getElementData(), 0, getSize());
+			}
+		}
+
+		public int size() {
+			return getSize();
+		}
+
+		public int indexOf(Object elem) {
+			if (elem == null) {
+				for (int i = 0; i < getSize(); i++)
+					if (getElementData().get(i)==null)
+						return i;
+			} else {
+				for (int i = 0; i < getSize(); i++)
+					if (elem.equals(getElementData().get(i)))
+						return i;
+			}
+			return -1;
+		}
+
+		public int lastIndexOf(Object elem) {
+			if (elem == null) {
+				for (int i = getSize()-1; i >= 0; i--)
+					if (getElementData().get(i)==null)
+						return i;
+			} else {
+				for (int i = getSize()-1; i >= 0; i--)
+					if (elem.equals(getElementData().get(i)))
+						return i;
+			}
+			return -1;
+		}
+
+		public Object[] toArray() {
+			Object[] result = new Object[getSize()];
+			Arrays.copy(getElementData(), 0, result, 0, getSize());
+			return result;
+		}
+
+		public Object[] toArray(Object a[]) {
+			if (a.length < getSize())
+				a = (Object[])java.lang.reflect.Array.newInstance(
+					a.getClass().getComponentType(), getSize());
+
+			Arrays.copy(getElementData(), 0, a, 0, getSize());
+
+			if (a.length > getSize())
+				a[getSize()] = null;
+
+			return a;
+		}
+
 		public Object get(int index) {
 			RangeCheck(index);
 
@@ -53,7 +143,7 @@ public class PersistentArrayList extends PersistentAbstractList
 		public Object remove(int index) {
 			RangeCheck(index);
 			
-			incModCount();
+			setModCount(getModCount()+1);
 			Object oldValue = getElementData().get(index);
 			
 			int numMoved = getSize() - index - 1;
@@ -92,11 +182,8 @@ public class PersistentArrayList extends PersistentAbstractList
 	}
 
 	public void init(int initialCapacity) {
-		super.init();
-		if (initialCapacity < 0)
-			throw new IllegalArgumentException("Illegal Capacity: "+
-						   initialCapacity);
-		setElementData(create(Object.class,initialCapacity));
+		execute(
+			new MethodCall("init",new Class[] {int.class},new Object[] {new Integer(initialCapacity)}));
 	}
 
 	public void init() {
@@ -104,97 +191,51 @@ public class PersistentArrayList extends PersistentAbstractList
 	}
 
 	public void init(Collection c) {
-		super.init();
-		setSize(c.size());
-		// Allow 10% room for growth
-		Object elementData[] = new Object[
-					  (int)Math.min((getSize()*110L)/100,Integer.MAX_VALUE)];
-		c.toArray(elementData);
-		setElementData(create(elementData));
-	}
-
-	void incModCount() {
-		setModCount(getModCount()+1);
+		execute(
+			new MethodCall("init",new Class[] {Collection.class},new Object[] {c}));
 	}
 
 	public void trimToSize() {
-		incModCount();
-		int oldCapacity = getElementData().length();
-		if (getSize() < oldCapacity) {
-			Array oldData = getElementData();
-			setElementData(create(Object.class,getSize()));
-			Arrays.copy(oldData, 0, getElementData(), 0, getSize());
-		}
+		execute(
+			new MethodCall("trimToSize",new Class[] {},new Object[] {}));
 	}
 
 	public void ensureCapacity(int minCapacity) {
-		incModCount();
-		int oldCapacity = getElementData().length();
-		if (minCapacity > oldCapacity) {
-			Array oldData = getElementData();
-			int newCapacity = (oldCapacity * 3)/2 + 1;
-				if (newCapacity < minCapacity)
-				newCapacity = minCapacity;
-			setElementData(create(Object.class,newCapacity));
-			Arrays.copy(oldData, 0, getElementData(), 0, getSize());
-		}
+		execute(
+			new MethodCall("ensureCapacity",new Class[] {int.class},new Object[] {new Integer(minCapacity)}));
 	}
 
 	public int size() {
-		return getSize();
+		return ((Integer)execute(
+			new MethodCall("size",new Class[] {},new Object[] {}))).intValue();
 	}
 
-	public boolean isEmpty() {
-		return getSize() == 0;
-	}
+//	public boolean isEmpty() {
+//		return getSize() == 0;
+//	}
 
 	public boolean contains(Object elem) {
 		return indexOf(elem) >= 0;
 	}
 
 	public int indexOf(Object elem) {
-		if (elem == null) {
-			for (int i = 0; i < getSize(); i++)
-				if (getElementData().get(i)==null)
-					return i;
-		} else {
-			for (int i = 0; i < getSize(); i++)
-				if (elem.equals(getElementData().get(i)))
-					return i;
-		}
-		return -1;
+		return ((Integer)execute(
+			new MethodCall("indexOf",new Class[] {Object.class},new Object[] {elem}))).intValue();
 	}
 
 	public int lastIndexOf(Object elem) {
-		if (elem == null) {
-			for (int i = getSize()-1; i >= 0; i--)
-				if (getElementData().get(i)==null)
-					return i;
-		} else {
-			for (int i = getSize()-1; i >= 0; i--)
-				if (elem.equals(getElementData().get(i)))
-					return i;
-		}
-		return -1;
+		return ((Integer)execute(
+			new MethodCall("lastIndexOf",new Class[] {Object.class},new Object[] {elem}))).intValue();
 	}
 
 	public Object[] toArray() {
-		Object[] result = new Object[getSize()];
-		Arrays.copy(getElementData(), 0, result, 0, getSize());
-		return result;
+		return (Object[])execute(
+			new MethodCall("toArray",new Class[] {},new Object[] {}));
 	}
 
 	public Object[] toArray(Object a[]) {
-		if (a.length < getSize())
-			a = (Object[])java.lang.reflect.Array.newInstance(
-								a.getClass().getComponentType(), getSize());
-
-		Arrays.copy(getElementData(), 0, a, 0, getSize());
-
-		if (a.length > getSize())
-			a[getSize()] = null;
-
-		return a;
+		return (Object[])execute(
+			new MethodCall("toArray",new Class[] {Object[].class},new Object[] {a}));
 	}
 
 	// Positional Access Operations
@@ -258,8 +299,8 @@ public class PersistentArrayList extends PersistentAbstractList
 //	}
 
 	private void RangeCheck(int index) {
-		if (index >= getSize())
+		if (index >= size())
 			throw new IndexOutOfBoundsException(
-				"Index: "+index+", Size: "+getSize());
+				"Index: "+index+", Size: "+size());
 	}
 }

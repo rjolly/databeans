@@ -12,8 +12,10 @@ import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.security.AccessController;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivilegedAction;
 import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Collection;
@@ -23,10 +25,12 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
 import java.util.WeakHashMap;
+import javax.security.auth.Subject;
 import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 import persistence.PersistentObject.MethodCall;
+import persistence.server.DatabeansPrincipal;
 import persistence.storage.Collector;
 import persistence.storage.FileHeap;
 import persistence.storage.Heap;
@@ -38,6 +42,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	Map classes;
 	Collection transactions;
 	PersistentSystem system;
+	final Subject systemSubject;
 	final Connection systemConnection;
 	final Map connections=new WeakHashMap();
 	final Map cache=new WeakHashMap();
@@ -51,14 +56,18 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		} catch (FileNotFoundException e) {
 			throw new RuntimeException(e);
 		}
-		systemConnection=new SystemConnection(this);
+		systemSubject=new Subject();
+		systemSubject.getPrincipals().add(new DatabeansPrincipal("system"));
+		systemConnection=new SystemConnection(this,systemSubject);
 		if((boot=heap.boot())==0) {
 			heap.mount(true);
 			create();
 			init();
 		} else {
-			if(heap.mounted()) readOnly=true;
-			else heap.mount(true);
+			if(heap.mounted()) {
+				System.out.println("store was not cleanly unmounted, running in recovery mode");
+				readOnly=true;
+			} else heap.mount(true);
 			instantiate();
 			init();
 			clear();
@@ -70,7 +79,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	void clear() {
 		if(readOnly) return;
 		for(Iterator it=transactions.iterator();it.hasNext();it.remove()) {
-			((Transaction)it.next()).rollback();
+			rollback(((Transaction)it.next()));
 		}
 	}
 
@@ -180,7 +189,6 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	}
 
 	void release(AccessorImpl accessor) {
-		if(closing) return;
 		synchronized(cache) {
 			Long base=accessor.base;
 			AccessorImpl obj=get(base);
@@ -220,16 +228,9 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		}
 	}
 
-	void createUser(String username, String password) {
-		if(closing) throw new PersistentException("store closing");
-		synchronized(users) {
-			if(users.containsKey(username)) throw new PersistentException("the user "+username+" already exists");
-			else users.put(username,crypt(password));
-		}
-	}
-
 	void changePassword(String username, String oldPassword, String newPassword) {
 		if(closing) throw new PersistentException("store closing");
+		if(oldPassword==null) AccessController.checkPermission(new AdminPermission("changePassword"));
 		synchronized(users) {
 			byte pw[]=(byte[])users.get(username);
 			if(pw==null) throw new PersistentException("the user "+username+" doesn't exist");
@@ -240,16 +241,59 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		}
 	}
 
+	void addUser(String username, String password) {
+		if(closing) throw new PersistentException("store closing");
+		AccessController.checkPermission(new AdminPermission("addUser"));
+		synchronized(users) {
+			if(users.containsKey(username)) throw new PersistentException("the user "+username+" already exists");
+			else users.put(username,crypt(password));
+		}
+	}
+
+	void deleteUser(String username) {
+		if(closing) throw new PersistentException("store closing");
+		AccessController.checkPermission(new AdminPermission("deleteUser"));
+		synchronized(users) {
+			if(!users.containsKey(username)) throw new PersistentException("the user "+username+" doesn't exist");
+			else users.remove(username);
+		}
+	}
+
+	void checkedClose() throws RemoteException {
+		if(closing) throw new PersistentException("store closing");
+		AccessController.checkPermission(new AdminPermission("close"));
+		close();
+	}
+
+	void checkedGc() {
+		if(closing) throw new PersistentException("store closing");
+		AccessController.checkPermission(new AdminPermission("gc"));
+		gc();
+	}
+
+	long allocatedSpace() {
+		return heap.allocatedSpace();
+	}
+
+	long maxSpace() {
+		return heap.maxSpace();
+	}
+
 	public boolean authenticate(String username, char[] password) {
 		if(closing) throw new PersistentException("store closing");
 		byte pw[]=(byte[])users.get(username);
 		return pw==null?false:Arrays.equals(pw,crypt(new String(password),salt(pw)));
 	}
 
-	public Connection getConnection(CallbackHandler handler, boolean admin) throws RemoteException {
+	public Connection getConnection(CallbackHandler handler) throws RemoteException {
 		if(closing) throw new PersistentException("store closing");
-		if(!admin && readOnly) throw new PersistentException("store in recovery mode");
-		return !admin?new Connection(this,Connection.TRANSACTION_READ_UNCOMMITTED,login(handler).getSubject()):new AdminConnection(this,readOnly,login(handler).getSubject());
+		if(readOnly) throw new PersistentException("store in recovery mode");
+		return new Connection(this,Connection.TRANSACTION_READ_UNCOMMITTED,login(handler).getSubject());
+	}
+
+	public AdminConnection getAdminConnection(CallbackHandler handler) throws RemoteException {
+		if(closing) throw new PersistentException("store closing");
+		return new AdminConnection(this,readOnly,login(handler).getSubject());
 	}
 
 	static LoginContext login(CallbackHandler handler) {
@@ -312,14 +356,21 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	}
 
 	void release(Transaction transaction) {
-		if(closing) return;
 		transactions.remove(transaction);
-		transaction.rollback();
+		rollback(transaction);
+	}
+
+	void rollback(final Transaction transaction) {
+		Subject.doAsPrivileged(systemSubject,new PrivilegedAction() {
+			public Object run() {
+				transaction.rollback();
+				return null;
+			}
+		},null);
 	}
 
 	public void close() throws RemoteException {
-		if(closing) return;
-		else closing=true;
+		closing=true;
 		UnicastRemoteObject.unexportObject(this,true);
 		while(true) {
 			try {
@@ -343,7 +394,6 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	}
 
 	public void gc() {
-		if(closing) throw new PersistentException("store closing");
 		System.gc();
 		gc(true);
 	}
