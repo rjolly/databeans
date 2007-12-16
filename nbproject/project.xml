@@ -37,7 +37,7 @@
             <export>
                 <type>folder</type>
                 <location>classes</location>
-                <build-target>jars</build-target>
+                <build-target>jar</build-target>
             </export>
             <view>
                 <items>
