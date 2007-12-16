@@ -132,9 +132,11 @@ public class PersistentObject implements Cloneable, Serializable {
 		}
 	}
 
+	transient PersistentClass clazz;
+
 	public final PersistentClass persistentClass() {
 		try {
-			return accessor.persistentClass();
+			return clazz==null?clazz=accessor.persistentClass():clazz;
 		} catch (RemoteException e) {
 			throw new RuntimeException(e);
 		}

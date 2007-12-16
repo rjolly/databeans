@@ -11,7 +11,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
 import persistence.PersistentObject;
-import persistence.UnicastSerializedObject;
 
 public class PersistentHashSet extends PersistentAbstractSet
 					 implements Set, Cloneable
@@ -31,6 +30,18 @@ public class PersistentHashSet extends PersistentAbstractSet
 			return getMap();
 		}
 
+		public PersistentObject present() {
+			return PRESENT==null?PRESENT=create(PersistentObject.class):PRESENT;
+		}
+
+		public boolean add(Object o) {
+			return getMap().put(o, present())==null;
+		}
+
+		public boolean remove(Object o) {
+			return getMap().remove(o)==present();
+		}
+
 		public PersistentObject remoteClone() {
 			PersistentHashSet newSet = (PersistentHashSet)super.remoteClone();
 			newSet.setMap((PersistentHashMap)getMap().clone());
@@ -47,7 +58,7 @@ public class PersistentHashSet extends PersistentAbstractSet
 	}
 
 	// Dummy value to associate with an Object in the backing Map
-	private static final Object PRESENT = new UnicastSerializedObject();
+	static PersistentObject PRESENT;
 
 	void init(PersistentHashMap map) {
 		execute(
@@ -97,11 +108,16 @@ public class PersistentHashSet extends PersistentAbstractSet
 	}
 
 	public boolean add(Object o) {
-		return map().put(o, PRESENT)==null;
+		return getMap().put(o, present())==null;
 	}
 
 	public boolean remove(Object o) {
-		return map().remove(o).equals(PRESENT);
+		return getMap().remove(o)==present();
+	}
+
+	PersistentObject present() {
+		return (PersistentObject)execute(
+			new MethodCall("present",new Class[] {},new Object[] {}));
 	}
 
 	public void clear() {

@@ -42,15 +42,19 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 			return null;
 		}
 
-		public Object put(Object key, Object value) {
-			return value==NULL?remove0(key):put0(key,value);
+		public PersistentObject nuii() {
+			return NULL==null?NULL=create(PersistentObject.class):NULL;
 		}
 
-		public Object put0(Object key, Object value) {
+		public Object put(Object key, Object value) {
+			return value==nuii()?remove0(key):put0(key,value);
+		}
+
+		Object put0(Object key, Object value) {
 			throw new UnsupportedOperationException();
 		}
 
-		public Object remove0(Object key) {
+		Object remove0(Object key) {
 			Iterator i = entrySet().iterator();
 			Entry correctEntry = null;
 			if (key==null) {
@@ -67,7 +71,7 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 				}
 			}
 			
-			Object oldValue = NULL;
+			Object oldValue = nuii();
 			if (correctEntry !=null) {
 				oldValue = correctEntry.getValue();
 				i.remove();
@@ -198,17 +202,22 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 		Object obj=execute(
 			new MethodCall("put",new Class[] {Object.class,Object.class},new Object[] {key,value}),
 			new MethodCall("put",new Class[] {Object.class,Object.class},new Object[] {key,null}),1);
-		return obj==NULL?null:obj;
+		return obj==nuii()?null:obj;
 	}
 
 	public Object remove(Object key) {
 		Object obj=execute(
-			new MethodCall("put",new Class[] {Object.class,Object.class},new Object[] {key,NULL}),
+			new MethodCall("put",new Class[] {Object.class,Object.class},new Object[] {key,nuii()}),
 			new MethodCall("put",new Class[] {Object.class,Object.class},new Object[] {key,null}),1);
-		return obj==NULL?null:obj;
+		return obj==nuii()?null:obj;
 	}
 
-	static final Object NULL=new Object();
+	static PersistentObject NULL;
+
+	PersistentObject nuii() {
+		return (PersistentObject)execute(
+			new MethodCall("nuii",new Class[] {},new Object[] {}));
+	}
 
 	// Bulk Operations
 
@@ -226,64 +235,73 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 
 	// Views
 
+	transient volatile Set	      keySet = null;
+	transient volatile Collection values = null;
+
 	public Set keySet() {
-		return new AbstractSet() {
-			public Iterator iterator() {
-				return new Iterator() {
-					private Iterator i = entrySet().iterator();
+		if (keySet == null) {
+			keySet = new AbstractSet() {
+				public Iterator iterator() {
+					return new Iterator() {
+						private Iterator i = entrySet().iterator();
 
-					public boolean hasNext() {
-						return i.hasNext();
-					}
+						public boolean hasNext() {
+							return i.hasNext();
+						}
 
-					public Object next() {
-						return ((Entry)i.next()).getKey();
-					}
+						public Object next() {
+							return ((Entry)i.next()).getKey();
+						}
 
-					public void remove() {
-						i.remove();
-					}
-				};
-			}
-			
-			public int size() {
-				return PersistentAbstractMap.this.size();
-			}
+						public void remove() {
+							i.remove();
+						}
+					};
+				}
 
-			public boolean contains(Object k) {
-				return PersistentAbstractMap.this.containsKey(k);
-			}
-		};
+				public int size() {
+					return PersistentAbstractMap.this.size();
+				}
+
+				public boolean contains(Object k) {
+					return PersistentAbstractMap.this.containsKey(k);
+				}
+			};
+		}
+		return keySet;
 	}
 
 	public Collection values() {
-		return new AbstractCollection() {
-			public Iterator iterator() {
-				return new Iterator() {
-					private Iterator i = entrySet().iterator();
+		if (values == null) {
+			values = new AbstractCollection() {
+				public Iterator iterator() {
+					return new Iterator() {
+						private Iterator i = entrySet().iterator();
 
-					public boolean hasNext() {
-						return i.hasNext();
-					}
+						public boolean hasNext() {
+							return i.hasNext();
+						}
 
-					public Object next() {
-						return ((Entry)i.next()).getValue();
-					}
+						public Object next() {
+							return ((Entry)i.next()).getValue();
+						}
 
-					public void remove() {
-						i.remove();
-					}
-				};
-			}
+						public void remove() {
+							i.remove();
+						}
+					};
+				}
 
-			public int size() {
-				return PersistentAbstractMap.this.size();
-			}
+				public int size() {
+					return PersistentAbstractMap.this.size();
+				}
 
-			public boolean contains(Object v) {
-				return PersistentAbstractMap.this.containsValue(v);
-			}
-		};
+				public boolean contains(Object v) {
+					return PersistentAbstractMap.this.containsValue(v);
+				}
+			};
+		}
+		return values;
 	}
 
 	public abstract Set entrySet();

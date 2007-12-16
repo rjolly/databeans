@@ -7,6 +7,7 @@
 package persistence.util;
 
 import java.rmi.RemoteException;
+import java.util.AbstractList;
 import java.util.Collection;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
@@ -154,7 +155,7 @@ public abstract class PersistentAbstractList extends PersistentAbstractCollectio
 
 	public ListIterator listIterator(final int index) {
 		if (index<0 || index>size())
-		  throw new IndexOutOfBoundsException("Index: "+index);
+			throw new IndexOutOfBoundsException("Index: "+index);
 
 		return new ListItr(index);
 	}
@@ -283,5 +284,179 @@ public abstract class PersistentAbstractList extends PersistentAbstractCollectio
 
 	public void setModCount(int n) {
 		set("modCount",new Integer(n));
+	}
+}
+
+class SubList extends AbstractList {
+	PersistentAbstractList l;
+	int offset;
+	private int size;
+	private int expectedModCount;
+
+	SubList(PersistentAbstractList list, int fromIndex, int toIndex) {
+		if (fromIndex < 0)
+			throw new IndexOutOfBoundsException("fromIndex = " + fromIndex);
+		if (toIndex > list.size())
+			throw new IndexOutOfBoundsException("toIndex = " + toIndex);
+		if (fromIndex > toIndex)
+			throw new IllegalArgumentException("fromIndex(" + fromIndex +
+											   ") > toIndex(" + toIndex + ")");
+		l = list;
+		offset = fromIndex;
+		size = toIndex - fromIndex;
+		expectedModCount = l.modCount();
+	}
+
+	public Object set(int index, Object element) {
+		rangeCheck(index);
+		checkForComodification();
+		return l.set(index+offset, element);
+	}
+
+	public Object get(int index) {
+		rangeCheck(index);
+		checkForComodification();
+		return l.get(index+offset);
+	}
+
+	public int size() {
+		checkForComodification();
+		return size;
+	}
+
+	public void add(int index, Object element) {
+		if (index<0 || index>size)
+			throw new IndexOutOfBoundsException();
+		checkForComodification();
+		l.add(index+offset, element);
+		expectedModCount = l.modCount();
+		size++;
+		modCount++;
+	}
+
+	public Object remove(int index) {
+		rangeCheck(index);
+		checkForComodification();
+		Object result = l.remove(index+offset);
+		expectedModCount = l.modCount();
+		size--;
+		modCount++;
+		return result;
+	}
+
+	protected void removeRange(int fromIndex, int toIndex) {
+		checkForComodification();
+		l.removeRange(fromIndex+offset, toIndex+offset);
+		expectedModCount = l.modCount();
+		size -= (toIndex-fromIndex);
+		modCount++;
+	}
+
+	public boolean addAll(Collection c) {
+		return addAll(size, c);
+	}
+
+	public boolean addAll(int index, Collection c) {
+		if (index<0 || index>size)
+			throw new IndexOutOfBoundsException(
+				"Index: "+index+", Size: "+size);
+		int cSize = c.size();
+		if (cSize==0)
+			return false;
+
+		checkForComodification();
+		l.addAll(offset+index, c);
+		expectedModCount = l.modCount();
+		size += cSize;
+		modCount++;
+		return true;
+	}
+
+	public Iterator iterator() {
+		return listIterator();
+	}
+
+	public ListIterator listIterator(final int index) {
+		checkForComodification();
+		if (index<0 || index>size)
+			throw new IndexOutOfBoundsException(
+				"Index: "+index+", Size: "+size);
+
+		return new ListIterator() {
+			private ListIterator i = l.listIterator(index+offset);
+
+			public boolean hasNext() {
+				return nextIndex() < size;
+			}
+
+			public Object next() {
+				if (hasNext())
+					return i.next();
+				else
+					throw new NoSuchElementException();
+			}
+
+			public boolean hasPrevious() {
+				return previousIndex() >= 0;
+			}
+
+			public Object previous() {
+				if (hasPrevious())
+					return i.previous();
+				else
+					throw new NoSuchElementException();
+			}
+
+			public int nextIndex() {
+				return i.nextIndex() - offset;
+			}
+
+			public int previousIndex() {
+				return i.previousIndex() - offset;
+			}
+
+			public void remove() {
+				i.remove();
+				expectedModCount = l.modCount();
+				size--;
+				modCount++;
+			}
+
+			public void set(Object o) {
+				i.set(o);
+			}
+
+			public void add(Object o) {
+				i.add(o);
+				expectedModCount = l.modCount();
+				size++;
+				modCount++;
+			}
+		};
+	}
+
+	public List subList(int fromIndex, int toIndex) {
+		return new SubList(l, offset+fromIndex, offset+toIndex);
+	}
+
+	private void rangeCheck(int index) {
+		if (index<0 || index>=size)
+			throw new IndexOutOfBoundsException("Index: "+index+
+												",Size: "+size);
+	}
+
+	private void checkForComodification() {
+		if (l.modCount() != expectedModCount)
+			throw new ConcurrentModificationException();
+	}
+}
+
+class RandomAccessSubList extends SubList implements RandomAccess {
+	RandomAccessSubList(PersistentAbstractList list, int fromIndex, int toIndex) {
+		super(list, fromIndex, toIndex);
+	}
+
+	public List subList(int fromIndex, int toIndex) {
+		return new RandomAccessSubList(l, offset+fromIndex, offset+toIndex);
 	}
 }
