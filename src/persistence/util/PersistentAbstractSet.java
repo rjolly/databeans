@@ -17,7 +17,7 @@ public abstract class PersistentAbstractSet extends PersistentAbstractCollection
 		return new Accessor();
 	}
 
-	protected class Accessor extends PersistentObject.Accessor {
+	protected class Accessor extends PersistentAbstractCollection.Accessor {
 		public Accessor() throws RemoteException {}
 
 		// Comparison and hashing

@@ -390,6 +390,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 				break;
 			} catch (ConcurrentModificationException e) {}
 		}
+		System.gc();
 		heap.mount(false);
 	}
 
