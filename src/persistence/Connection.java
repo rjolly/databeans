@@ -52,22 +52,38 @@ public class Connection implements Serializable {
 	}
 
 	public PersistentObject create(Class clazz, Class types[], Object args[]) {
-		return create(new PersistentClass(clazz),types,args);
+		return create(get(clazz),types,args);
 	}
 
 	public PersistentArray create(Class componentType, int length) {
-		return (PersistentArray)create(new ArrayClass(componentType,length),new Class[] {},new Object[] {});
+		return (PersistentArray)create(get(componentType,length),new Class[] {},new Object[] {});
 	}
 
 	public PersistentArray create(Object component[]) {
 		Class componentType=component.getClass().getComponentType();
 		int length=component.length;
-		return (PersistentArray)create(new ArrayClass(componentType,length),new Class[] {Object[].class},new Object[] {component});
+		return (PersistentArray)create(get(componentType,length),new Class[] {Object[].class},new Object[] {component});
 	}
 
 	PersistentObject create(PersistentClass clazz, Class types[], Object args[]) {
 		try {
 			return attach(connection.create(clazz,types,args));
+		} catch (RemoteException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public PersistentClass get(Class clazz) {
+		try {
+			return (PersistentClass)attach(connection.get(clazz));
+		} catch (RemoteException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	PersistentClass get(Class clazz, int length) {
+		try {
+			return (PersistentClass)attach(connection.get(clazz,length));
 		} catch (RemoteException e) {
 			throw new RuntimeException(e);
 		}

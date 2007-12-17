@@ -22,6 +22,10 @@ public class PersistentObject implements Cloneable, Serializable {
 		}
 	}
 
+	protected PersistentClass createClass() {
+		return (PersistentClass)create(PersistentClass.class,new Class[] {Class.class},new Object[] {getClass()});
+	}
+
 	protected PersistentObject() {}
 
 	void init(persistence.Accessor accessor, Connection connection) {
@@ -47,6 +51,10 @@ public class PersistentObject implements Cloneable, Serializable {
 
 	protected final PersistentArray create(Object component[]) {
 		return connection.create(component);
+	}
+
+	protected final PersistentClass get(Class clazz) {
+		return connection.get(clazz);
 	}
 
 	protected final Object get(String name) {

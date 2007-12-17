@@ -47,7 +47,11 @@ abstract class RemoteConnectionImpl extends UnicastRemoteObject implements Remot
 
 	abstract Connection connection();
 
-	public synchronized PersistentObject create(PersistentClass clazz, Class types[], Object args[]) {
+	public PersistentObject create(PersistentClass clazz, Class types[], Object args[]) {
+		return create((PersistentClass)store.attach(clazz),types,store.attach(args),true);
+	}
+
+	synchronized PersistentObject create(PersistentClass clazz, Class types[], Object args[], boolean attached) {
 		try {
 			PersistentObject obj=store.create(clazz).object();
 			obj.getClass().getMethod("init",types).invoke(obj,args);
@@ -55,6 +59,14 @@ abstract class RemoteConnectionImpl extends UnicastRemoteObject implements Remot
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	public synchronized PersistentClass get(Class clazz) {
+		return store.get(clazz);
+	}
+
+	public synchronized PersistentClass get(Class clazz, int length) {
+		return store.get(clazz,length);
 	}
 
 	public PersistentSystem system() {

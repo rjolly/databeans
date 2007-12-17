@@ -1,6 +1,8 @@
 package persistence;
 
 import java.rmi.RemoteException;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 import persistence.PersistentObject.MethodCall;
 
 public final class PersistentArray extends PersistentObject implements Array {
@@ -16,11 +18,11 @@ public final class PersistentArray extends PersistentObject implements Array {
 		public Accessor() throws RemoteException {}
 
 		public int length() {
-			return getLength();
+			return ((ArrayClass)clazz).getLength();
 		}
 
 		public char typeCode() {
-			return getTypeCode();
+			return ((ArrayClass)clazz).getTypeCode();
 		}
 
 		public Object get(int index) {
@@ -36,6 +38,87 @@ public final class PersistentArray extends PersistentObject implements Array {
 		}
 	}
 
+	protected PersistentClass createClass(Class componentType, int length) {
+		return (PersistentClass)create(ArrayClass.class,new Class[] {Class.class,Class.class,int.class},new Object[] {getClass(),componentType,new Integer(length)});
+	}
+
+	protected static class ArrayClass extends PersistentClass {
+		transient int header;
+
+		public void init(Class clazz, Class componentType, int length) {
+			init(clazz);
+			init(new Field("element",componentType).typeCode,length);
+		}
+
+		void init(char typeCode, int length) {
+			setTypeCode(typeCode);
+			setLength(length);
+		}
+
+		protected PersistentObject.Accessor createAccessor() throws RemoteException {
+			return new Accessor();
+		}
+
+		protected class Accessor extends PersistentClass.Accessor {
+			public Accessor() throws RemoteException {}
+
+			public String remoteToString() {
+				return Long.toHexString(base().longValue())+"["+getLength()+" "+getTypeCode()+"]";
+			}
+		}
+
+		void setup() {
+			super.setup();
+			header=size;
+			size+=new Field("element",getTypeCode()).size*getLength();
+		}
+
+		Field getField(int index) {
+			if(map==null) setup();
+			if(index<getLength()) {
+				Field f=new Field("element["+index+"]",getTypeCode());
+				f.setOffset(header+f.size*index);
+				return f;
+			} else throw new PersistentException("array index : "+index+" out of bounds : "+getLength());
+		}
+
+		Iterator fieldIterator() {
+			if(map==null) setup();
+			return new Iterator() {
+				int index=0;
+
+				public boolean hasNext() {
+					return index<getLength();
+				}
+
+				public Object next() {
+					if (index>=getLength()) throw new NoSuchElementException();
+					return getField(index++);
+				}
+
+				public void remove() {
+					throw new UnsupportedOperationException();
+				}
+			};
+		}
+
+		public int getLength() {
+			return ((Integer)get("length")).intValue();
+		}
+
+		public void setLength(int n) {
+			set("length",new Integer(n));
+		}
+
+		public char getTypeCode() {
+			return ((Character)get("typeCode")).charValue();
+		}
+
+		public void setTypeCode(char c) {
+			set("typeCode",new Character(c));
+		}
+	}
+
 	public int length() {
 		return ((Integer)execute(
 			new MethodCall("length",new Class[] {},new Object[] {}))).intValue();
@@ -45,22 +128,6 @@ public final class PersistentArray extends PersistentObject implements Array {
 		return ((Character)execute(
 			new MethodCall("typeCode",new Class[] {},new Object[] {}))).charValue();
 	}
-
-	public int getLength() {
-		return ((Integer)get("length")).intValue();
-	}
-
-//	public void setLength(int n) {
-//		set("length",new Integer(n));
-//	}
-
-	public char getTypeCode() {
-		return ((Character)get("typeCode")).charValue();
-	}
-
-//	public void setTypeCode(char c) {
-//		set("typeCode",new Character(c));
-//	}
 
 	public boolean getBoolean(int index) {
 		return ((Boolean)get(index)).booleanValue();
