@@ -119,12 +119,6 @@
          includes="databeans/**"/>
   </target>
 
-  <target name="close">
-    <java classname="bsh.Interpreter" classpath="lib/bsh-2.0b4.jar:databeans.jar" fork="true">
-      <arg value="bsh/close.bsh"/>
-    </java>
-  </target>
-
   <target name="console">
     <java classname="bsh.Console" classpath="lib/bsh-2.0b4.jar:databeans.jar" fork="true"/>
   </target>

@@ -83,7 +83,7 @@ abstract class AccessorImpl extends UnicastRemoteObject implements Accessor {
 	}
 
 	AccessorImpl getLock(int timeout) {
-		if(timeout>0 && !store.closing) try {
+		if(timeout>0 && !store.closed) try {
 			wait(timeout);
 		} catch (InterruptedException e) {
 			throw new RuntimeException(e);
@@ -95,7 +95,7 @@ abstract class AccessorImpl extends UnicastRemoteObject implements Accessor {
 		store.setLock(base.longValue(),transaction);
 	}
 
-	void close() throws RemoteException {
+	synchronized void close() throws RemoteException {
 		UnicastRemoteObject.unexportObject(this,true);
 		object().close();
 	}

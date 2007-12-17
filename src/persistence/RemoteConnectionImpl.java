@@ -47,7 +47,7 @@ abstract class RemoteConnectionImpl extends UnicastRemoteObject implements Remot
 
 	abstract Connection connection();
 
-	public PersistentObject create(PersistentClass clazz, Class types[], Object args[]) {
+	public synchronized PersistentObject create(PersistentClass clazz, Class types[], Object args[]) {
 		try {
 			PersistentObject obj=store.create(clazz).object();
 			obj.getClass().getMethod("init",types).invoke(obj,args);
@@ -93,7 +93,7 @@ abstract class RemoteConnectionImpl extends UnicastRemoteObject implements Remot
 		return execute(store.attach(call),store.attach(undo),index,false);
 	}
 
-	Object execute(final MethodCall call, final MethodCall undo, final int index, final boolean read) {
+	synchronized Object execute(final MethodCall call, final MethodCall undo, final int index, final boolean read) {
 		if(!read && readOnly) throw new PersistentException("read only");
 		Object obj=Subject.doAsPrivileged(subject,new PrivilegedAction() {
 			public Object run() {
@@ -104,7 +104,7 @@ abstract class RemoteConnectionImpl extends UnicastRemoteObject implements Remot
 		return obj;
 	}
 
-	public void commit() {
+	public synchronized void commit() {
 		Subject.doAsPrivileged(subject,new PrivilegedAction() {
 			public Object run() {
 				if(transaction!=null) transaction.commit();
@@ -113,7 +113,7 @@ abstract class RemoteConnectionImpl extends UnicastRemoteObject implements Remot
 		},null);
 	}
 
-	public void rollback() {
+	public synchronized void rollback() {
 		Subject.doAsPrivileged(subject,new PrivilegedAction() {
 			public Object run() {
 				if(transaction!=null) transaction.rollback();
@@ -122,8 +122,7 @@ abstract class RemoteConnectionImpl extends UnicastRemoteObject implements Remot
 		},null);
 	}
 
-	void close() throws RemoteException {
-		if(transaction!=null) transaction.kick();
+	synchronized void close() throws RemoteException {
 		UnicastRemoteObject.unexportObject(this,true);
 		connection().close();
 	}

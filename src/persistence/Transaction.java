@@ -49,12 +49,10 @@ public class Transaction extends PersistentObject {
 		Map map=getPairs();
 //		Long base=obj.base();
 		Number base=MemoryModel.model.toNumber(obj.accessor().base.longValue());
-		synchronized(map) {
-			if(map.containsKey(base)) pair=(Array)map.get(base);
-			else {
-				pair=(Array)create(new Object[] {obj,obj.clone()});
-				map.put(base,pair);
-			}
+		if(map.containsKey(base)) pair=(Array)map.get(base);
+		else {
+			pair=(Array)create(new Object[] {obj,obj.clone()});
+			map.put(base,pair);
 		}
 		return (PersistentObject)pair.get(1);
 	}
