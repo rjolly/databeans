@@ -5,9 +5,6 @@ import java.beans.IndexedPropertyDescriptor;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -38,11 +35,10 @@ public class PersistentClass extends UnicastSerializedObject {
 		}
 		c.toArray(fields=new Field[c.size()]);
 		name=clazz.getName();
-		init();
 	}
 
-	private void init() {
-		size+=Field.HEADER_SIZE;
+	void init() {
+		size=Field.HEADER_SIZE;
 		map=new HashMap();
 		for(int i=0;i<fields.length;i++) {
 			Field f=fields[i];
@@ -52,13 +48,20 @@ public class PersistentClass extends UnicastSerializedObject {
 		}
 	}
 
+	int size() {
+		if(map==null) init();
+		return size;
+	}
+
 	Field getField(String name) {
+		if(map==null) init();
 		Field f=(Field)map.get(name);
 		if(f==null) throw new PersistentException("no such property : "+name+" in class : "+this.name);
 		return f;
 	}
 
 	Iterator fieldIterator() {
+		if(map==null) init();
 		return map.values().iterator();
 	}
 
@@ -81,14 +84,5 @@ public class PersistentClass extends UnicastSerializedObject {
 		for(int i=0;i<fields.length;i++) s.append((i==0?"":", ")+fields[i]);
 		s.append("]");
 		return s.toString();
-	}
-
-	private void writeObject(ObjectOutputStream s) throws IOException {
-		s.defaultWriteObject();
-	}
-
-	private void readObject(ObjectInputStream s) throws ClassNotFoundException, IOException {
-		s.defaultReadObject();
-		init();
 	}
 }

@@ -149,7 +149,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	}
 
 	AccessorImpl create(PersistentClass clazz) {
-		byte b[]=new byte[clazz.size];
+		byte b[]=new byte[clazz.size()];
 		long base=heap.alloc(b.length);
 		heap.writeBytes(base,b);
 		setClass(base,clazz=cache(clazz));
