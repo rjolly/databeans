@@ -212,7 +212,7 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 		return obj==nuii()?null:obj;
 	}
 
-	static PersistentObject NULL;
+	transient static PersistentObject NULL;
 
 	PersistentObject nuii() {
 		return (PersistentObject)execute(

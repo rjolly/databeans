@@ -242,7 +242,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 
 	// internal utilities
 
-//	static PersistentObject NULL_KEY;
+//	transient static PersistentObject NULL_KEY;
 
 //	PersistentObject nullKey() {
 //		return (PersistentObject)execute(

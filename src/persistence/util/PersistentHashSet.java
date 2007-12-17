@@ -58,7 +58,7 @@ public class PersistentHashSet extends PersistentAbstractSet
 	}
 
 	// Dummy value to associate with an Object in the backing Map
-	static PersistentObject PRESENT;
+	transient static PersistentObject PRESENT;
 
 	void init(PersistentHashMap map) {
 		execute(

@@ -819,19 +819,19 @@ public class PersistentTreeMap extends PersistentAbstractMap
 			}
 		}
 
-		public Object getKey0() {
+		Object getKey0() {
 			return get("key");
 		}
 
-		public void setKey0(Object obj) {
+		void setKey0(Object obj) {
 			set("key",obj);
 		}
 
-		public Object getValue0() {
+		Object getValue0() {
 			return get("value");
 		}
 
-		public void setValue0(Object obj) {
+		void setValue0(Object obj) {
 			set("value",obj);
 		}
 
