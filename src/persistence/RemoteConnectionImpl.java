@@ -65,8 +65,8 @@ abstract class RemoteConnectionImpl extends UnicastRemoteObject implements Remot
 		return store.get(clazz);
 	}
 
-	public synchronized PersistentClass get(Class clazz, int length) {
-		return store.get(clazz,length);
+	public synchronized PersistentClass get(Class componentType, int length) {
+		return store.get(componentType,length);
 	}
 
 	public PersistentSystem system() {

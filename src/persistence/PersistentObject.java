@@ -26,8 +26,6 @@ public class PersistentObject implements Cloneable, Serializable {
 		return (PersistentClass)create(PersistentClass.class,new Class[] {Class.class},new Object[] {getClass()});
 	}
 
-	protected PersistentObject() {}
-
 	void init(persistence.Accessor accessor, Connection connection) {
 		this.accessor=accessor;
 		this.connection=connection;
@@ -140,11 +138,9 @@ public class PersistentObject implements Cloneable, Serializable {
 		}
 	}
 
-	transient PersistentClass clazz;
-
 	public final PersistentClass persistentClass() {
 		try {
-			return clazz==null?clazz=accessor.persistentClass():clazz;
+			return (PersistentClass)connection.attach(accessor.persistentClass());
 		} catch (RemoteException e) {
 			throw new RuntimeException(e);
 		}

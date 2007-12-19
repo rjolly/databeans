@@ -1,20 +1,18 @@
 package persistence;
 
 import java.rmi.RemoteException;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
 import persistence.PersistentObject.MethodCall;
 
 public final class PersistentArray extends PersistentObject implements Array {
 	public void init(Object component[]) {
-		Arrays.copy(component,0,this,0,component.length);
+		copy(component,0,this,0,component.length);
 	}
 
 	protected PersistentObject.Accessor createAccessor() throws RemoteException {
 		return new Accessor();
 	}
 
-	protected class Accessor extends PersistentObject.Accessor {
+	final class Accessor extends PersistentObject.Accessor {
 		public Accessor() throws RemoteException {}
 
 		public int length() {
@@ -38,85 +36,12 @@ public final class PersistentArray extends PersistentObject implements Array {
 		}
 	}
 
-	protected PersistentClass createClass(Class componentType, int length) {
-		return (PersistentClass)create(ArrayClass.class,new Class[] {Class.class,Class.class,int.class},new Object[] {getClass(),componentType,new Integer(length)});
+	protected PersistentClass createClass() {
+		return createClass(int.class,0);
 	}
 
-	protected static class ArrayClass extends PersistentClass {
-		transient int header;
-
-		public void init(Class clazz, Class componentType, int length) {
-			init(clazz);
-			init(new Field("element",componentType).typeCode,length);
-		}
-
-		void init(char typeCode, int length) {
-			setTypeCode(typeCode);
-			setLength(length);
-		}
-
-		protected PersistentObject.Accessor createAccessor() throws RemoteException {
-			return new Accessor();
-		}
-
-		protected class Accessor extends PersistentClass.Accessor {
-			public Accessor() throws RemoteException {}
-
-			public String remoteToString() {
-				return Long.toHexString(base().longValue())+"["+getLength()+" "+getTypeCode()+"]";
-			}
-		}
-
-		void setup() {
-			super.setup();
-			header=size;
-			size+=new Field("element",getTypeCode()).size*getLength();
-		}
-
-		Field getField(int index) {
-			if(map==null) setup();
-			if(index<getLength()) {
-				Field f=new Field("element["+index+"]",getTypeCode());
-				f.setOffset(header+f.size*index);
-				return f;
-			} else throw new PersistentException("array index : "+index+" out of bounds : "+getLength());
-		}
-
-		Iterator fieldIterator() {
-			if(map==null) setup();
-			return new Iterator() {
-				int index=0;
-
-				public boolean hasNext() {
-					return index<getLength();
-				}
-
-				public Object next() {
-					if (index>=getLength()) throw new NoSuchElementException();
-					return getField(index++);
-				}
-
-				public void remove() {
-					throw new UnsupportedOperationException();
-				}
-			};
-		}
-
-		public int getLength() {
-			return ((Integer)get("length")).intValue();
-		}
-
-		public void setLength(int n) {
-			set("length",new Integer(n));
-		}
-
-		public char getTypeCode() {
-			return ((Character)get("typeCode")).charValue();
-		}
-
-		public void setTypeCode(char c) {
-			set("typeCode",new Character(c));
-		}
+	PersistentClass createClass(Class componentType, int length) {
+		return (PersistentClass)create(ArrayClass.class,new Class[] {Class.class,Class.class,int.class},new Object[] {getClass(),componentType,new Integer(length)});
 	}
 
 	public int length() {
@@ -203,5 +128,20 @@ public final class PersistentArray extends PersistentObject implements Array {
 		for(int i=0;i<n;i++) s.append((i==0?"":", ")+get(i));
 		s.append("}");
 		return s.toString();
+	}
+
+	public static void copy(Array src, int src_position, Array dst, int dst_position, int length) {
+		if(src_position<dst_position) for(int i=length-1;i>=0;i--) dst.set(dst_position+i,src.get(src_position+i));
+		else for(int i=0;i<length;i++) dst.set(dst_position+i,src.get(src_position+i));
+	}
+
+	public static void copy(Object src[], int src_position, Array dst, int dst_position, int length) {
+		if(src_position<dst_position) for(int i=length-1;i>=0;i--) dst.set(dst_position+i,src[src_position+i]);
+		else for(int i=0;i<length;i++) dst.set(dst_position+i,src[src_position+i]);
+	}
+
+	public static void copy(Array src, int src_position, Object dst[], int dst_position, int length) {
+		if(src_position<dst_position) for(int i=length-1;i>=0;i--) dst[dst_position+i]=src.get(src_position+i);
+		else for(int i=0;i<length;i++) dst[dst_position+i]=src.get(src_position+i);
 	}
 }

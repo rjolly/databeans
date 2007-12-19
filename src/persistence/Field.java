@@ -1,15 +1,11 @@
 package persistence;
 
 import java.beans.PropertyDescriptor;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.ObjectStreamField;
-import java.io.Serializable;
 import persistence.storage.Heap;
 import persistence.storage.MemoryModel;
 
-public class Field implements Serializable {
+class Field {
 	static final Field REF_COUNT=new Field("refCount",'L');
 	static final Field CLASS=new Field("class",'L');
 	static final Field LOCK=new Field("lock",'L');
@@ -25,9 +21,9 @@ public class Field implements Serializable {
 	}
 	String name;
 	char typeCode;
-	transient int size;
-	transient int offset;
-	transient boolean reference;
+	int size;
+	int offset;
+	boolean reference;
 
 	Field(PropertyDescriptor desc) {
 		this(desc.getName(), desc.getPropertyType());
@@ -40,10 +36,6 @@ public class Field implements Serializable {
 	Field(String name, char typeCode) {
 		this.name=name;
 		this.typeCode=typeCode;
-		init();
-	}
-
-	private void init() {
 		switch (typeCode) {
 		case 'Z':
 		case 'B':
@@ -73,6 +65,10 @@ public class Field implements Serializable {
 		default:
 			throw new PersistentException("internal error");
 		}
+	}
+
+	Field(String str) {
+		this(str.substring(2),str.substring(0,1).charAt(0));
 	}
 
 	void setOffset(int offset) {
@@ -141,15 +137,6 @@ public class Field implements Serializable {
 	}
 
 	public String toString() {
-		return name+" "+typeCode;
-	}
-
-	private void writeObject(ObjectOutputStream s) throws IOException {
-		s.defaultWriteObject();
-	}
-
-	private void readObject(ObjectInputStream s) throws ClassNotFoundException, IOException {
-		s.defaultReadObject();
-		init();
+		return typeCode+" "+name;
 	}
 }

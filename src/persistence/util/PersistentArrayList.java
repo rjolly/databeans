@@ -11,7 +11,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.RandomAccess;
 import persistence.Array;
-import persistence.Arrays;
+import persistence.PersistentArray;
 import persistence.PersistentObject;
 
 public class PersistentArrayList extends PersistentAbstractList
@@ -48,7 +48,7 @@ public class PersistentArrayList extends PersistentAbstractList
 			if (getSize() < oldCapacity) {
 				Array oldData = getElementData();
 				setElementData(create(Object.class,getSize()));
-				Arrays.copy(oldData, 0, getElementData(), 0, getSize());
+				PersistentArray.copy(oldData, 0, getElementData(), 0, getSize());
 			}
 		}
 
@@ -61,7 +61,7 @@ public class PersistentArrayList extends PersistentAbstractList
 				if (newCapacity < minCapacity)
 					newCapacity = minCapacity;
 				setElementData(create(Object.class,newCapacity));
-				Arrays.copy(oldData, 0, getElementData(), 0, getSize());
+				PersistentArray.copy(oldData, 0, getElementData(), 0, getSize());
 			}
 		}
 
@@ -97,7 +97,7 @@ public class PersistentArrayList extends PersistentAbstractList
 
 		public Object[] toArray() {
 			Object[] result = new Object[getSize()];
-			Arrays.copy(getElementData(), 0, result, 0, getSize());
+			PersistentArray.copy(getElementData(), 0, result, 0, getSize());
 			return result;
 		}
 
@@ -106,7 +106,7 @@ public class PersistentArrayList extends PersistentAbstractList
 				a = (Object[])java.lang.reflect.Array.newInstance(
 					a.getClass().getComponentType(), getSize());
 
-			Arrays.copy(getElementData(), 0, a, 0, getSize());
+			PersistentArray.copy(getElementData(), 0, a, 0, getSize());
 
 			if (a.length > getSize())
 				a[getSize()] = null;
@@ -134,7 +134,7 @@ public class PersistentArrayList extends PersistentAbstractList
 					"Index: "+index+", Size: "+getSize());
 			
 			ensureCapacity(getSize()+1);  // Increments modCount!!
-			Arrays.copy(getElementData(), index, getElementData(), index + 1,
+			PersistentArray.copy(getElementData(), index, getElementData(), index + 1,
 				getSize() - index);
 			getElementData().set(index,element);
 			setSize(getSize()+1);
@@ -148,7 +148,7 @@ public class PersistentArrayList extends PersistentAbstractList
 			
 			int numMoved = getSize() - index - 1;
 			if (numMoved > 0)
-				Arrays.copy(getElementData(), index+1, getElementData(), index,
+				PersistentArray.copy(getElementData(), index+1, getElementData(), index,
 					numMoved);
 			setSize(getSize()-1);
 			getElementData().set(getSize(),null); // Let gc do its work
@@ -159,7 +159,7 @@ public class PersistentArrayList extends PersistentAbstractList
 		public PersistentObject remoteClone() {
 			PersistentArrayList v = (PersistentArrayList)super.remoteClone();
 			v.setElementData(create(Object.class,getSize()));
-			Arrays.copy(getElementData(), 0, v.getElementData(), 0, getSize());
+			PersistentArray.copy(getElementData(), 0, v.getElementData(), 0, getSize());
 			v.setModCount(0);
 			return v;
 		}

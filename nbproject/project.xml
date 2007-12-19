@@ -35,9 +35,9 @@
                 </action>
             </ide-actions>
             <export>
-                <type>folder</type>
-                <location>classes</location>
-                <build-target>jar</build-target>
+                <type>jar</type>
+                <location>databeans.jar</location>
+                <build-target>compile</build-target>
             </export>
             <view>
                 <items>
@@ -63,7 +63,7 @@
         <java-data xmlns="http://www.netbeans.org/ns/freeform-project-java/1">
             <compilation-unit>
                 <package-root>src</package-root>
-                <built-to>classes</built-to>
+                <built-to>databeans.jar</built-to>
                 <source-level>1.4</source-level>
             </compilation-unit>
         </java-data>

@@ -13,8 +13,8 @@ public class PersistentMethodCall extends PersistentObject {
 		Array a=getArgs();
 		Class types[]=new Class[t.length()];
 		Object args[]=new Object[a.length()];
-		Arrays.copy(t,0,types,0,types.length);
-		Arrays.copy(a,0,args,0,args.length);
+		PersistentArray.copy(t,0,types,0,types.length);
+		PersistentArray.copy(a,0,args,0,args.length);
 		return getTarget().new MethodCall(getMethod(),types,args);
 	}
 

@@ -81,9 +81,9 @@ public class Connection implements Serializable {
 		}
 	}
 
-	PersistentClass get(Class clazz, int length) {
+	PersistentClass get(Class componentType, int length) {
 		try {
-			return (PersistentClass)attach(connection.get(clazz,length));
+			return (PersistentClass)attach(connection.get(componentType,length));
 		} catch (RemoteException e) {
 			throw new RuntimeException(e);
 		}
@@ -175,7 +175,7 @@ public class Connection implements Serializable {
 		return w==null?null:(PersistentObject)w.get();
 	}
 
-	public Object execute(MethodCall call) {
+	Object execute(MethodCall call) {
 		try {
 			return attach(connection.execute(call));
 		} catch (RemoteException e) {
@@ -183,7 +183,7 @@ public class Connection implements Serializable {
 		}
 	}
 
-	public Object execute(MethodCall call, MethodCall undo, int index) {
+	Object execute(MethodCall call, MethodCall undo, int index) {
 		try {
 			return attach(connection.execute(call,undo,index));
 		} catch (RemoteException e) {

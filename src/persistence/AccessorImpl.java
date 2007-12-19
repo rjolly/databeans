@@ -22,7 +22,7 @@ abstract class AccessorImpl extends UnicastRemoteObject implements Accessor {
 	abstract PersistentObject object();
 
 	synchronized Object call(String method, Class types[], Object args[]) {
-		if(!method.equals("get") && !method.equals("set")) AccessController.checkPermission(new MethodPermission(clazz.getName()+"."+method));
+		if(!method.equals("get") && !method.equals("set")) AccessController.checkPermission(new MethodPermission(clazz.name()+"."+method));
 		try {
 			return getClass().getMethod(method,types).invoke(this,args);
 		} catch (Exception e) {
@@ -31,12 +31,12 @@ abstract class AccessorImpl extends UnicastRemoteObject implements Accessor {
 	}
 
 	public Object get(String name) {
-		AccessController.checkPermission(new PropertyPermission(clazz.getName()+"."+name));
+		AccessController.checkPermission(new PropertyPermission(clazz.name()+"."+name));
 		return get(clazz.getField(name));
 	}
 
 	public Object set(String name, Object value) {
-		AccessController.checkPermission(new PropertyPermission(clazz.getName()+"."+name));
+		AccessController.checkPermission(new PropertyPermission(clazz.name()+"."+name));
 		return set(clazz.getField(name),value);
 	}
 
@@ -112,11 +112,11 @@ abstract class AccessorImpl extends UnicastRemoteObject implements Accessor {
 		return clazz;
 	}
 
-	static AccessorImpl newInstance(Long base, PersistentClass clazz, StoreImpl store) {
+	static AccessorImpl newInstance(long base, PersistentClass clazz, StoreImpl store) {
 		try {
 			PersistentObject obj=clazz.newInstance();
 			AccessorImpl accessor=obj.createAccessor();
-			accessor.init(base,clazz,store);
+			accessor.init(new Long(base),clazz,store);
 			obj.init(accessor,store.systemConnection);
 			return accessor;
 		} catch (RemoteException e) {
@@ -133,7 +133,7 @@ abstract class AccessorImpl extends UnicastRemoteObject implements Accessor {
 	}
 
 	public String remoteToString() {
-		return clazz.getName()+"@"+Long.toHexString(base.longValue());
+		return clazz.name()+"@"+Long.toHexString(base.longValue());
 	}
 
 	public PersistentObject remoteClone() {

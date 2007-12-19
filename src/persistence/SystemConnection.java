@@ -17,6 +17,10 @@ class SystemConnection extends Connection {
 
 		void open() {}
 
+		public PersistentObject create(PersistentClass clazz, Class types[], Object args[]) {
+			return create(clazz,types,args,true);
+		}
+
 		public Object execute(MethodCall call) {
 			return execute(call,null,0,true);
 		}

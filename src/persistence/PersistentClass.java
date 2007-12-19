@@ -6,16 +6,14 @@ import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.rmi.RemoteException;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import persistence.PersistentObject.MethodCall;
 
 public class PersistentClass extends PersistentObject {
 	transient Map map;
 	transient int size;
+	transient String name;
 
 	public void init(Class clazz) {
 		if(!PersistentObject.class.isAssignableFrom(clazz)) throw new PersistentException("type not persistent");
@@ -26,16 +24,16 @@ public class PersistentClass extends PersistentObject {
 			throw new RuntimeException(e);
 		}
 		PropertyDescriptor desc[]=info.getPropertyDescriptors();
-		Collection c=new ArrayList();
+		StringBuffer buffer=new StringBuffer();
+		boolean first=true;
 		for(int i=0;i<desc.length;i++) {
 			PropertyDescriptor d=desc[i];
 			if(d instanceof IndexedPropertyDescriptor) continue;
 			if(d.getName().equals("class")) continue;
-			c.add(new Field(d));
+			buffer.append(first?"":";").append(new Field(d));
+			first=false;
 		}
-		Field fields[];
-		c.toArray(fields=new Field[c.size()]);
-		setFields(create(fields));
+		setFields(buffer.toString());
 		setName(clazz.getName());
 	}
 
@@ -46,16 +44,12 @@ public class PersistentClass extends PersistentObject {
 	protected class Accessor extends PersistentObject.Accessor {
 		public Accessor() throws RemoteException {}
 
-		public String name() {
-			return getName();
-		}
-
 		public String remoteToString() {
 			StringBuffer s=new StringBuffer();
-			Array fields=getFields();
+			String fields[]=getFields().split(";");
 			s.append(Long.toHexString(base.longValue()));
 			s.append("[");
-			for(int i=0;i<fields.length();i++) s.append((i==0?"":", ")+fields.get(i));
+			for(int i=0;i<fields.length;i++) s.append((i==0?"":", ")+fields[i]);
 			s.append("]");
 			return s.toString();
 		}
@@ -65,24 +59,18 @@ public class PersistentClass extends PersistentObject {
 		return (PersistentClass)create(ClassClass.class,new Class[] {Class.class},new Object[] {getClass()});
 	}
 
-	protected static class ClassClass extends PersistentClass {
-		PersistentObject newInstance() {
-			return this;
-		}
-	}
-
-	protected PersistentClass() {}
-
 	void setup() {
-		size=Field.HEADER_SIZE;
 		map=new HashMap();
-		Array fields=getFields();
-		for(int i=0;i<fields.length();i++) {
-			Field f=(Field)fields.get(i);
+		size=Field.HEADER_SIZE;
+		String str=getFields();
+		String fields[]=str.length()==0?new String[0]:str.split(";");
+		for(int i=0;i<fields.length;i++) {
+			Field f=new Field(fields[i]);
 			f.setOffset(size);
 			map.put(f.name, f);
 			size+=f.size;
 		}
+		name=getName();
 	}
 
 	int size() {
@@ -93,7 +81,7 @@ public class PersistentClass extends PersistentObject {
 	Field getField(String name) {
 		if(map==null) setup();
 		Field f=(Field)map.get(name);
-		if(f==null) throw new PersistentException("no such property : "+name+" in class : "+getName());
+		if(f==null) throw new PersistentException("no such property : "+name+" in class : "+name());
 		return f;
 	}
 
@@ -102,16 +90,31 @@ public class PersistentClass extends PersistentObject {
 		return map.values().iterator();
 	}
 
+	public String name() {
+		if(map==null) setup();
+		return name;
+	}
+
+	public String getName() {
+		return (String)get("name");
+	}
+
+	public void setName(String str) {
+		set("name",str);
+	}
+
+	public String getFields() {
+		return (String)get("fields");
+	}
+
+	public void setFields(String str) {
+		set("fields",str);
+	}
+
 	static PersistentClass create(Class clazz, StoreImpl store) {
 		PersistentObject obj=newInstance(clazz);
 		obj.connection=store.systemConnection;
 		return obj.createClass();
-	}
-
-	static PersistentClass create(Class clazz, int length, StoreImpl store) {
-		PersistentArray obj=new PersistentArray();
-		obj.connection=store.systemConnection;
-		return obj.createClass(clazz,length);
 	}
 
 	static PersistentObject newInstance(Class clazz) {
@@ -124,30 +127,9 @@ public class PersistentClass extends PersistentObject {
 
 	PersistentObject newInstance() {
 		try {
-			return newInstance(Class.forName(getName()));
+			return newInstance(Class.forName(name()));
 		} catch (ClassNotFoundException e) {
 			throw new RuntimeException(e);
 		}
-	}
-
-	public String name() {
-		return (String)execute(
-			new MethodCall("name",new Class[] {},new Object[] {}));
-	}
-
-	public String getName() {
-		return (String)get("name");
-	}
-
-	public void setName(String str) {
-		set("name",str);
-	}
-
-	public Array getFields() {
-		return (Array)get("fields");
-	}
-
-	public void setFields(Array array) {
-		set("fields",array);
 	}
 }
