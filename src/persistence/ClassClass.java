@@ -1,10 +1,6 @@
 package persistence;
 
 final class ClassClass extends PersistentClass {
-	protected PersistentClass createClass() {
-		return this;
-	}
-
 	public String getName() {
 		return PersistentClass.class.getName();
 	}

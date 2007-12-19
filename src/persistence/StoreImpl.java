@@ -92,10 +92,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	void create() {
 		classes=new HashMap();
 		createSystem();
-		Map map=new HashMap();
-		map.putAll(classes);
-		classes.clear();
-		putAllClasses(map);
+		putAllClasses(new HashMap(classes));
 		putAllClasses(classes);
 		createUsers();
 	}
@@ -104,7 +101,9 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		Map classes=system.getClasses();
 		for(Iterator it=map.entrySet().iterator();it.hasNext();) {
 			Map.Entry e=(Map.Entry)it.next();
-			classes.put(e.getKey(),e.getValue());
+			String name=(String)e.getKey();
+			PersistentClass clazz=(PersistentClass)e.getValue();
+			if(!classes.containsKey(name)) classes.put(name,clazz);
 		}
 	}
 
