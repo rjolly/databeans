@@ -147,20 +147,21 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		return get(obj.base().longValue()).object();
 	}
 
-	PersistentClass get(Class clazz) {
-		synchronized(classes) {
-			String name=clazz.getName();
-			PersistentClass c=(PersistentClass)classes.get(name);
-			if(c==null) classes.put(name,c=PersistentClass.create(clazz,this));
-			return c;
-		}
+	synchronized PersistentClass get(Class clazz) {
+		String name=clazz.getName();
+		PersistentClass c=(PersistentClass)classes.get(name);
+		if(c==null) classes.put(name,c=PersistentClass.create(clazz,this));
+		return c;
 	}
 
-	PersistentClass get(Class componentType, int length) {
-		return ArrayClass.create(componentType,length,this);
+	synchronized PersistentClass get(Class componentType, int length) {
+		String name=ArrayClass.name(componentType,length);
+		PersistentClass c=(PersistentClass)classes.get(name);
+		if(c==null) classes.put(name,c=ArrayClass.create(componentType,length,this));
+		return c;
 	}
 
-	AccessorImpl create(PersistentClass clazz) {
+	synchronized AccessorImpl create(PersistentClass clazz) {
 		byte b[]=new byte[clazz.size()];
 		long base=heap.alloc(b.length);
 		heap.writeBytes(base,b);
@@ -169,12 +170,10 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	}
 
 	AccessorImpl cache(AccessorImpl obj) {
-		synchronized(cache) {
-			Long base=obj.base;
-			hold(base.longValue());
-			cache.put(base,new WeakReference(obj));
-			return obj;
-		}
+		Long base=obj.base;
+		hold(base.longValue());
+		cache.put(base,new WeakReference(obj));
+		return obj;
 	}
 
 	AccessorImpl get(long base) {
@@ -182,25 +181,21 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		return w==null?null:(AccessorImpl)w.get();
 	}
 
-	AccessorImpl instantiate(long base) {
-		synchronized(cache) {
-			AccessorImpl obj=get(base);
-			if(obj==null) obj=cache(AccessorImpl.newInstance(base,(PersistentClass)getClass(base).object(),this));
-			return obj;
-		}
+	synchronized AccessorImpl instantiate(long base) {
+		AccessorImpl obj=get(base);
+		if(obj==null) obj=cache(AccessorImpl.newInstance(base,(PersistentClass)getClass(base).object(),this));
+		return obj;
 	}
 
 	synchronized void release(AccessorImpl accessor) {
 		if(readOnly) return;
 		if(closed) return;
-		synchronized(cache) {
-			Long base=accessor.base;
-			AccessorImpl obj=get(base.longValue());
-			if(obj==null) release(base.longValue());
-			else if(obj==accessor) {
-				cache.remove(base);
-				release(base.longValue());
-			}
+		Long base=accessor.base;
+		AccessorImpl obj=get(base.longValue());
+		if(obj==null) release(base.longValue());
+		else if(obj==accessor) {
+			cache.remove(base);
+			release(base.longValue());
 		}
 	}
 
@@ -233,7 +228,6 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	}
 
 	synchronized void changePassword(String username, String oldPassword, String newPassword) {
-		if(closed) throw new PersistentException("store closed");
 		if(oldPassword==null) AccessController.checkPermission(new AdminPermission("changePassword"));
 		synchronized(users) {
 			byte pw[]=(byte[])users.get(username);
@@ -246,7 +240,6 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	}
 
 	synchronized void addUser(String username, String password) {
-		if(closed) throw new PersistentException("store closed");
 		AccessController.checkPermission(new AdminPermission("addUser"));
 		synchronized(users) {
 			if(users.containsKey(username)) throw new PersistentException("the user "+username+" already exists");
@@ -255,7 +248,6 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	}
 
 	synchronized void deleteUser(String username) {
-		if(closed) throw new PersistentException("store closed");
 		AccessController.checkPermission(new AdminPermission("deleteUser"));
 		synchronized(users) {
 			if(!users.containsKey(username)) throw new PersistentException("the user "+username+" doesn't exist");
@@ -272,7 +264,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	void checkedGc() {
 		AccessController.checkPermission(new AdminPermission("gc"));
 		System.gc();
-		gc();
+		heap.gc();
 	}
 
 	long allocatedSpace() {
@@ -284,19 +276,16 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	}
 
 	public synchronized boolean authenticate(String username, char[] password) {
-		if(closed) throw new PersistentException("store closed");
 		byte pw[]=(byte[])users.get(username);
 		return pw==null?false:Arrays.equals(pw,crypt(new String(password),salt(pw)));
 	}
 
 	public synchronized Connection getConnection(CallbackHandler handler) throws RemoteException {
-		if(closed) throw new PersistentException("store closed");
 		if(readOnly) throw new PersistentException("store in recovery mode");
 		return new Connection(this,Connection.TRANSACTION_READ_UNCOMMITTED,login(handler).getSubject());
 	}
 
 	public synchronized AdminConnection getAdminConnection(CallbackHandler handler) throws RemoteException {
-		if(closed) throw new PersistentException("store closed");
 		return new AdminConnection(this,readOnly,login(handler).getSubject());
 	}
 
@@ -410,11 +399,9 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	}
 
 	void gc(boolean keep) {
-		synchronized(heap) {
-			mark(boot);
-			if(keep) mark();
-			sweep();
-		}
+		mark(boot);
+		if(keep) mark();
+		sweep();
 	}
 
 	void mark() {
@@ -439,10 +426,10 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 
 	void mark(long base) {
 		if(heap.mark(base,true)) return;
-		PersistentClass c=(PersistentClass)getClass(base).object();
+		AccessorImpl c=getClass(base);
 		if(c!=null) {
-			mark(c.accessor().base.longValue());
-			Iterator t=c.fieldIterator();
+			mark(c.base.longValue());
+			Iterator t=((PersistentClass)c.object()).fieldIterator();
 			while(t.hasNext()) {
 				Field field=(Field)t.next();
 				switch (field.typeCode) {
@@ -471,11 +458,11 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		if(!heap.status(base)) return;
 		Heap patch=patch(base);
 		heap.free(base);
-		PersistentClass c=(PersistentClass)getClass(patch,base).object();
+		AccessorImpl c=getClass(patch,base);
 		if(c!=null) {
 //			Field.CLASS.set(patch,base,new Long(0));
-			decRefCount(c.accessor().base.longValue());
-			Iterator t=c.fieldIterator();
+			decRefCount(c.base.longValue());
+			Iterator t=((PersistentClass)c.object()).fieldIterator();
 			while(t.hasNext()) {
 				Field field=(Field)t.next();
 				switch (field.typeCode) {
@@ -670,6 +657,9 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 
 		public long realloc(long ptr, int size) {
 			return 0;
+		}
+
+		public void gc() {
 		}
 
 		public void free(long ptr) {

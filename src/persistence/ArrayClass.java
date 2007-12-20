@@ -21,8 +21,16 @@ final class ArrayClass extends PersistentClass {
 		public Accessor() throws RemoteException {}
 		
 		public String remoteToString() {
-			return Long.toHexString(base().longValue())+"["+getLength()+" "+getTypeCode()+"]";
+			return Long.toHexString(base().longValue())+name(getLength(),getTypeCode());
 		}
+	}
+
+	static String name(Class componentType, int length) {
+		return name(length,new Field("element",componentType).typeCode);
+	}
+
+	static String name(int length, char typeCode) {
+		return "["+length+" "+typeCode+"]";
 	}
 
 	protected PersistentClass createClass() {

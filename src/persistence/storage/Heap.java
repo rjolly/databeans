@@ -9,6 +9,7 @@ public interface Heap {
 	void mount(boolean n);
 	long alloc(int size);
 	long realloc(long ptr, int size);
+	void gc();
 	void free(long ptr);
 	boolean mark(long ptr, boolean n);
 	boolean status(long ptr);

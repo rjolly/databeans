@@ -28,9 +28,7 @@ abstract class RemoteConnectionImpl extends UnicastRemoteObject implements Remot
 	}
 
 	void open() {
-		synchronized(store.connections) {
-			store.connections.put(this,null);
-		}
+		store.connections.put(this,null);
 	}
 
 	String clientName() {
