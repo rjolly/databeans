@@ -1,7 +1,6 @@
 package persistence;
 
 import java.rmi.RemoteException;
-import java.rmi.server.RemoteServer;
 import java.rmi.server.ServerNotActiveException;
 import java.rmi.server.UnicastRemoteObject;
 import java.security.Principal;
@@ -38,7 +37,7 @@ abstract class RemoteConnectionImpl extends UnicastRemoteObject implements Remot
 	String clientHost() {
 		String host="";
 		try {
-			host=RemoteServer.getClientHost();
+			host=getClientHost();
 		} catch (ServerNotActiveException e) {}
 		return host;
 	}

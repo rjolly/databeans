@@ -17,6 +17,10 @@ class SystemConnection extends Connection {
 
 		void open() {}
 
+		Connection connection() {
+			return SystemConnection.this;
+		}
+
 		public PersistentObject create(PersistentClass clazz, Class types[], Object args[]) {
 			return create(clazz,types,args,true);
 		}
@@ -40,10 +44,6 @@ class SystemConnection extends Connection {
 		public void commit() {}
 
 		public void rollback() {}
-
-		Connection connection() {
-			return SystemConnection.this;
-		}
 	}
 
 	PersistentObject attach(PersistentObject obj) {
