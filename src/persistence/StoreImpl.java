@@ -541,11 +541,11 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		return r^s;
 	}
 
-	Object get(long base, Field field) {
+	synchronized Object get(long base, Field field) {
 		return field.reference?getReference(base,field):field.get(heap,base);
 	}
 
-	void set(long base, Field field, Object value) {
+	synchronized void set(long base, Field field, Object value) {
 		if(field.reference) setReference(base,field,value);
 		else field.set(heap,base,value);
 	}
@@ -580,12 +580,12 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		Field.CLASS.set(heap,base,new Long(ptr));
 	}
 
-	AccessorImpl getLock(long base) {
+	synchronized AccessorImpl getLock(long base) {
 		long ptr=((Long)Field.LOCK.get(heap,base)).longValue();
 		return ptr==0?null:instantiate(ptr);
 	}
 
-	void setLock(long base, AccessorImpl transaction) {
+	synchronized void setLock(long base, AccessorImpl transaction) {
 		Field.LOCK.set(heap,base,transaction==null?new Long(0):transaction.base);
 	}
 
