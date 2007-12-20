@@ -10,6 +10,7 @@ import java.rmi.RemoteException;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
+import persistence.PersistentClass;
 import persistence.PersistentObject;
 
 public class PersistentHashSet extends PersistentAbstractSet
@@ -30,23 +31,20 @@ public class PersistentHashSet extends PersistentAbstractSet
 			return getMap();
 		}
 
-		public PersistentObject present() {
-			return PRESENT==null?PRESENT=create(PersistentObject.class):PRESENT;
-		}
-
-		public boolean add(Object o) {
-			return getMap().put(o, present())==null;
-		}
-
-		public boolean remove(Object o) {
-			return getMap().remove(o)==present();
-		}
-
 		public PersistentObject remoteClone() {
 			PersistentHashSet newSet = (PersistentHashSet)super.remoteClone();
 			newSet.setMap((PersistentHashMap)getMap().clone());
 			return newSet;
 		}
+	}
+
+	protected PersistentClass createClass() {
+		return (PersistentClass)create(HashSetClass.class,new Class[] {Class.class},new Object[] {getClass()});
+	}
+
+	PersistentHashMap map() {
+		return (PersistentHashMap)execute(
+			new MethodCall("map",new Class[] {},new Object[] {}));
 	}
 
 	public PersistentHashMap getMap() {
@@ -56,9 +54,6 @@ public class PersistentHashSet extends PersistentAbstractSet
 	public void setMap(PersistentHashMap map) {
 		set("map",map);
 	}
-
-	// Dummy value to associate with an Object in the backing Map
-	transient static PersistentObject PRESENT;
 
 	void init(PersistentHashMap map) {
 		execute(
@@ -86,11 +81,6 @@ public class PersistentHashSet extends PersistentAbstractSet
 //		init(create(PersistentLinkedHashMap.class,new Class[] {int.class,float.class},new Object[] {new Integer(initialCapacity),new Float(loadFactor)}));
 //	}
 
-	PersistentHashMap map() {
-		return (PersistentHashMap)execute(
-			new MethodCall("map",new Class[] {},new Object[] {}));
-	}
-
 	public Iterator iterator() {
 		return map().keySet().iterator();
 	}
@@ -108,16 +98,11 @@ public class PersistentHashSet extends PersistentAbstractSet
 	}
 
 	public boolean add(Object o) {
-		return getMap().put(o, present())==null;
+		return map().put(o, ((HashSetClass)persistentClass()).PRESENT())==null;
 	}
 
 	public boolean remove(Object o) {
-		return getMap().remove(o)==present();
-	}
-
-	PersistentObject present() {
-		return (PersistentObject)execute(
-			new MethodCall("present",new Class[] {},new Object[] {}));
+		return map().remove(o)==((HashSetClass)persistentClass()).PRESENT();
 	}
 
 	public void clear() {

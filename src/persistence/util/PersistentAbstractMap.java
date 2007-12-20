@@ -14,6 +14,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import persistence.PersistentClass;
 import persistence.PersistentObject;
 
 public abstract class PersistentAbstractMap extends PersistentObject implements Map {
@@ -42,12 +43,8 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 			return null;
 		}
 
-		public PersistentObject nuii() {
-			return NULL==null?NULL=create(PersistentObject.class):NULL;
-		}
-
 		public Object put(Object key, Object value) {
-			return value==nuii()?remove0(key):put0(key,value);
+			return value==((AbstractMapClass)persistentClass()).NULL()?remove0(key):put0(key,value);
 		}
 
 		Object put0(Object key, Object value) {
@@ -71,7 +68,7 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 				}
 			}
 			
-			Object oldValue = nuii();
+			Object oldValue = ((AbstractMapClass)persistentClass()).NULL();
 			if (correctEntry !=null) {
 				oldValue = correctEntry.getValue();
 				i.remove();
@@ -145,6 +142,10 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 		}
 	}
 
+	protected PersistentClass createClass() {
+		return (PersistentClass)create(AbstractMapClass.class,new Class[] {Class.class},new Object[] {getClass()});
+	}
+
 	// Query Operations
 
 	public int size() {
@@ -202,21 +203,14 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 		Object obj=execute(
 			new MethodCall("put",new Class[] {Object.class,Object.class},new Object[] {key,value}),
 			new MethodCall("put",new Class[] {Object.class,Object.class},new Object[] {key,null}),1);
-		return obj==nuii()?null:obj;
+		return obj==((AbstractMapClass)persistentClass()).NULL()?null:obj;
 	}
 
 	public Object remove(Object key) {
 		Object obj=execute(
-			new MethodCall("put",new Class[] {Object.class,Object.class},new Object[] {key,nuii()}),
+			new MethodCall("put",new Class[] {Object.class,Object.class},new Object[] {key,((AbstractMapClass)persistentClass()).NULL()}),
 			new MethodCall("put",new Class[] {Object.class,Object.class},new Object[] {key,null}),1);
-		return obj==nuii()?null:obj;
-	}
-
-	transient static PersistentObject NULL;
-
-	PersistentObject nuii() {
-		return (PersistentObject)execute(
-			new MethodCall("nuii",new Class[] {},new Object[] {}));
+		return obj==((AbstractMapClass)persistentClass()).NULL()?null:obj;
 	}
 
 	// Bulk Operations

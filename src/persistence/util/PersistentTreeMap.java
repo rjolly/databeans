@@ -136,7 +136,7 @@ public class PersistentTreeMap extends PersistentAbstractMap
 			if (t == null) {
 				incrementSize();
 				setRoot((Entry)create(Entry.class,new Class[] {Object.class,Object.class,Entry.class},new Object[] {key, value, null}));
-				return nuii();
+				return ((AbstractMapClass)persistentClass()).NULL();
 			}
 
 			while (true) {
@@ -150,7 +150,7 @@ public class PersistentTreeMap extends PersistentAbstractMap
 						incrementSize();
 						t.setLeft((Entry)create(Entry.class,new Class[] {Object.class,Object.class,Entry.class},new Object[] {key, value, t}));
 						fixAfterInsertion(t.getLeft());
-						return nuii();
+						return ((AbstractMapClass)persistentClass()).NULL();
 					}
 				} else { // cmp > 0
 					if (t.getRight() != null) {
@@ -159,7 +159,7 @@ public class PersistentTreeMap extends PersistentAbstractMap
 						incrementSize();
 						t.setRight((Entry)create(Entry.class,new Class[] {Object.class,Object.class,Entry.class},new Object[] {key, value, t}));
 						fixAfterInsertion(t.getRight());
-						return nuii();
+						return ((AbstractMapClass)persistentClass()).NULL();
 					}
 				}
 			}
@@ -168,7 +168,7 @@ public class PersistentTreeMap extends PersistentAbstractMap
 		Object remove0(Object key) {
 			Entry p = getEntry(key);
 			if (p == null)
-				return nuii();
+				return ((AbstractMapClass)persistentClass()).NULL();
 			
 			Object oldValue = p.getValue0();
 			deleteEntry(p);

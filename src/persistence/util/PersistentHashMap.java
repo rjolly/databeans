@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import persistence.Array;
+import persistence.PersistentClass;
 import persistence.PersistentObject;
 
 public class PersistentHashMap extends PersistentAbstractMap implements Map, Cloneable
@@ -68,10 +69,6 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 		public int size() {
 			return getSize();
 		}
-
-//		public PersistentObject nullKey() {
-//			return NULL_KEY==null?NULL_KEY=create(PersistentObject.class):NULL_KEY;
-//		}
 
 		public boolean containsKey(Object key) {
 			Object k = maskNull(key);
@@ -181,6 +178,10 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 		}
 	}
 
+	protected PersistentClass createClass() {
+		return (PersistentClass)create(HashMapClass.class,new Class[] {Class.class},new Object[] {getClass()});
+	}
+
 	public Array getTable() {
 		return (Array)get("table");
 	}
@@ -242,21 +243,12 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 
 	// internal utilities
 
-//	transient static PersistentObject NULL_KEY;
-
-//	PersistentObject nullKey() {
-//		return (PersistentObject)execute(
-//			new MethodCall("nullKey",new Class[] {},new Object[] {}));
-//	}
-
-	static Object maskNull(Object key) {
-//		return (key == null ? nullKey() : key);
-		return key;
+	Object maskNull(Object key) {
+		return (key == null ? ((HashMapClass)persistentClass()).NULL_KEY() : key);
 	}
 
-	static Object unmaskNull(Object key) {
-//		return (key == nullKey() ? null : key);
-		return key;
+	Object unmaskNull(Object key) {
+		return (key == ((HashMapClass)persistentClass()).NULL_KEY() ? null : key);
 	}
 
 	static int hash(Object x) {
@@ -444,6 +436,10 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 				setHash(h);
 			}
 
+			Object unmaskNull(Object key) {
+				return (key == ((HashMapClass)Entry.this.get(PersistentHashMap.class)).NULL_KEY() ? null : key);
+			}
+
 			public Object getKey() {
 				return unmaskNull(getKey0());
 			}
@@ -474,7 +470,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 			}
 	
 			public int remoteHashCode() {
-				return (unmaskNull(getKey0())==null ? 0 : getKey0().hashCode()) ^
+				return (getKey0()==((HashMapClass)Entry.this.get(PersistentHashMap.class)).NULL_KEY() ? 0 : getKey0().hashCode()) ^
 					(getValue0()==null  ? 0 : getValue0().hashCode());
 			}
 

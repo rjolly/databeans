@@ -56,10 +56,12 @@ public class PersistentClass extends PersistentObject {
 	}
 
 	protected PersistentClass createClass() {
-		PersistentClass clazz=(PersistentClass)connection.create(new ClassClass(),new Class[] {Class.class},new Object[] {getClass()});
-		clazz.setup();
-		clazz.accessor().clazz=clazz;
-		return clazz;
+		if(getClass()==PersistentClass.class) {
+			PersistentClass clazz=(PersistentClass)connection.create(new ClassClass(),new Class[] {Class.class},new Object[] {getClass()});
+			clazz.setup();
+			clazz.accessor().clazz=clazz;
+			return clazz;
+		} else return super.createClass();
 	}
 
 	void setup() {

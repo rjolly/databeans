@@ -4,7 +4,7 @@ import java.rmi.RemoteException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-final class ArrayClass extends PersistentClass {
+public final class ArrayClass extends PersistentClass {
 	transient int header;
 
 	public void init(Class clazz, Class componentType, int length) {
@@ -31,10 +31,6 @@ final class ArrayClass extends PersistentClass {
 
 	static String name(int length, char typeCode) {
 		return "["+length+" "+typeCode+"]";
-	}
-
-	protected PersistentClass createClass() {
-		return (PersistentClass)create(PersistentClass.class,new Class[] {Class.class},new Object[] {getClass()});
 	}
 
 	void setup() {
