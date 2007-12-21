@@ -114,10 +114,6 @@ public class PersistentObject implements Cloneable, Serializable {
 		accessor().unlock();
 	}
 
-	void kick() {
-		accessor().kick();
-	}
-
 	void close() {
 		accessor=null;
 	}

@@ -79,10 +79,6 @@ public class FileHeap extends RandomAccessFile implements Heap {
 	}
 
 
-	public synchronized void gc() {
-		collector.gc();
-	}
-
 	public synchronized void free(long ptr) {
 		Chunk c=new Chunk(ptr-Integer_SIZE);
 		allocatedSpace-=c.size;

@@ -74,10 +74,6 @@ abstract class AccessorImpl extends UnicastRemoteObject implements Accessor {
 		notify();
 	}
 
-	synchronized void kick() {
-		notifyAll();
-	}
-
 	AccessorImpl getLock() {
 		return getLock(0);
 	}

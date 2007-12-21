@@ -18,7 +18,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PrivilegedAction;
 import java.security.SecureRandom;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -38,16 +37,14 @@ import persistence.storage.MemoryModel;
 
 public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	final Heap heap;
-	Map users;
-	Map classes;
-	Collection transactions;
-	PersistentSystem system;
 	final Subject systemSubject;
 	final Connection systemConnection;
 	final Map connections=new WeakHashMap();
 	final Map cache=new WeakHashMap();
+	PersistentSystem system;
 	boolean readOnly;
 	boolean closed;
+	Map classes;
 	long boot;
 
 	public StoreImpl(String name) throws RemoteException {
@@ -62,54 +59,22 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		if((boot=heap.boot())==0) {
 			heap.mount(true);
 			create();
-			init();
 		} else {
 			if(heap.mounted()) {
 				System.out.println("store was not cleanly unmounted, running in recovery mode");
 				readOnly=true;
 			} else heap.mount(true);
 			instantiate();
-			init();
-			clear();
-		}
-	}
-
-	void clear() {
-		if(readOnly) return;
-		for(Iterator it=transactions.iterator();it.hasNext();it.remove()) {
-			rollback(((Transaction)it.next()));
-		}
-		gc(false);
-		updateClasses();
-	}
-
-	void updateClasses() {
-		for(Iterator it=classes.values().iterator();it.hasNext();) {
-			if(refCount(((PersistentClass)it.next()).accessor().base.longValue())==1) it.remove();
 		}
 	}
 
 	void create() {
 		classes=new HashMap();
 		createSystem();
-		putAllClasses(new HashMap(classes));
-		putAllClasses(classes);
 		createUsers();
-	}
-
-	void putAllClasses(Map map) {
-		Map classes=system.getClasses();
-		for(Iterator it=map.entrySet().iterator();it.hasNext();) {
-			Map.Entry e=(Map.Entry)it.next();
-			String name=(String)e.getKey();
-			PersistentClass clazz=(PersistentClass)e.getValue();
-			if(!classes.containsKey(name)) classes.put(name,clazz);
-		}
-	}
-
-	void createUsers() {
-		Map users=system.getUsers();
-		users.put("admin",crypt(""));
+		system.getClasses().putAll(new HashMap(classes));
+		system.getClasses().putAll(classes);
+		classes=system.getClasses();
 	}
 
 	void createSystem() {
@@ -118,14 +83,26 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		heap.setBoot(boot);
 	}
 
-	void instantiate() {
-		system=(PersistentSystem)instantiate(boot).object();
+	void createUsers() {
+		Map users=system.getUsers();
+		users.put("admin",crypt(""));
 	}
 
-	void init() {
-		users=system.getUsers();
+	void instantiate() {
+		system=(PersistentSystem)instantiate(boot).object();
 		classes=system.getClasses();
-		transactions=system.getTransactions();
+		clear();
+	}
+
+	void clear() {
+		if(readOnly) return;
+		for(Iterator it=system.getTransactions().iterator();it.hasNext();it.remove()) {
+			rollback(((Transaction)it.next()));
+		}
+		gc(false);
+		for(Iterator it=classes.values().iterator();it.hasNext();) {
+			if(refCount(((PersistentClass)it.next()).accessor().base.longValue())==1) it.remove();
+		}
 	}
 
 	MethodCall attach(MethodCall call) {
@@ -147,21 +124,25 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		return get(obj.base().longValue()).object();
 	}
 
-	synchronized PersistentClass get(Class clazz) {
-		String name=clazz.getName();
-		PersistentClass c=(PersistentClass)classes.get(name);
-		if(c==null) classes.put(name,c=PersistentClass.create(clazz,this));
-		return c;
+	PersistentClass get(Class clazz) {
+		synchronized(classes) {
+			String name=clazz.getName();
+			PersistentClass c=(PersistentClass)classes.get(name);
+			if(c==null) classes.put(name,c=PersistentClass.create(clazz,this));
+			return c;
+		}
 	}
 
-	synchronized PersistentClass get(Class componentType, int length) {
-		String name=ArrayClass.name(componentType,length);
-		PersistentClass c=(PersistentClass)classes.get(name);
-		if(c==null) classes.put(name,c=ArrayClass.create(componentType,length,this));
-		return c;
+	PersistentClass get(Class componentType, int length) {
+		synchronized(classes) {
+			String name=ArrayClass.name(componentType,length);
+			PersistentClass c=(PersistentClass)classes.get(name);
+			if(c==null) classes.put(name,c=ArrayClass.create(componentType,length,this));
+			return c;
+		}
 	}
 
-	synchronized AccessorImpl create(PersistentClass clazz) {
+	AccessorImpl create(PersistentClass clazz) {
 		byte b[]=new byte[clazz.size()];
 		long base=heap.alloc(b.length);
 		heap.writeBytes(base,b);
@@ -170,10 +151,12 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	}
 
 	AccessorImpl cache(AccessorImpl obj) {
-		Long base=obj.base;
-		hold(base.longValue());
-		cache.put(base,new WeakReference(obj));
-		return obj;
+		synchronized(heap) {
+			Long base=obj.base;
+			hold(base.longValue());
+			cache.put(base,new WeakReference(obj));
+			return obj;
+		}
 	}
 
 	AccessorImpl get(long base) {
@@ -181,10 +164,12 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		return w==null?null:(AccessorImpl)w.get();
 	}
 
-	synchronized AccessorImpl instantiate(long base) {
-		AccessorImpl obj=get(base);
-		if(obj==null) obj=cache(AccessorImpl.newInstance(base,(PersistentClass)getClass(base).object(),this));
-		return obj;
+	AccessorImpl instantiate(long base) {
+		synchronized(heap) {
+			AccessorImpl obj=get(base);
+			if(obj==null) obj=cache(AccessorImpl.newInstance(base,(PersistentClass)getClass(base).object(),this));
+			return obj;
+		}
 	}
 
 	synchronized void release(AccessorImpl accessor) {
@@ -229,6 +214,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 
 	synchronized void changePassword(String username, String oldPassword, String newPassword) {
 		if(oldPassword==null) AccessController.checkPermission(new AdminPermission("changePassword"));
+		Map users=system.getUsers();
 		synchronized(users) {
 			byte pw[]=(byte[])users.get(username);
 			if(pw==null) throw new PersistentException("the user "+username+" doesn't exist");
@@ -241,6 +227,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 
 	synchronized void addUser(String username, String password) {
 		AccessController.checkPermission(new AdminPermission("addUser"));
+		Map users=system.getUsers();
 		synchronized(users) {
 			if(users.containsKey(username)) throw new PersistentException("the user "+username+" already exists");
 			else users.put(username,crypt(password));
@@ -249,6 +236,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 
 	synchronized void deleteUser(String username) {
 		AccessController.checkPermission(new AdminPermission("deleteUser"));
+		Map users=system.getUsers();
 		synchronized(users) {
 			if(!users.containsKey(username)) throw new PersistentException("the user "+username+" doesn't exist");
 			else users.remove(username);
@@ -264,7 +252,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	void checkedGc() {
 		AccessController.checkPermission(new AdminPermission("gc"));
 		System.gc();
-		heap.gc();
+		syncGc();
 	}
 
 	long allocatedSpace() {
@@ -276,7 +264,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	}
 
 	public synchronized boolean authenticate(String username, char[] password) {
-		byte pw[]=(byte[])users.get(username);
+		byte pw[]=(byte[])system.getUsers().get(username);
 		return pw==null?false:Arrays.equals(pw,crypt(new String(password),salt(pw)));
 	}
 
@@ -344,14 +332,14 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 
 	Transaction getTransaction(String client) {
 		Transaction trans=(Transaction)systemConnection.create(Transaction.class,new Class[] {String.class},new Object[] {client});
-		transactions.add(trans);
+		system.getTransactions().add(trans);
 		return trans;
 	}
 
 	synchronized void release(Transaction transaction) {
 //		if(readOnly) return;
 		if(closed) return;
-		transactions.remove(transaction);
+		system.getTransactions().remove(transaction);
 		rollback(transaction);
 	}
 
@@ -367,8 +355,8 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	public synchronized void close() throws RemoteException {
 		if(closed) return;
 		UnicastRemoteObject.unexportObject(this,true);
-		for(Iterator it=transactions.iterator();it.hasNext();) {
-			((Transaction)it.next()).kick();
+		for(Iterator it=system.getTransactions().iterator();it.hasNext();) {
+			((Transaction)it.next()).unlock();
 		}
 		while(true) {
 			try {
@@ -392,16 +380,22 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		closed=true;
 	}
 
-	public synchronized void gc() {
+	synchronized void syncGc() {
 		if(readOnly) return;
 		if(closed) return;
 		gc(true);
 	}
 
+	public void gc() {
+		gc(true);
+	}
+
 	void gc(boolean keep) {
-		mark(boot);
-		if(keep) mark();
-		sweep();
+		synchronized(heap) {
+			mark(boot);
+			if(keep) mark();
+			sweep();
+		}
 	}
 
 	void mark() {
@@ -657,9 +651,6 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 
 		public long realloc(long ptr, int size) {
 			return 0;
-		}
-
-		public void gc() {
 		}
 
 		public void free(long ptr) {

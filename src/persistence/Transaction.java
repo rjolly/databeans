@@ -1,6 +1,5 @@
 package persistence;
 
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
@@ -44,7 +43,8 @@ public class Transaction extends PersistentObject {
 		}
 	}
 
-	PersistentObject copy(PersistentObject obj) {
+	synchronized PersistentObject copy(PersistentObject obj) {
+		if(isRollbackOnly()) throw new PersistentException("rollback only");
 		Array pair;
 		Map map=getPairs();
 //		Long base=obj.base();
@@ -76,35 +76,32 @@ public class Transaction extends PersistentObject {
 		return (PersistentMethodCall)create(PersistentMethodCall.class,new Class[] {MethodCall.class},new Object[] {call});
 	}
 
-	void commit() {
-		List l=getCalls();
-		for(ListIterator it=l.listIterator(0);it.hasNext();it.remove()) {
+	synchronized void commit() {
+		if(isRollbackOnly()) throw new PersistentException("rollback only");
+		for(ListIterator it=getCalls().listIterator(0);it.hasNext();it.remove()) {
 			((PersistentMethodCall)it.next()).call().execute();
 		}
 		getUndos().clear();
-		unlock();
+		clear();
 	}
 
-	void rollback() {
-		List l=getUndos();
-		for(ListIterator it=l.listIterator(l.size());it.hasPrevious();it.remove()) {
+	synchronized void rollback() {
+		for(ListIterator it=getUndos().listIterator(getUndos().size());it.hasPrevious();it.remove()) {
 			((PersistentMethodCall)it.previous()).call().execute();
 		}
 		getCalls().clear();
-		unlock();
+		clear();
+		setRollbackOnly(false);
 	}
 
-	void unlock() {
-		Collection o=getPairs().values();
-		for(Iterator it=o.iterator();it.hasNext();it.remove()) {
+	synchronized void unlock() {
+		clear();
+		setRollbackOnly(true);
+	}
+
+	void clear() {
+		for(Iterator it=getPairs().values().iterator();it.hasNext();it.remove()) {
 			((PersistentObject)((Array)it.next()).get(0)).unlock();
-		}
-	}
-
-	void kick() {
-		Collection o=getPairs().values();
-		for(Iterator it=o.iterator();it.hasNext();) {
-			((PersistentObject)((Array)it.next()).get(0)).kick();
 		}
 	}
 
@@ -140,7 +137,15 @@ public class Transaction extends PersistentObject {
 		set("pairs",map);
 	}
 
+	public boolean isRollbackOnly() {
+		return ((Boolean)get("rollbackOnly")).booleanValue();
+	}
+
+	public void setRollbackOnly(boolean b) {
+		set("rollbackOnly",new Boolean(b));
+	}
+
 	public String toString() {
-		return "["+getClient()+", "+getCalls()+", "+getUndos()+", "+getPairs()+"]";
+		return "["+getClient()+", "+getCalls()+", "+getUndos()+", "+getPairs()+", "+isRollbackOnly()+"]";
 	}
 }

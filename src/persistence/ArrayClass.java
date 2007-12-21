@@ -12,7 +12,6 @@ public final class ArrayClass extends PersistentClass {
 
 	void init(Class clazz, char typeCode, int length) {
 		init(clazz);
-		setName(name(typeCode,length));
 		setTypeCode(typeCode);
 		setLength(length);
 	}

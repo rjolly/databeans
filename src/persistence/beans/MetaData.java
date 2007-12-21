@@ -378,14 +378,20 @@ class java_util_AbstractCollection_PersistenceDelegate extends java_util_Collect
 	}
 }
 
+class persistence_util_PersistentAbstractCollection_PersistenceDelegate extends java_util_Collection_PersistenceDelegate {
+	public persistence_util_PersistentAbstractCollection_PersistenceDelegate(Connection connection) {
+		super(connection);
+	}
+}
+
 class java_util_AbstractList_PersistenceDelegate extends java_util_List_PersistenceDelegate {
 	public java_util_AbstractList_PersistenceDelegate(Connection connection) {
 		super(connection);
 	}
 }
 
-class persistence_util_PersistentArrayList_PersistenceDelegate extends java_util_List_PersistenceDelegate {
-	public persistence_util_PersistentArrayList_PersistenceDelegate(Connection connection) {
+class persistence_util_PersistentAbstractList_PersistenceDelegate extends java_util_List_PersistenceDelegate {
+	public persistence_util_PersistentAbstractList_PersistenceDelegate(Connection connection) {
 		super(connection);
 	}
 }
@@ -402,12 +408,11 @@ class java_util_Hashtable_PersistenceDelegate extends java_util_Map_PersistenceD
 	}
 }
 
-class persistence_util_PersistentHashMap_PersistenceDelegate extends java_util_Map_PersistenceDelegate {
-	public persistence_util_PersistentHashMap_PersistenceDelegate(Connection connection) {
+class persistence_util_PersistentAbstractMap_PersistenceDelegate extends java_util_Map_PersistenceDelegate {
+	public persistence_util_PersistentAbstractMap_PersistenceDelegate(Connection connection) {
 		super(connection);
 	}
 }
-
 
 // Beans
 class java_beans_beancontext_BeanContextSupport_PersistenceDelegate extends java_util_Collection_PersistenceDelegate {

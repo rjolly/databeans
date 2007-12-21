@@ -49,4 +49,8 @@ class SystemConnection extends Connection {
 	PersistentObject attach(PersistentObject obj) {
 		return obj;
 	}
+
+	public void close() {
+		connection=null;
+	}
 }

@@ -153,19 +153,25 @@ public class Connection implements Serializable {
 		}
 	}
 
+	Map cache() {
+		return cache==null?cache=new WeakHashMap():cache;
+	}
+
 	Object attach(Object obj) {
 		return obj instanceof PersistentObject?attach((PersistentObject)obj):obj;
 	}
 
-	synchronized PersistentObject attach(PersistentObject obj) {
-		if(cache==null) cache=new WeakHashMap();
-		Accessor accessor=obj.accessor;
-		PersistentObject b=get(accessor);
-		if(b==null) {
-			obj.connection=this;
-			cache.put(accessor,new WeakReference(obj));
-		} else obj=b;
-		return obj;
+	PersistentObject attach(PersistentObject obj) {
+		Map cache=cache();
+		synchronized(cache) {
+			Accessor accessor=obj.accessor;
+			PersistentObject b=get(accessor);
+			if(b==null) {
+				obj.connection=this;
+				cache.put(accessor,new WeakReference(obj));
+			} else obj=b;
+			return obj;
+		}
 	}
 
 	PersistentObject get(Accessor accessor) {
@@ -207,7 +213,7 @@ public class Connection implements Serializable {
 
 	public void close() {
 		connection=null;
-		if(cache==null) return;
+		Map cache=cache();
 		while(true) {
 			try {
 				for(Iterator it=cache.keySet().iterator();it.hasNext();it.remove()) {
