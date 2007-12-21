@@ -1,6 +1,5 @@
 package persistence;
 
-import java.rmi.RemoteException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
@@ -8,29 +7,22 @@ public final class ArrayClass extends PersistentClass {
 	transient int header;
 
 	public void init(Class clazz, Class componentType, int length) {
+		init(clazz,new Field("element",componentType).typeCode,length);
+	}
+
+	void init(Class clazz, char typeCode, int length) {
 		init(clazz);
-		setTypeCode(new Field("element",componentType).typeCode);
+		setName(name(typeCode,length));
+		setTypeCode(typeCode);
 		setLength(length);
 	}
 
-	protected PersistentObject.Accessor createAccessor() throws RemoteException {
-		return new Accessor();
-	}
-
-	protected class Accessor extends PersistentClass.Accessor {
-		public Accessor() throws RemoteException {}
-		
-		public String remoteToString() {
-			return Long.toHexString(base().longValue())+name(getLength(),getTypeCode());
-		}
-	}
-
 	static String name(Class componentType, int length) {
-		return name(length,new Field("element",componentType).typeCode);
+		return name(new Field("element",componentType).typeCode,length);
 	}
 
-	static String name(int length, char typeCode) {
-		return "["+length+" "+typeCode+"]";
+	static String name(char typeCode, int length) {
+		return PersistentArray.class.getName()+"["+length+" "+typeCode+"]";
 	}
 
 	void setup() {
