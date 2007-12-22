@@ -21,7 +21,7 @@ abstract class AccessorImpl extends UnicastRemoteObject implements Accessor {
 
 	abstract PersistentObject object();
 
-	synchronized Object call(String method, Class types[], Object args[]) {
+	Object call(String method, Class types[], Object args[]) {
 		if(!method.equals("get") && !method.equals("set")) AccessController.checkPermission(new MethodPermission(clazz.name()+"."+method));
 		try {
 			return getClass().getMethod(method,types).invoke(this,args);

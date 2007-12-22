@@ -2,7 +2,9 @@ package persistence;
 
 import java.io.Serializable;
 import java.rmi.RemoteException;
+import java.security.PrivilegedAction;
 import java.util.Iterator;
+import javax.security.auth.Subject;
 
 public class PersistentObject implements Cloneable, Serializable {
 	persistence.Accessor accessor;
@@ -89,12 +91,16 @@ public class PersistentObject implements Cloneable, Serializable {
 			return PersistentObject.this;
 		}
 
-		Object execute() {
-			return execute(PersistentObject.this);
+		Object execute(Subject subject) {
+			return execute(PersistentObject.this,subject);
 		}
 
-		Object execute(PersistentObject target) {
-			return target.call(method,types,args);
+		Object execute(final PersistentObject target, Subject subject) {
+			return Subject.doAsPrivileged(subject,new PrivilegedAction() {
+				public Object run() {
+					return target.call(method,types,args);
+				}
+			},null);
 		}
 	}
 

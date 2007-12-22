@@ -15,7 +15,6 @@ import java.rmi.server.UnicastRemoteObject;
 import java.security.AccessController;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.PrivilegedAction;
 import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.ConcurrentModificationException;
@@ -97,7 +96,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	void clear() {
 		if(readOnly) return;
 		for(Iterator it=system.getTransactions().iterator();it.hasNext();it.remove()) {
-			rollback(((Transaction)it.next()));
+			((Transaction)it.next()).rollback(systemSubject);
 		}
 		gc(false);
 		for(Iterator it=classes.values().iterator();it.hasNext();) {
@@ -243,13 +242,13 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		}
 	}
 
-	void checkedClose() throws RemoteException {
-		AccessController.checkPermission(new AdminPermission("close"));
+	void shutdown() throws RemoteException {
+		AccessController.checkPermission(new AdminPermission("shutdown"));
 		close();
 		System.gc();
 	}
 
-	void checkedGc() {
+	void userGc() {
 		AccessController.checkPermission(new AdminPermission("gc"));
 		System.gc();
 		syncGc();
@@ -340,16 +339,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 //		if(readOnly) return;
 		if(closed) return;
 		system.getTransactions().remove(transaction);
-		rollback(transaction);
-	}
-
-	void rollback(final Transaction transaction) {
-		Subject.doAsPrivileged(systemSubject,new PrivilegedAction() {
-			public Object run() {
-				transaction.rollback();
-				return null;
-			}
-		},null);
+		transaction.rollback(systemSubject);
 	}
 
 	public synchronized void close() throws RemoteException {

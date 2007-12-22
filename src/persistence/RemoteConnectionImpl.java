@@ -4,7 +4,6 @@ import java.rmi.RemoteException;
 import java.rmi.server.ServerNotActiveException;
 import java.rmi.server.UnicastRemoteObject;
 import java.security.Principal;
-import java.security.PrivilegedAction;
 import javax.security.auth.Subject;
 import persistence.PersistentObject.MethodCall;
 import persistence.server.DatabeansPrincipal;
@@ -102,33 +101,19 @@ abstract class RemoteConnectionImpl extends UnicastRemoteObject implements Remot
 		return execute(store.attach(call),store.attach(undo),index,false);
 	}
 
-	synchronized Object execute(final MethodCall call, final MethodCall undo, final int index, final boolean read) {
+	synchronized Object execute(MethodCall call, MethodCall undo, int index, boolean read) {
 		if(!read && readOnly) throw new PersistentException("read only");
-		Object obj=Subject.doAsPrivileged(subject,new PrivilegedAction() {
-			public Object run() {
-				return transaction!=null?transaction.execute(call,undo,index,level,read,readOnly):call.execute();
-			}
-		},null);
+		Object obj=transaction!=null?transaction.execute(call,undo,index,level,read,readOnly,subject):call.execute(subject);
 		if(autoCommit) commit();
 		return obj;
 	}
 
 	public synchronized void commit() {
-		Subject.doAsPrivileged(subject,new PrivilegedAction() {
-			public Object run() {
-				if(transaction!=null) transaction.commit();
-				return null;
-			}
-		},null);
+		if(transaction!=null) transaction.commit(subject);
 	}
 
 	public synchronized void rollback() {
-		Subject.doAsPrivileged(subject,new PrivilegedAction() {
-			public Object run() {
-				if(transaction!=null) transaction.rollback();
-				return null;
-			}
-		},null);
+		if(transaction!=null) transaction.rollback(subject);
 	}
 
 	synchronized void close() throws RemoteException {

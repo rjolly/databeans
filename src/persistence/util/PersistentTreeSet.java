@@ -34,7 +34,7 @@ public class PersistentTreeSet extends PersistentAbstractSet
 			return getM();
 		}
 
-		public PersistentObject remoteClone() {
+		public synchronized PersistentObject remoteClone() {
 			PersistentTreeSet clone = (PersistentTreeSet)super.remoteClone();
 			clone.setM((SortedMap)create(PersistentTreeMap.class,new Class[] {SortedMap.class},new Object[] {getM()}));
 			return clone;

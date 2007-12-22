@@ -70,7 +70,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 			return getSize();
 		}
 
-		public boolean containsKey(Object key) {
+		public synchronized boolean containsKey(Object key) {
 			Object k = maskNull(key);
 			int hash = hash(k);
 			int i = indexFor(hash, getTable().length());
@@ -83,7 +83,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 			return false;
 		}
 
-		public Entry getEntry(Object key) {
+		public synchronized Entry getEntry(Object key) {
 			Object k = maskNull(key);
 			int hash = hash(k);
 			int i = indexFor(hash, getTable().length());
@@ -93,7 +93,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 			return e;
 		}
 
-		public boolean containsValue(Object value) {
+		public synchronized boolean containsValue(Object value) {
 			if (value == null)
 				return containsNullValue();
 			
@@ -105,7 +105,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 			return false;
 		}
 
-		public Entry nextEntry(Entry entry) {
+		public synchronized Entry nextEntry(Entry entry) {
 			Entry n;
 			Array t = getTable();
 			if(entry == null) {
@@ -128,7 +128,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 			return putMapping(entry.getKey(),entry.getValue());
 		}
 
-		public Map.Entry putMapping(Object key, Object value) {
+		public synchronized Map.Entry putMapping(Object key, Object value) {
 			Object k = maskNull(key);
 			int hash = hash(k);
 			int i = indexFor(hash, getTable().length());
@@ -137,7 +137,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 			return addEntry(hash, k, value, i);
 		}
 
-		public Map.Entry removeMapping(Map.Entry entry) {
+		public synchronized Map.Entry removeMapping(Map.Entry entry) {
 			Object k = maskNull(entry.getKey());
 			int hash = hash(k);
 			int i = indexFor(hash, getTable().length());
@@ -163,7 +163,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 			return e;
 		}
 
-		public PersistentObject remoteClone() {
+		public synchronized PersistentObject remoteClone() {
 			PersistentHashMap result = (PersistentHashMap)super.remoteClone();
 			result.setTable(create(Entry.class,getTable().length()));
 			result.setModCount(0);

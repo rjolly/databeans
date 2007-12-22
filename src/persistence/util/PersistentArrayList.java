@@ -42,7 +42,7 @@ public class PersistentArrayList extends PersistentAbstractList
 			setElementData(create(elementData));
 		}
 
-		public void trimToSize() {
+		public synchronized void trimToSize() {
 			setModCount(getModCount()+1);
 			int oldCapacity = getElementData().length();
 			if (getSize() < oldCapacity) {
@@ -52,7 +52,7 @@ public class PersistentArrayList extends PersistentAbstractList
 			}
 		}
 
-		public void ensureCapacity(int minCapacity) {
+		public synchronized void ensureCapacity(int minCapacity) {
 			setModCount(getModCount()+1);
 			int oldCapacity = getElementData().length();
 			if (minCapacity > oldCapacity) {
@@ -69,7 +69,7 @@ public class PersistentArrayList extends PersistentAbstractList
 			return getSize();
 		}
 
-		public int indexOf(Object elem) {
+		public synchronized int indexOf(Object elem) {
 			if (elem == null) {
 				for (int i = 0; i < getSize(); i++)
 					if (getElementData().get(i)==null)
@@ -82,7 +82,7 @@ public class PersistentArrayList extends PersistentAbstractList
 			return -1;
 		}
 
-		public int lastIndexOf(Object elem) {
+		public synchronized int lastIndexOf(Object elem) {
 			if (elem == null) {
 				for (int i = getSize()-1; i >= 0; i--)
 					if (getElementData().get(i)==null)
@@ -95,13 +95,13 @@ public class PersistentArrayList extends PersistentAbstractList
 			return -1;
 		}
 
-		public Object[] toArray() {
+		public synchronized Object[] toArray() {
 			Object[] result = new Object[getSize()];
 			PersistentArray.copy(getElementData(), 0, result, 0, getSize());
 			return result;
 		}
 
-		public Object[] toArray(Object a[]) {
+		public synchronized Object[] toArray(Object a[]) {
 			if (a.length < getSize())
 				a = (Object[])java.lang.reflect.Array.newInstance(
 					a.getClass().getComponentType(), getSize());
@@ -114,13 +114,13 @@ public class PersistentArrayList extends PersistentAbstractList
 			return a;
 		}
 
-		public Object get(int index) {
+		public synchronized Object get(int index) {
 			RangeCheck(index);
 
 			return getElementData().get(index);
 		}
 
-		public Object set(int index, Object element) {
+		public synchronized Object set(int index, Object element) {
 			RangeCheck(index);
 
 			Object oldValue = getElementData().get(index);
@@ -128,7 +128,7 @@ public class PersistentArrayList extends PersistentAbstractList
 			return oldValue;
 		}
 
-		public void add(int index, Object element) {
+		public synchronized void add(int index, Object element) {
 			if (index > getSize() || index < 0)
 				throw new IndexOutOfBoundsException(
 					"Index: "+index+", Size: "+getSize());
@@ -140,7 +140,7 @@ public class PersistentArrayList extends PersistentAbstractList
 			setSize(getSize()+1);
 		}
 
-		public Object remove(int index) {
+		public synchronized Object remove(int index) {
 			RangeCheck(index);
 			
 			setModCount(getModCount()+1);
@@ -156,7 +156,7 @@ public class PersistentArrayList extends PersistentAbstractList
 			return oldValue;
 		}
 
-		public PersistentObject remoteClone() {
+		public synchronized PersistentObject remoteClone() {
 			PersistentArrayList v = (PersistentArrayList)super.remoteClone();
 			v.setElementData(create(Object.class,getSize()));
 			PersistentArray.copy(getElementData(), 0, v.getElementData(), 0, getSize());

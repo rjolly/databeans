@@ -25,7 +25,7 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 	protected class Accessor extends PersistentObject.Accessor {
 		public Accessor() throws RemoteException {}
 
-		public Object get(Object key) {
+		public synchronized Object get(Object key) {
 			Iterator i = entrySet().iterator();
 			if (key==null) {
 				while (i.hasNext()) {
@@ -43,7 +43,7 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 			return null;
 		}
 
-		public Object put(Object key, Object value) {
+		public synchronized Object put(Object key, Object value) {
 			return value==((AbstractMapClass)persistentClass()).NULL()?remove0(key):put0(key,value);
 		}
 
@@ -78,7 +78,7 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 
 		// Comparison and hashing
 
-		public boolean remoteEquals(PersistentObject o) {
+		public synchronized boolean remoteEquals(PersistentObject o) {
 			if (o == PersistentAbstractMap.this)
 				return true;
 
@@ -111,7 +111,7 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 			return true;
 		}
 
-		public int remoteHashCode() {
+		public synchronized int remoteHashCode() {
 			int h = 0;
 			Iterator i = entrySet().iterator();
 			while (i.hasNext())
@@ -119,7 +119,7 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 			return h;
 		}
 
-		public String remoteToString() {
+		public synchronized String remoteToString() {
 			StringBuffer buf = new StringBuffer();
 			buf.append("{");
 

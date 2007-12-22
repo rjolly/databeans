@@ -4,6 +4,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import javax.security.auth.Subject;
 import persistence.PersistentObject.MethodCall;
 import persistence.storage.MemoryModel;
 import persistence.util.PersistentArrayList;
@@ -17,9 +18,9 @@ public class Transaction extends PersistentObject {
 		setPairs((Map)create(PersistentHashMap.class));
 	}
 
-	Object execute(MethodCall call, MethodCall undo, int index, int level, boolean read, boolean readOnly) {
+	Object execute(MethodCall call, MethodCall undo, int index, int level, boolean read, boolean readOnly, Subject subject) {
 		PersistentObject target=copy(call.target(),level,read,readOnly);
-		Object obj=call.execute(target);
+		Object obj=call.execute(target,subject);
 		if(!read) {
 			undo.args[index]=obj;
 			record(call,undo,level);
@@ -76,18 +77,18 @@ public class Transaction extends PersistentObject {
 		return (PersistentMethodCall)create(PersistentMethodCall.class,new Class[] {MethodCall.class},new Object[] {call});
 	}
 
-	synchronized void commit() {
+	synchronized void commit(Subject subject) {
 		if(isRollbackOnly()) throw new PersistentException("rollback only");
 		for(ListIterator it=getCalls().listIterator(0);it.hasNext();it.remove()) {
-			((PersistentMethodCall)it.next()).call().execute();
+			((PersistentMethodCall)it.next()).call().execute(subject);
 		}
 		getUndos().clear();
 		clear();
 	}
 
-	synchronized void rollback() {
+	synchronized void rollback(Subject subject) {
 		for(ListIterator it=getUndos().listIterator(getUndos().size());it.hasPrevious();it.remove()) {
-			((PersistentMethodCall)it.previous()).call().execute();
+			((PersistentMethodCall)it.previous()).call().execute(subject);
 		}
 		getCalls().clear();
 		clear();

@@ -1,7 +1,6 @@
 package persistence;
 
 import java.rmi.RemoteException;
-import java.security.PrivilegedAction;
 import javax.security.auth.Subject;
 import persistence.PersistentObject.MethodCall;
 
@@ -33,12 +32,8 @@ class SystemConnection extends Connection {
 			return execute(call,undo,index,false);
 		}
 
-		Object execute(final MethodCall call, MethodCall undo, int index, boolean read) {
-			return Subject.doAsPrivileged(subject,new PrivilegedAction() {
-				public Object run() {
-					return call.execute();
-				}
-			},null);
+		Object execute(MethodCall call, MethodCall undo, int index, boolean read) {
+			return call.execute(subject);
 		}
 
 		public void commit() {}

@@ -73,9 +73,9 @@ public class AdminConnection extends Connection {
 		}
 	}
 
-	public void closeStore() {
+	public void shutdown() {
 		try {
-			((persistence.RemoteAdminConnection)connection).closeStore();
+			((persistence.RemoteAdminConnection)connection).shutdown();
 		} catch (RemoteException e) {
 			throw new RuntimeException(e);
 		}

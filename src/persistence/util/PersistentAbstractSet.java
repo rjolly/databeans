@@ -22,7 +22,7 @@ public abstract class PersistentAbstractSet extends PersistentAbstractCollection
 
 		// Comparison and hashing
 
-		public boolean remoteEquals(PersistentObject o) {
+		public synchronized boolean remoteEquals(PersistentObject o) {
 			if (o == PersistentAbstractSet.this)
 				return true;
 
@@ -40,7 +40,7 @@ public abstract class PersistentAbstractSet extends PersistentAbstractCollection
 			}
 		}
 
-		public int remoteHashCode() {
+		public synchronized int remoteHashCode() {
 			int h = 0;
 			Iterator i = iterator();
 			while (i.hasNext()) {

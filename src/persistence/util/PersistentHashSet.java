@@ -31,7 +31,7 @@ public class PersistentHashSet extends PersistentAbstractSet
 			return getMap();
 		}
 
-		public PersistentObject remoteClone() {
+		public synchronized PersistentObject remoteClone() {
 			PersistentHashSet newSet = (PersistentHashSet)super.remoteClone();
 			newSet.setMap((PersistentHashMap)getMap().clone());
 			return newSet;

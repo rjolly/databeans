@@ -19,7 +19,7 @@ public abstract class PersistentAbstractCollection extends PersistentObject impl
 	protected class Accessor extends PersistentObject.Accessor {
 		public Accessor() throws RemoteException {}
 
-		public boolean add(Object o, boolean b) {
+		public synchronized boolean add(Object o, boolean b) {
 			return b?add0(o):false;
 		}
 
@@ -27,7 +27,7 @@ public abstract class PersistentAbstractCollection extends PersistentObject impl
 			throw new UnsupportedOperationException();
 		}
 
-		public boolean remove(Object o, boolean b) {
+		public synchronized boolean remove(Object o, boolean b) {
 			return b?remove0(o):false;
 		}
 
@@ -53,7 +53,7 @@ public abstract class PersistentAbstractCollection extends PersistentObject impl
 
 		//  String conversion
 
-		public String remoteToString() {
+		public synchronized String remoteToString() {
 			StringBuffer buf = new StringBuffer();
 			buf.append("[");
 

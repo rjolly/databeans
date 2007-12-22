@@ -48,7 +48,7 @@ public class PersistentTreeMap extends PersistentAbstractMap
 			return getSize();
 		}
 
-		public boolean containsValue(Object value) {
+		public synchronized boolean containsValue(Object value) {
 			return (getRoot()==null ? false :
 				(value==null ? valueSearchNull(getRoot())
 				: valueSearchNonNull(getRoot(), value)));
@@ -58,7 +58,7 @@ public class PersistentTreeMap extends PersistentAbstractMap
 			return getComparator();
 		}
 
-		public Entry getEntry(Object key) {
+		public synchronized Entry getEntry(Object key) {
 			Entry p = getRoot();
 			while (p != null) {
 				int cmp = compare(key,p.getKey0());
@@ -72,7 +72,7 @@ public class PersistentTreeMap extends PersistentAbstractMap
 			return null;
 		}
 
-		public Entry getCeilEntry(Object key) {
+		public synchronized Entry getCeilEntry(Object key) {
 			Entry p = getRoot();
 			if (p==null)
 				return null;
@@ -102,7 +102,7 @@ public class PersistentTreeMap extends PersistentAbstractMap
 			}
 		}
 
-		public Entry getPrecedingEntry(Object key) {
+		public synchronized Entry getPrecedingEntry(Object key) {
 			Entry p = getRoot();
 			if (p==null)
 				return null;
@@ -175,7 +175,7 @@ public class PersistentTreeMap extends PersistentAbstractMap
 			return oldValue;
 		}
 
-		public PersistentObject remoteClone() {
+		public synchronized PersistentObject remoteClone() {
 			PersistentTreeMap clone = (PersistentTreeMap)super.remoteClone();
 
 			// Put clone into "virgin" state (except for comparator)
@@ -193,11 +193,11 @@ public class PersistentTreeMap extends PersistentAbstractMap
 			return clone;
 		}
 
-		public boolean hasChildren(Entry entry) {
+		public synchronized boolean hasChildren(Entry entry) {
 			return entry.getLeft() != null && entry.getRight() != null;
 		}
 
-		public Entry firstEntry() {
+		public synchronized Entry firstEntry() {
 			Entry p = getRoot();
 			if (p != null)
 				while (p.getLeft() != null)
@@ -205,7 +205,7 @@ public class PersistentTreeMap extends PersistentAbstractMap
 			return p;
 		}
 
-		public Entry lastEntry() {
+		public synchronized Entry lastEntry() {
 			Entry p = getRoot();
 			if (p != null)
 				while (p.getRight() != null)
@@ -213,7 +213,7 @@ public class PersistentTreeMap extends PersistentAbstractMap
 			return p;
 		}
 
-		public Entry successor(Entry t) {
+		public synchronized Entry successor(Entry t) {
 			if (t == null)
 				return null;
 			else if (t.getRight() != null) {

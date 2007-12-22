@@ -38,11 +38,11 @@ abstract class RemoteAdminConnectionImpl extends RemoteConnectionImpl implements
 		},null);
 	}
 
-	public void closeStore() throws RemoteException {
+	public void shutdown() throws RemoteException {
 		try {
 			Subject.doAsPrivileged(subject,new PrivilegedExceptionAction() {
 				public Object run() throws RemoteException {
-					store.checkedClose();
+					store.shutdown();
 					return null;
 				}
 			},null);
@@ -54,7 +54,7 @@ abstract class RemoteAdminConnectionImpl extends RemoteConnectionImpl implements
 	public void gc() {
 		Subject.doAsPrivileged(subject,new PrivilegedAction() {
 			public Object run() {
-				store.checkedGc();
+				store.userGc();
 				return null;
 			}
 		},null);
