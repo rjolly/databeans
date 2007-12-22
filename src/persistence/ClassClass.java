@@ -1,15 +1,25 @@
 package persistence;
 
 final class ClassClass extends PersistentClass {
-	public String getName() {
-		return PersistentClass.class.getName();
+	transient String fields;
+
+	ClassClass() {
+		init(PersistentClass.class);
 	}
 
-	public void setName(String str) {}
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String str) {
+		name=str;
+	}
 
 	public String getFields() {
-		return "L fields;L name";
+		return fields;
 	}
 
-	public void setFields(String str) {}
+	public void setFields(String str) {
+		fields=str;
+	}
 }
