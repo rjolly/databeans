@@ -21,6 +21,7 @@
 
   <target name="compile">
     <mkdir dir="classes"/>
+    <unzip src="lib/sun_reflect_misc.jar" dest="classes" overwrite="false"/>
     <javac srcdir="src" destdir="classes"/>
     <rmic base="classes"
           includes="persistence/*Impl.class
@@ -30,6 +31,7 @@
 
   <target name="compile-debug">
     <mkdir dir="classes"/>
+    <unzip src="lib/sun_reflect_misc.jar" dest="classes" overwrite="false"/>
     <javac debug="on" srcdir="src" destdir="classes"/>
     <rmic debug="on"
           base="classes"
