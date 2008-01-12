@@ -21,7 +21,7 @@ abstract class RemoteConnectionImpl extends UnicastRemoteObject implements Remot
 		this.level=level;
 		this.readOnly=readOnly;
 		this.subject=subject;
-		if(level!=Connection.TRANSACTION_NONE) transaction=store.getTransaction(clientName()+"@"+clientHost());
+		if(level!=Connection.TRANSACTION_NONE) transaction=store.getTransaction(client());
 		open();
 	}
 
@@ -29,16 +29,12 @@ abstract class RemoteConnectionImpl extends UnicastRemoteObject implements Remot
 		store.connections.put(this,null);
 	}
 
-	String clientName() {
-		return ((Principal)subject.getPrincipals(DatabeansPrincipal.class).iterator().next()).getName();
-	}
-
-	String clientHost() {
-		String host="";
+	String client() {
+		String name=((Principal)subject.getPrincipals(DatabeansPrincipal.class).iterator().next()).getName();
 		try {
-			host=getClientHost();
+			name+="@"+getClientHost();
 		} catch (ServerNotActiveException e) {}
-		return host;
+		return name;
 	}
 
 	abstract Connection connection();
