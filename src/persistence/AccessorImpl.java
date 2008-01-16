@@ -44,7 +44,7 @@ abstract class AccessorImpl extends UnicastRemoteObject implements Accessor {
 		return attach(store.get(base.longValue(),field));
 	}
 
-	Object set(Field field, Object value) {
+	synchronized Object set(Field field, Object value) {
 		Object obj=get(field);
 		store.set(base.longValue(),field,detach(value));
 		return obj;
