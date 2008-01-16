@@ -300,10 +300,24 @@ class SubList extends AbstractList {
 			throw new IndexOutOfBoundsException("toIndex = " + toIndex);
 		if (fromIndex > toIndex)
 			throw new IllegalArgumentException("fromIndex(" + fromIndex +
-											   ") > toIndex(" + toIndex + ")");
+							") > toIndex(" + toIndex + ")");
 		l = list;
 		offset = fromIndex;
 		size = toIndex - fromIndex;
+		expectedModCount = l.modCount();
+	}
+
+	SubList(PersistentAbstractList list, int offset, int fromIndex, int toIndex, int size) {
+		if (fromIndex < 0)
+			throw new IndexOutOfBoundsException("fromIndex = " + fromIndex);
+		if (toIndex > size)
+			throw new IndexOutOfBoundsException("toIndex = " + toIndex);
+		if (fromIndex > toIndex)
+			throw new IllegalArgumentException("fromIndex(" + fromIndex +
+							") > toIndex(" + toIndex + ")");
+		l = list;
+		this.offset = offset+fromIndex;
+		this.size = toIndex - fromIndex;
 		expectedModCount = l.modCount();
 	}
 
@@ -436,13 +450,13 @@ class SubList extends AbstractList {
 	}
 
 	public List subList(int fromIndex, int toIndex) {
-		return new SubList(l, offset+fromIndex, offset+toIndex);
+		return new SubList(l, offset, fromIndex, toIndex, size);
 	}
 
 	private void rangeCheck(int index) {
 		if (index<0 || index>=size)
 			throw new IndexOutOfBoundsException("Index: "+index+
-												",Size: "+size);
+								",Size: "+size);
 	}
 
 	private void checkForComodification() {

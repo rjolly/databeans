@@ -118,7 +118,10 @@
     <antcall target="javadoc"/>
     <zip destfile="../databeans.zip"
          basedir=".."
-         includes="databeans/**"/>
+         includes="databeans/**"
+         excludes="databeans/nbproject/private/**,
+                   databeans/sample/client/nbproject/private/**,
+		   databeans/sample/server/nbproject/private/**"/>
   </target>
 
   <target name="console">
