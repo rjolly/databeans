@@ -15,7 +15,7 @@ public abstract class NotifiedObject extends PersistentObject {
 	protected class Accessor extends PersistentObject.Accessor {
 		public Accessor() throws RemoteException {}
 
-		Object set(Field field, Object value) {
+		synchronized Object set(Field field, Object value) {
 			Object oldValue=get(field);
 			try {
 				PersistentVetoableChangeSupport support=getVetoableChangeSupport();
