@@ -7,11 +7,6 @@ grant codebase "file:-" {
 	permission javax.security.auth.AuthPermission "doAsPrivileged";
 };
 
-grant Principal persistence.server.DatabeansPrincipal "system" {
-	permission persistence.MethodPermission "*";
-	permission persistence.PropertyPermission "*";
-};
-
 grant Principal persistence.server.DatabeansPrincipal "admin" {
 	permission persistence.AdminPermission "*";
 	permission persistence.PropertyPermission "*";

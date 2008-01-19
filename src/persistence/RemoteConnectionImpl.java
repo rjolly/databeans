@@ -118,6 +118,6 @@ abstract class RemoteConnectionImpl extends UnicastRemoteObject implements Remot
 	}
 
 	protected final void finalize() {
-		if(transaction!=null) store.release(transaction);
+		if(transaction!=null) store.release(transaction,subject);
 	}
 }

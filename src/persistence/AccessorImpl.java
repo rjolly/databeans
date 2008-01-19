@@ -21,8 +21,11 @@ abstract class AccessorImpl extends UnicastRemoteObject implements Accessor {
 
 	abstract PersistentObject object();
 
-	Object call(String method, Class types[], Object args[]) {
-		if(!method.equals("get") && !method.equals("set")) AccessController.checkPermission(new MethodPermission(clazz.name()+"."+method));
+	Object call(String method, Class types[], Object args[], boolean check) {
+		if(check) {
+			if(method.equals("get") || method.equals("set")) AccessController.checkPermission(new PropertyPermission(clazz.name()+"."+args[0]));
+			else AccessController.checkPermission(new MethodPermission(clazz.name()+"."+method));
+		}
 		try {
 			return getClass().getMethod(method,types).invoke(this,args);
 		} catch (Exception e) {
@@ -30,13 +33,11 @@ abstract class AccessorImpl extends UnicastRemoteObject implements Accessor {
 		}
 	}
 
-	public Object get(String name) {
-		AccessController.checkPermission(new PropertyPermission(clazz.name()+"."+name));
+	public final Object get(String name) {
 		return get(clazz.getField(name));
 	}
 
-	public Object set(String name, Object value) {
-		AccessController.checkPermission(new PropertyPermission(clazz.name()+"."+name));
+	public final Object set(String name, Object value) {
 		return set(clazz.getField(name),value);
 	}
 

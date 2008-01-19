@@ -96,9 +96,9 @@ public class PersistentObject implements Cloneable, Serializable {
 		}
 
 		Object execute(final PersistentObject target, Subject subject) {
-			return Subject.doAsPrivileged(subject,new PrivilegedAction() {
+			return subject==null?target.call(method,types,args,false):Subject.doAsPrivileged(subject,new PrivilegedAction() {
 				public Object run() {
-					return target.call(method,types,args);
+					return target.call(method,types,args,true);
 				}
 			},null);
 		}
@@ -108,8 +108,8 @@ public class PersistentObject implements Cloneable, Serializable {
 		return (AccessorImpl)accessor;
 	}
 
-	Object call(String method, Class types[], Object args[]) {
-		return accessor().call(method,types,args);
+	Object call(String method, Class types[], Object args[], boolean check) {
+		return accessor().call(method,types,args,check);
 	}
 
 	void lock(Transaction transaction) {

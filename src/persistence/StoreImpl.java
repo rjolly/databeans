@@ -28,7 +28,6 @@ import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 import persistence.PersistentObject.MethodCall;
-import persistence.server.DatabeansPrincipal;
 import persistence.storage.Collector;
 import persistence.storage.FileHeap;
 import persistence.storage.Heap;
@@ -36,7 +35,6 @@ import persistence.storage.MemoryModel;
 
 public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	final Heap heap;
-	final Subject systemSubject;
 	final Connection systemConnection;
 	final Map connections=new WeakHashMap();
 	final Map cache=new WeakHashMap();
@@ -52,9 +50,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		} catch (FileNotFoundException e) {
 			throw new RuntimeException(e);
 		}
-		systemSubject=new Subject();
-		systemSubject.getPrincipals().add(new DatabeansPrincipal("system"));
-		systemConnection=new SystemConnection(this,systemSubject);
+		systemConnection=new SystemConnection(this);
 		if((boot=heap.boot())==0) {
 			heap.mount(true);
 			create();
@@ -96,7 +92,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	void clear() {
 		if(readOnly) return;
 		for(Iterator it=system.getTransactions().iterator();it.hasNext();it.remove()) {
-			((Transaction)it.next()).rollback(systemSubject);
+			((Transaction)it.next()).rollback(null);
 		}
 		gc(false);
 		for(Iterator it=classes.values().iterator();it.hasNext();) {
@@ -335,11 +331,11 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		return trans;
 	}
 
-	synchronized void release(Transaction transaction) {
+	synchronized void release(Transaction transaction, Subject subject) {
 //		if(readOnly) return;
 		if(closed) return;
 		system.getTransactions().remove(transaction);
-		transaction.rollback(systemSubject);
+		transaction.rollback(subject);
 	}
 
 	public synchronized void close() throws RemoteException {

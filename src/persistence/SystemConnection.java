@@ -1,17 +1,16 @@
 package persistence;
 
 import java.rmi.RemoteException;
-import javax.security.auth.Subject;
 import persistence.PersistentObject.MethodCall;
 
 class SystemConnection extends Connection {
-	SystemConnection(StoreImpl store, Subject subject) throws RemoteException {
-		connection=new RemoteSystemConnection(store,subject);
+	SystemConnection(StoreImpl store) throws RemoteException {
+		connection=new RemoteSystemConnection(store);
 	}
 
 	class RemoteSystemConnection extends RemoteConnectionImpl {
-		RemoteSystemConnection(StoreImpl store, Subject subject) throws RemoteException {
-			super(store,Connection.TRANSACTION_NONE,false,subject);
+		RemoteSystemConnection(StoreImpl store) throws RemoteException {
+			super(store,Connection.TRANSACTION_NONE,false,null);
 		}
 
 		void open() {}
