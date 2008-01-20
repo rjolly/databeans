@@ -369,7 +369,9 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	synchronized void syncGc() {
 		if(readOnly) return;
 		if(closed) return;
-		gc(true);
+		synchronized(heap) {
+			gc();
+		}
 	}
 
 	public void gc() {
@@ -377,11 +379,9 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	}
 
 	void gc(boolean keep) {
-		synchronized(heap) {
-			mark(boot);
-			if(keep) mark();
-			sweep();
-		}
+		if(keep) mark();
+		mark(boot);
+		sweep();
 	}
 
 	void mark() {
