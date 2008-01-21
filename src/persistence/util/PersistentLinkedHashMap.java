@@ -36,7 +36,7 @@ public class PersistentLinkedHashMap extends PersistentHashMap {
 			return e.getValue();
 		}
 
-		public synchronized Object put(Entry entry, Object value) {
+		public synchronized Object put(PersistentHashMap.Entry entry, Object value) {
 			Object oldValue = entry.getValue();
 			entry.setValue(value);
 			entry.recordAccess(PersistentLinkedHashMap.this);
@@ -121,10 +121,10 @@ public class PersistentLinkedHashMap extends PersistentHashMap {
 		else return putMapping(key,value);
 	}
 
-	Object put(Entry entry, Object value) {
+	Object put(PersistentHashMap.Entry entry, Object value) {
 		return execute(
-			new MethodCall("put",new Class[] {Map.Entry.class,Object.class},new Object[] {entry,value}),
-			new MethodCall("put",new Class[] {Map.Entry.class,Object.class},new Object[] {entry,null}),1);
+			new MethodCall("put",new Class[] {PersistentHashMap.Entry.class,Object.class},new Object[] {entry,value}),
+			new MethodCall("put",new Class[] {PersistentHashMap.Entry.class,Object.class},new Object[] {entry,null}),1);
 	}
 
 	public void clear() {
