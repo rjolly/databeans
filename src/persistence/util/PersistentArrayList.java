@@ -25,7 +25,6 @@ public class PersistentArrayList extends PersistentAbstractList
 		public Accessor() throws RemoteException {}
 
 		public void init(int initialCapacity) {
-			PersistentArrayList.super.init();
 			if (initialCapacity < 0)
 				throw new IllegalArgumentException("Illegal Capacity: "+
 					initialCapacity);
@@ -33,7 +32,6 @@ public class PersistentArrayList extends PersistentAbstractList
 		}
 
 		public void init(Collection c) {
-			PersistentArrayList.super.init();
 			setSize(c.size());
 			// Allow 10% room for growth
 			Object elementData[] = new Object[

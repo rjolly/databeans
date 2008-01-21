@@ -33,7 +33,6 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 		public Accessor() throws RemoteException {}
 
 		public void init(int initialCapacity, float loadFactor) {
-			PersistentHashMap.super.init();
 			if (initialCapacity < 0)
 				throw new IllegalArgumentException("Illegal initial capacity: " +
 					initialCapacity);
@@ -55,7 +54,6 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 		}
 
 		public void init() {
-			PersistentHashMap.super.init();
 			setLoadFactor(DEFAULT_LOAD_FACTOR);
 			setThreshold((int)(DEFAULT_INITIAL_CAPACITY * DEFAULT_LOAD_FACTOR));
 			setTable(create(Entry.class,DEFAULT_INITIAL_CAPACITY));
@@ -227,7 +225,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 
 	public void init(int initialCapacity, float loadFactor) {
 		execute(
-			new MethodCall("init",new Class[] {int.class,float.class},new Object[] {new Integer(initialCapacity), new Float(loadFactor)}));
+			new MethodCall("init",new Class[] {int.class,float.class},new Object[] {new Integer(initialCapacity),new Float(loadFactor)}));
 	}
 
 	public void init(int initialCapacity) {

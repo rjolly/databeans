@@ -6,13 +6,44 @@
  */
 package persistence.util;
 
+import java.rmi.RemoteException;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import persistence.Array;
+import persistence.PersistentObject;
 
 public class PersistentLinkedHashMap extends PersistentHashMap {
+	protected PersistentObject.Accessor createAccessor() throws RemoteException {
+		return new Accessor();
+	}
+
+	protected class Accessor extends PersistentHashMap.Accessor {
+		public Accessor() throws RemoteException {}
+
+		public void init(int initialCapacity, float loadFactor,
+							 boolean accessOrder) {
+			PersistentLinkedHashMap.super.init(initialCapacity,loadFactor);
+			setAccessOrder(accessOrder);
+		}
+
+		public synchronized Object get(Object key) {
+			Entry e = (Entry)getEntry(key);
+			if (e == null)
+				return null;
+			e.recordAccess(PersistentLinkedHashMap.this);
+			return e.getValue();
+		}
+
+		public synchronized Object put(Entry entry, Object value) {
+			Object oldValue = entry.getValue();
+			entry.setValue(value);
+			entry.recordAccess(PersistentLinkedHashMap.this);
+			return oldValue;
+		}
+	}
+
 	public Entry getHeader() {
 		return (Entry)get("header");
 	}
@@ -31,32 +62,27 @@ public class PersistentLinkedHashMap extends PersistentHashMap {
 
 	public void init(int initialCapacity, float loadFactor) {
 		super.init(initialCapacity, loadFactor);
-		setAccessOrder(false);
 	}
 
 	public void init(int initialCapacity) {
 		super.init(initialCapacity);
-		setAccessOrder(false);
 	}
 
 	public void init() {
 		super.init();
-		setAccessOrder(false);
 	}
 
 	public void init(Map m) {
 		super.init(m);
-		setAccessOrder(false);
 	}
 
-//	public void init(int initialCapacity, float loadFactor,
-//						 boolean accessOrder) {
-//		super.init(initialCapacity, loadFactor);
-//		setAccessOrder(accessOrder);
-//	}
+	public void init(int initialCapacity, float loadFactor, boolean accessOrder) {
+		execute(
+			new MethodCall("init",new Class[] {int.class,float.class,boolean.class},new Object[] {new Integer(initialCapacity),new Float(loadFactor),new Boolean(accessOrder)}));
+	}
 
 	void init0() {
-		setHeader((Entry)create(Entry.class,new Class[] {int.class,Object.class,Object.class,Entry.class},new Object[] {new Integer(-1), null, null, null}));
+		setHeader((Entry)create(Entry.class,new Class[] {int.class,Object.class,Object.class,PersistentHashMap.Entry.class},new Object[] {new Integer(-1), null, null, null}));
 		getHeader().setBefore(getHeader());
 		getHeader().setAfter(getHeader());
 	}
@@ -85,11 +111,20 @@ public class PersistentLinkedHashMap extends PersistentHashMap {
 	}
 
 	public Object get(Object key) {
-		Entry e = (Entry)getEntry(key);
-		if (e == null)
-			return null;
-		e.recordAccess(this);
-		return e.getValue();
+		return execute(
+			new MethodCall("get",new Class[] {Object.class},new Object[] {key}));
+	}
+
+	public Object put(Object key, Object value) {
+		PersistentHashMap.Entry e = getEntry(key);
+		if(e != null) return put(e,value);
+		else return putMapping(key,value);
+	}
+
+	Object put(Entry entry, Object value) {
+		return execute(
+			new MethodCall("put",new Class[] {Map.Entry.class,Object.class},new Object[] {entry,value}),
+			new MethodCall("put",new Class[] {Map.Entry.class,Object.class},new Object[] {entry,null}),1);
 	}
 
 	public void clear() {
@@ -98,7 +133,7 @@ public class PersistentLinkedHashMap extends PersistentHashMap {
 		getHeader().setAfter(getHeader());
 	}
 
-	private static class Entry extends PersistentHashMap.Entry {
+	public static class Entry extends PersistentHashMap.Entry {
 		public Entry getBefore() {
 			return (Entry)get("before");
 		}
@@ -208,7 +243,7 @@ public class PersistentLinkedHashMap extends PersistentHashMap {
 	}
 
 	PersistentHashMap.Entry createEntry(int hash, Object key, Object value, int bucketIndex) {
-		Entry e = (Entry)create(Entry.class,new Class[] {int.class,Object.class,Object.class,Entry.class},new Object[] {new Integer(hash), key, value, getTable().get(bucketIndex)});
+		Entry e = (Entry)create(Entry.class,new Class[] {int.class,Object.class,Object.class,PersistentHashMap.Entry.class},new Object[] {new Integer(hash), key, value, getTable().get(bucketIndex)});
 		getTable().set(bucketIndex,e);
 		e.addBefore(getHeader());
 		setSize(getSize()+1);
