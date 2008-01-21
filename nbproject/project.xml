@@ -43,6 +43,7 @@
             <export>
                 <type>jar</type>
                 <location>databeans.jar</location>
+                <script>nbproject/nbjdk.xml</script>
                 <build-target>compile</build-target>
             </export>
             <view>
