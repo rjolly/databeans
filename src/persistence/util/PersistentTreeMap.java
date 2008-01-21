@@ -175,8 +175,8 @@ public class PersistentTreeMap extends PersistentAbstractMap
 			return oldValue;
 		}
 
-		public synchronized PersistentObject remoteClone() {
-			PersistentTreeMap clone = (PersistentTreeMap)super.remoteClone();
+		public synchronized PersistentObject persistentClone() {
+			PersistentTreeMap clone = (PersistentTreeMap)super.persistentClone();
 
 			// Put clone into "virgin" state (except for comparator)
 			clone.setRoot(null);
@@ -800,7 +800,7 @@ public class PersistentTreeMap extends PersistentAbstractMap
 				return oldValue;
 			}
 
-			public boolean remoteEquals(Object o) {
+			public boolean persistentEquals(Object o) {
 				if (!(o instanceof Map.Entry))
 					return false;
 				Map.Entry e = (Map.Entry)o;
@@ -808,13 +808,13 @@ public class PersistentTreeMap extends PersistentAbstractMap
 				return valEquals(getKey0(),e.getKey()) && valEquals(getValue0(),e.getValue());
 			}
 
-			public int remoteHashCode() {
+			public int persistentHashCode() {
 				int keyHash = (getKey0()==null ? 0 : getKey0().hashCode());
 				int valueHash = (getValue0()==null ? 0 : getValue0().hashCode());
 				return keyHash ^ valueHash;
 			}
 
-			public String remoteToString() {
+			public String persistentToString() {
 				return getKey0() + "=" + getValue0();
 			}
 		}

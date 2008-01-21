@@ -156,8 +156,8 @@ public class PersistentArrayList extends PersistentAbstractList
 			return oldValue;
 		}
 
-		public synchronized PersistentObject remoteClone() {
-			PersistentArrayList v = (PersistentArrayList)super.remoteClone();
+		public synchronized PersistentObject persistentClone() {
+			PersistentArrayList v = (PersistentArrayList)super.persistentClone();
 			v.setElementData(create(Object.class,getSize()));
 			PersistentArray.copy(getElementData(), 0, v.getElementData(), 0, getSize());
 			v.setModCount(0);

@@ -74,7 +74,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 
 	void createSystem() {
 		system=(PersistentSystem)systemConnection.create(PersistentSystem.class);
-		incRefCount(boot=system.accessor().base.longValue());
+		incRefCount(boot=system.accessor().base());
 		heap.setBoot(boot);
 	}
 
@@ -96,7 +96,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		}
 		gc(false);
 		for(Iterator it=classes.values().iterator();it.hasNext();) {
-			if(refCount(((PersistentClass)it.next()).accessor().base.longValue())==1) it.remove();
+			if(refCount(((PersistentClass)it.next()).accessor().base())==1) it.remove();
 		}
 	}
 
@@ -116,7 +116,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 
 	PersistentObject attach(PersistentObject obj) {
 		if(!equals(obj.store())) throw new PersistentException("not the same store");
-		return get(obj.base().longValue()).object();
+		return get(obj.base()).object();
 	}
 
 	PersistentClass get(Class clazz) {

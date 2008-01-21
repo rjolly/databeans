@@ -13,10 +13,23 @@ abstract class AccessorImpl extends UnicastRemoteObject implements Accessor {
 
 	protected AccessorImpl() throws RemoteException {}
 
-	void init(Long base, PersistentClass clazz, StoreImpl store) {
-		this.base=base;
+	static AccessorImpl newInstance(long base, PersistentClass clazz, StoreImpl store) {
+		try {
+			PersistentObject obj=clazz.newInstance();
+			AccessorImpl accessor=obj.createAccessor();
+			accessor.base=new Long(base);
+			accessor.clazz=clazz;
+			accessor.store=store;
+			obj.accessor=accessor;
+			obj.connection=store.systemConnection;
+			return accessor;
+		} catch (RemoteException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	void setClass(PersistentClass clazz) {
 		this.clazz=clazz;
-		this.store=store;
 	}
 
 	abstract PersistentObject object();
@@ -97,8 +110,8 @@ abstract class AccessorImpl extends UnicastRemoteObject implements Accessor {
 		object().close();
 	}
 
-	public final Long base() {
-		return base;
+	public final long base() {
+		return base.longValue();
 	}
 
 	public final Store store() {
@@ -109,31 +122,19 @@ abstract class AccessorImpl extends UnicastRemoteObject implements Accessor {
 		return clazz;
 	}
 
-	static AccessorImpl newInstance(long base, PersistentClass clazz, StoreImpl store) {
-		try {
-			PersistentObject obj=clazz.newInstance();
-			AccessorImpl accessor=obj.createAccessor();
-			accessor.init(new Long(base),clazz,store);
-			obj.init(accessor,store.systemConnection);
-			return accessor;
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	public int remoteHashCode() {
+	public int persistentHashCode() {
 		return base.hashCode();
 	}
 
-	public boolean remoteEquals(PersistentObject obj) {
-		return obj.base().equals(base);
+	public boolean persistentEquals(PersistentObject obj) {
+		return base.equals(obj.accessor().base);
 	}
 
-	public String remoteToString() {
+	public String persistentToString() {
 		return clazz.name()+"@"+Long.toHexString(base.longValue());
 	}
 
-	public PersistentObject remoteClone() {
+	public PersistentObject persistentClone() {
 		return ((AccessorImpl)clone()).object();
 	}
 

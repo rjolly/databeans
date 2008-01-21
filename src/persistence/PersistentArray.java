@@ -31,7 +31,7 @@ public final class PersistentArray extends PersistentObject implements Array {
 			return set(((ArrayClass)clazz).getField(index),value);
 		}
 
-		public String remoteToString() {
+		public String persistentToString() {
 			return dump();
 		}
 	}

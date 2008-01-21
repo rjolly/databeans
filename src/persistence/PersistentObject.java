@@ -28,11 +28,6 @@ public class PersistentObject implements Cloneable, Serializable {
 		return (PersistentClass)create(PersistentClass.class,new Class[] {Class.class},new Object[] {getClass()});
 	}
 
-	void init(persistence.Accessor accessor, Connection connection) {
-		this.accessor=accessor;
-		this.connection=connection;
-	}
-
 	protected final PersistentObject create(String name) {
 		return connection.create(name);
 	}
@@ -124,7 +119,7 @@ public class PersistentObject implements Cloneable, Serializable {
 		accessor=null;
 	}
 
-	Long base() {
+	long base() {
 		try {
 			return accessor.base();
 		} catch (RemoteException e) {
@@ -141,35 +136,27 @@ public class PersistentObject implements Cloneable, Serializable {
 	}
 
 	public final PersistentClass persistentClass() {
-		try {
-			return (PersistentClass)connection.attach(accessor.persistentClass());
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
+		return (PersistentClass)execute(
+			new MethodCall("persistentClass",new Class[] {},new Object[] {}));
 	}
 
 	public int hashCode() {
-		try {
-			return accessor.remoteHashCode();
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
+		return ((Integer)execute(
+			new MethodCall("persistentHashCode",new Class[] {},new Object[] {}))).intValue();
 	}
 
 	public boolean equals(Object obj) {
-		try {
-			return obj instanceof PersistentObject?((PersistentObject)obj).accessor.remoteEquals(this):false;
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
+		return obj instanceof PersistentObject?equals((PersistentObject)obj):false;
+	}
+
+	boolean equals(PersistentObject obj) {
+		return ((Boolean)execute(
+			new MethodCall("persistentEquals",new Class[] {PersistentObject.class},new Object[] {obj}))).booleanValue();
 	}
 
 	public String toString() {
-		try {
-			return accessor.remoteToString();
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
+		return (String)execute(
+			new MethodCall("persistentToString",new Class[] {},new Object[] {}));
 	}
 
 	public String dump() {
@@ -186,10 +173,7 @@ public class PersistentObject implements Cloneable, Serializable {
 	}
 
 	public Object clone() {
-		try {
-			return connection.attach(accessor.remoteClone());
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
+		return execute(
+			new MethodCall("persistentClone",new Class[] {},new Object[] {}));
 	}
 }

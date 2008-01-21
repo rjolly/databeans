@@ -44,7 +44,7 @@ public class PersistentClass extends PersistentObject {
 	protected class Accessor extends PersistentObject.Accessor {
 		public Accessor() throws RemoteException {}
 
-		public String remoteToString() {
+		public String persistentToString() {
 			StringBuffer s=new StringBuffer();
 			String fields[]=getFields().split(";");
 			s.append(Long.toHexString(base.longValue()));
@@ -59,9 +59,13 @@ public class PersistentClass extends PersistentObject {
 		if(getClass()==PersistentClass.class) {
 			PersistentClass c=(PersistentClass)connection.create(new ClassClass(),new Class[] {Class.class},new Object[] {getClass()});
 			c.setup();
-			c.accessor().clazz=c;
+			c.setClass(c);
 			return c;
 		} else return super.createClass();
+	}
+
+	void setClass(PersistentClass clazz) {
+		accessor().setClass(clazz);
 	}
 
 	void setup() {

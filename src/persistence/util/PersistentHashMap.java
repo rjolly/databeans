@@ -51,6 +51,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 			setLoadFactor(loadFactor);
 			setThreshold((int)(capacity * loadFactor));
 			setTable(create(Entry.class,capacity));
+			init0();
 		}
 
 		public void init() {
@@ -58,6 +59,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 			setLoadFactor(DEFAULT_LOAD_FACTOR);
 			setThreshold((int)(DEFAULT_INITIAL_CAPACITY * DEFAULT_LOAD_FACTOR));
 			setTable(create(Entry.class,DEFAULT_INITIAL_CAPACITY));
+			init0();
 		}
 
 		public void init(Map m) {
@@ -163,11 +165,12 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 			return e;
 		}
 
-		public synchronized PersistentObject remoteClone() {
-			PersistentHashMap result = (PersistentHashMap)super.remoteClone();
+		public synchronized PersistentObject persistentClone() {
+			PersistentHashMap result = (PersistentHashMap)super.persistentClone();
 			result.setTable(create(Entry.class,getTable().length()));
 			result.setModCount(0);
 			result.setSize(0);
+			result.init0();
 			result.putAllForCreate(PersistentHashMap.this);
 			
 			return result;
@@ -240,6 +243,8 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 		execute(
 			new MethodCall("init",new Class[] {Map.class},new Object[] {m}));
 	}
+
+	void init0() {}
 
 	// internal utilities
 
@@ -454,7 +459,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 				return oldValue;
 			}
 	
-			public boolean remoteEquals(Object o) {
+			public boolean persistentEquals(Object o) {
 				if (!(o instanceof Map.Entry))
 					return false;
 				Map.Entry e = (Map.Entry)o;
@@ -469,12 +474,12 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 				return false;
 			}
 	
-			public int remoteHashCode() {
+			public int persistentHashCode() {
 				return (getKey0()==((HashMapClass)Entry.this.get(PersistentHashMap.class)).NULL_KEY() ? 0 : getKey0().hashCode()) ^
 					(getValue0()==null  ? 0 : getValue0().hashCode());
 			}
 
-			public String remoteToString() {
+			public String persistentToString() {
 				return getKey0() + "=" + getValue0();
 			}
 		}

@@ -31,8 +31,8 @@ public class PersistentHashSet extends PersistentAbstractSet
 			return getMap();
 		}
 
-		public synchronized PersistentObject remoteClone() {
-			PersistentHashSet newSet = (PersistentHashSet)super.remoteClone();
+		public synchronized PersistentObject persistentClone() {
+			PersistentHashSet newSet = (PersistentHashSet)super.persistentClone();
 			newSet.setMap((PersistentHashMap)getMap().clone());
 			return newSet;
 		}
@@ -77,9 +77,9 @@ public class PersistentHashSet extends PersistentAbstractSet
 		init((PersistentHashMap)create(PersistentHashMap.class,new Class[] {int.class},new Object[] {new Integer(initialCapacity)}));
 	}
 
-//	PersistentHashSet(int initialCapacity, float loadFactor, boolean dummy) {
-//		init(create(PersistentLinkedHashMap.class,new Class[] {int.class,float.class},new Object[] {new Integer(initialCapacity),new Float(loadFactor)}));
-//	}
+	public void init(int initialCapacity, float loadFactor, boolean dummy) {
+		init((PersistentHashMap)create(PersistentLinkedHashMap.class,new Class[] {int.class,float.class},new Object[] {new Integer(initialCapacity),new Float(loadFactor)}));
+	}
 
 	public Iterator iterator() {
 		return map().keySet().iterator();

@@ -37,7 +37,7 @@ public abstract class PersistentAbstractList extends PersistentAbstractCollectio
 
 		// Comparison and hashing
 
-		public synchronized boolean remoteEquals(PersistentObject o) {
+		public synchronized boolean persistentEquals(PersistentObject o) {
 			if (o == PersistentAbstractList.this)
 				return true;
 			if (!(o instanceof List))
@@ -54,7 +54,7 @@ public abstract class PersistentAbstractList extends PersistentAbstractCollectio
 			return !(e1.hasNext() || e2.hasNext());
 		}
 
-		public synchronized int remoteHashCode() {
+		public synchronized int persistentHashCode() {
 			int hashCode = 1;
 			Iterator i = iterator();
 			while (i.hasNext()) {
