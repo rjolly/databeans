@@ -68,7 +68,6 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		createSystem();
 		createUsers();
 		system.getClasses().putAll(new LinkedHashMap(classes));
-		system.getClasses().toString();
 		system.getClasses().putAll(classes);
 		classes=system.getClasses();
 	}
@@ -88,10 +87,6 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		system=(PersistentSystem)instantiate(boot).object();
 		classes=system.getClasses();
 		clear();
-		classes=new LinkedHashMap();
-		system.getClasses().toString();
-		system.getClasses().putAll(classes);
-		classes=system.getClasses();
 	}
 
 	void clear() {

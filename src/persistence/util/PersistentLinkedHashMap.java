@@ -134,6 +134,10 @@ public class PersistentLinkedHashMap extends PersistentHashMap {
 	}
 
 	public static class Entry extends PersistentHashMap.Entry {
+		protected HashMapClass enclosingClass() {
+			return (HashMapClass)get(PersistentLinkedHashMap.class);
+		}
+
 		public Entry getBefore() {
 			return (Entry)get("before");
 		}

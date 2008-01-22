@@ -440,7 +440,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 			}
 
 			Object unmaskNull(Object key) {
-				return (key == ((HashMapClass)Entry.this.get(PersistentHashMap.class)).NULL_KEY() ? null : key);
+				return (key == enclosingClass().NULL_KEY() ? null : key);
 			}
 
 			public Object getKey() {
@@ -473,13 +473,17 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 			}
 	
 			public int persistentHashCode() {
-				return (getKey0()==((HashMapClass)Entry.this.get(PersistentHashMap.class)).NULL_KEY() ? 0 : getKey0().hashCode()) ^
+				return (getKey0()==enclosingClass().NULL_KEY() ? 0 : getKey0().hashCode()) ^
 					(getValue0()==null  ? 0 : getValue0().hashCode());
 			}
 
 			public String persistentToString() {
 				return getKey0() + "=" + getValue0();
 			}
+		}
+
+		protected HashMapClass enclosingClass() {
+			return (HashMapClass)get(PersistentHashMap.class);
 		}
 
 		Object getKey0() {
