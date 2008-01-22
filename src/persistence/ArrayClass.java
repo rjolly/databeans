@@ -16,6 +16,14 @@ public final class ArrayClass extends PersistentClass {
 		setLength(length);
 	}
 
+	static String name(Class componentType, int length) {
+		return name(new Field("element",componentType).typeCode,length);
+	}
+
+	static String name(char typeCode, int length) {
+		return PersistentArray.class.getName()+"["+length+" "+typeCode+"]";
+	}
+
 	void setup() {
 		super.setup();
 		header=size;

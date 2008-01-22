@@ -88,6 +88,10 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		system=(PersistentSystem)instantiate(boot).object();
 		classes=system.getClasses();
 		clear();
+		classes=new LinkedHashMap();
+		system.getClasses().toString();
+		system.getClasses().putAll(classes);
+		classes=system.getClasses();
 	}
 
 	void clear() {
@@ -130,7 +134,12 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	}
 
 	PersistentClass get(Class componentType, int length) {
-		return ArrayClass.create(componentType,length,this);
+		synchronized(classes) {
+			String name=ArrayClass.name(componentType,length);
+			PersistentClass c=(PersistentClass)classes.get(name);
+			if(c==null) classes.put(name,c=ArrayClass.create(componentType,length,this));
+			return c;
+		}
 	}
 
 	AccessorImpl create(PersistentClass clazz) {
