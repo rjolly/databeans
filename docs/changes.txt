@@ -9,6 +9,7 @@ Changes between 1.0 and 2.0rc13:
 - PersistentClass now extends PersistentObject
 - PersistentObject constructors replaced by init() methods
 - "Persistent" prefix removed from Collection (and PropertyChangeSupport) classes
+- persistent TreeMap, TreeSet, LinkedHashMap, LinkedHashSet
 - import/export on client rather than server side
 - imported the project in netbeans
 - "getting_started" tour entirely based on ant tasks
