@@ -1,80 +1,68 @@
-Supported operating systems
----------------------------
-
-The following instructions apply to Linux. Other Unices shouldn't make any difference. Win32 users will have to find equivalent instructions for their system, but it should be straightforward. Admin scripts (see the bin/ directory) are provided for both systems ; the ones for Win32 have the extension ".bat", as expected.
-
 Software requirements
 ---------------------
 
-java version "1.4.2-03" (or higher)
-Apache Ant (I used version 1.6.2)
-BeanShell (I used version 2.0b4)
+Java 1.4 or higher
+Apache Ant (I used the one bundled in netbeans 5.0)
+BeanShell (optional ; I used version 2.0b4)
 
-BeanShell is used for databeans admin scripts. It can also run client interaction, provided it is given the right classpath and import statements (see below : Running a beanshell client). It is available from:
+BeanShell can be used for running databeans admin scripts. It can provide client interaction too, with the right classpath and import statements (see below : Running a beanshell client). It is available from:
 
 http://www.beanshell.org/download.html
 
-OS environment setup
---------------------
+As of databeans 2.0, this "getting_started" tour is entirely based on ant tasks so as to be independant of the underlying system. Of course they can be run graphically from your preferred IDE.
 
-From now on, the installed databeans directory will be referred to as $DATABEANS_HOME. Copy the BeanShell jar file into the lib/ directory with the changed name below:
-  cp bsh-2.0b4.jar $DATABEANS_HOME/lib/bsh.jar
+Running a bare server
+---------------------
 
-Put the bin/ directory into your path:
-  PATH=$PATH:$DATABEANS_HOME/bin
+Go to the installation directory. Run the RMI registry:
+  ant registry
 
-On Unix, you'll have to make the admin scripts executable, because they have been extracted from a zip file:
-  ant -f $DATABEANS_HOME/build.xml chmod
+Take a new window. Run the class file server (needed for RMI):
+  ant class_file_server
 
-Running the sample
-------------------
+Take another new window. Create a heapspace:
+  ant mkheapspace
 
-Run the RMI registry:
-  rmiregistry &
-  rmiregistry 2000 &
-
-(The second instance is for the admin connection. Its port (2000) should be made available to priviledged users/administrators only.)
-
-Create a working copy of the sample directory and change dir to it:
-  cp -r $DATABEANS_HOME/sample mysample
-  cd mysample
-
-Create a "heapspace":
-  cd server
-  mkheapspace 262144
-
-This creates a file named "heapspace" of sample size 250Kb (but feel free to take anything else). The command above is tantamount to the unix command (that you may prefer):
-  dd if=/dev/zero of=heapspace count=512
-
-Prepare the server directory:
-  ant -Ddatabeans.home=$DATABEANS_HOME setup
-
-(Once you've executed this, you've got a standalone server application, you don't need the databeans installation directory anymore.)
+This last one simply creates an empty file of 256Kb ; it is equivalent to the unix command "dd if=/dev/zero of=heapspace count=512".
 
 Run the server:
-  ant debug
+  ant
 
-You should get the output:
+The output should read:
 
 store bound in registry
-admin bound in registry
 
-Take another window (make sure $DATABEANS_HOME is defined). Prepare the client directory:
-  cd mysample/client
-  ant -Ddatabeans.home=$DATABEANS_HOME setup
+That's all. You may now connect to a bare databeans instance (i.e. without business classes) suited to get acquainted with admin tasks, but not much more. See below "Running a beanshell client" for that.
 
-(As above with this you've got a standalone client application and you need no more the databeans installation directory.)
+Then, stop the server with a simple CTRL-C (or IDE equivalent) and likewise for the class file server. We will now have a look on how to deploy and run a more interesting sample application.
 
-Run the client:
-  ant debug
+Deploying and running the sample
+--------------------------------
 
-You should get the output:
+Prepare the sample:
+  ant setup_sample
+
+This just makes a copy of the databeans libraries in the sample client and server directories. These are now standalone and may be deployed wherever they need, possibly on different machines.
+
+Go to the server directory. Check the RMI registry (see beginning). Run the class file server:
+  ant class_file_server
+
+Take another window. Create the heapspace:
+  ant mkheapspace
+
+Build and run the server:
+  ant
+
+Take another window. Go to the client directory. Build and run the sample client:
+  ant
+
+The output should read:
 
 [[Clark Research New York Manager $2,000.00 Clark], [Miller Research New York Clerk $1,000.00 Clark]]
 
-We've printed a few contents of the database that the sample was intended to create. If you've made it all through here, congratulations, you will now be able to experiment with the sample at your will and then create a new one from scratch to build your own databeans application.
+We've printed the content of the database the sample was intended to create. If you've made it through here, congratulations, you will now be able to play with the sample and later to create a new one from scratch and build your own databeans application.
 
-We may now shutdown the server. Type CTRL-C in the server window. To re-enter the running cycle (for instance after you've made some changes to the sample source files), type again:
+We may now shutdown the server. Type CTRL-C in the server window. To re-enter the running cycle (for instance after some changes to the sample source files), type again:
   ant
 
 And likewise for the client:
@@ -83,10 +71,10 @@ And likewise for the client:
 Running a beanshell client
 --------------------------
 
-It is possible to connect to the server in interactive mode using a scripting language like BeanShell:
-  java -classpath bsh.jar:databeans_client.jar:. -Djava.security.policy=policy bsh.Interpreter
+It is possible to connect to the server in interactive mode with a beanshell console:
+  ant console
 
-The following statements will just get the connection, commit the transaction, and exit. Feel free to try anything in between (provided perhaps you have read the databeans manual !)
+The following statements will just get the connection, commit the transaction, and exit. Feel free to try anything in between (after perhaps you have read the databeans manual !)
 
 import persistence.*;
 conn=Connections.getConnection("//localhost/store");

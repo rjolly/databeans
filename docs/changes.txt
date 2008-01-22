@@ -1,0 +1,14 @@
+Changes between 1.0 and 2.0rc13:
+
+- redesigned the transaction mechanism, which was unstable in case of concurrent access (notably to collections) based on atomic actions and method call logging
+- class access permission based security system
+- data beans no more remote objects, which allows to implement non-remote interfaces and greatly simplifies the task of persisting classes (for instance : collections)
+- synchronization on PersistentObject fixed, now on Accessor (the former are not unique)
+- strengthened concurrency, removed synchronizations where not needed
+- improved the exceptions
+- PersistentClass now extends PersistentObject
+- PersistentObject constructors replaced by init() methods
+- "Persistent" prefix removed from Collection (and PropertyChangeSupport) classes
+- import/export on client rather than server side
+- imported the project in netbeans
+- "getting_started" tour entirely based on ant tasks
