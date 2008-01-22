@@ -9,6 +9,7 @@ grant codebase "file:-" {
 
 grant Principal persistence.server.DatabeansPrincipal "admin" {
 	permission persistence.AdminPermission "*";
+	permission persistence.MethodPermission "*";
 	permission persistence.PropertyPermission "*";
 };
 

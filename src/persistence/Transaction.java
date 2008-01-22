@@ -8,14 +8,14 @@ import javax.security.auth.Subject;
 import persistence.PersistentObject.MethodCall;
 import persistence.storage.MemoryModel;
 import persistence.util.PersistentArrayList;
-import persistence.util.PersistentHashMap;
+import persistence.util.PersistentLinkedHashMap;
 
 public class Transaction extends PersistentObject {
 	public void init(String client) {
 		setClient(client);
 		setCalls((List)create(PersistentArrayList.class));
 		setUndos((List)create(PersistentArrayList.class));
-		setPairs((Map)create(PersistentHashMap.class));
+		setPairs((Map)create(PersistentLinkedHashMap.class));
 	}
 
 	Object execute(MethodCall call, MethodCall undo, int index, int level, boolean read, boolean readOnly, Subject subject) {

@@ -18,8 +18,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.ConcurrentModificationException;
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Random;
 import java.util.WeakHashMap;
@@ -64,10 +64,11 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	}
 
 	void create() {
-		classes=new HashMap();
+		classes=new LinkedHashMap();
 		createSystem();
 		createUsers();
-		system.getClasses().putAll(new HashMap(classes));
+		system.getClasses().putAll(new LinkedHashMap(classes));
+		system.getClasses().toString();
 		system.getClasses().putAll(classes);
 		classes=system.getClasses();
 	}
@@ -129,12 +130,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	}
 
 	PersistentClass get(Class componentType, int length) {
-		synchronized(classes) {
-			String name=ArrayClass.name(componentType,length);
-			PersistentClass c=(PersistentClass)classes.get(name);
-			if(c==null) classes.put(name,c=ArrayClass.create(componentType,length,this));
-			return c;
-		}
+		return ArrayClass.create(componentType,length,this);
 	}
 
 	AccessorImpl create(PersistentClass clazz) {
