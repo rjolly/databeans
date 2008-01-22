@@ -19,7 +19,7 @@ import persistence.Array;
 import persistence.PersistentClass;
 import persistence.PersistentObject;
 
-public class PersistentHashMap extends PersistentAbstractMap implements Map, Cloneable
+public class HashMap extends AbstractMap implements Map, Cloneable
 {
 	static final int DEFAULT_INITIAL_CAPACITY = 16;
 	static final int MAXIMUM_CAPACITY = 1 << 30;
@@ -29,7 +29,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 		return new Accessor();
 	}
 
-	protected class Accessor extends PersistentAbstractMap.Accessor {
+	protected class Accessor extends AbstractMap.Accessor {
 		public Accessor() throws RemoteException {}
 
 		public void init(int initialCapacity, float loadFactor) {
@@ -153,7 +153,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 						getTable().set(i,next);
 					else
 						prev.setNext(next);
-					e.recordRemoval(PersistentHashMap.this);
+					e.recordRemoval(HashMap.this);
 					return e;
 				}
 				prev = e;
@@ -164,12 +164,12 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 		}
 
 		public synchronized PersistentObject persistentClone() {
-			PersistentHashMap result = (PersistentHashMap)super.persistentClone();
+			HashMap result = (HashMap)super.persistentClone();
 			result.setTable(create(Entry.class,getTable().length()));
 			result.setModCount(0);
 			result.setSize(0);
 			result.init0();
-			result.putAllForCreate(PersistentHashMap.this);
+			result.putAllForCreate(HashMap.this);
 			
 			return result;
 		}
@@ -483,7 +483,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 		}
 
 		protected HashMapClass enclosingClass() {
-			return (HashMapClass)get(PersistentHashMap.class);
+			return (HashMapClass)get(HashMap.class);
 		}
 
 		Object getKey0() {
@@ -539,9 +539,9 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 				new MethodCall("setValue",new Class[] {Object.class},new Object[] {null}),0);
 		}
 
-		void recordAccess(PersistentHashMap m) {}
+		void recordAccess(HashMap m) {}
 
-		void recordRemoval(PersistentHashMap m) {}
+		void recordRemoval(HashMap m) {}
 	}
 
 	Entry addEntry(int hash, Object key, Object value, int bucketIndex) {
@@ -575,7 +575,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 
 		HashIterator() {
 			expectedModCount = modCount();
-			next = PersistentHashMap.this.nextEntry(null);
+			next = HashMap.this.nextEntry(null);
 		}
 
 		public boolean hasNext() {
@@ -589,7 +589,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 			if (e == null) 
 				throw new NoSuchElementException();
 
-			next = PersistentHashMap.this.nextEntry(e);
+			next = HashMap.this.nextEntry(e);
 			return current = e;
 		}
 
@@ -600,7 +600,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 				throw new ConcurrentModificationException();
 			Object k = current.getKey();
 			current = null;
-			PersistentHashMap.this.removeEntryForKey(k);
+			HashMap.this.removeEntryForKey(k);
 			expectedModCount = modCount();
 		}
 
@@ -649,13 +649,13 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 			return newKeyIterator();
 		}
 		public int size() {
-			return PersistentHashMap.this.size();
+			return HashMap.this.size();
 		}
 		public boolean contains(Object o) {
 			return containsKey(o);
 		}
 		public boolean remove(Object o) {
-			return PersistentHashMap.this.removeEntryForKey(o) != null;
+			return HashMap.this.removeEntryForKey(o) != null;
 		}
 //		public void clear() {
 //			PersistentHashMap.this.clear();
@@ -672,7 +672,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 			return newValueIterator();
 		}
 		public int size() {
-			return PersistentHashMap.this.size();
+			return HashMap.this.size();
 		}
 		public boolean contains(Object o) {
 			return containsValue(o);
@@ -706,7 +706,7 @@ public class PersistentHashMap extends PersistentAbstractMap implements Map, Clo
 			return removeMapping(entry) != null;
 		}
 		public int size() {
-			return PersistentHashMap.this.size();
+			return HashMap.this.size();
 		}
 //		public void clear() {
 //			PersistentHashMap.this.clear();

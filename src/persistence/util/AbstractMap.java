@@ -17,7 +17,7 @@ import java.util.Set;
 import persistence.PersistentClass;
 import persistence.PersistentObject;
 
-public abstract class PersistentAbstractMap extends PersistentObject implements Map {
+public abstract class AbstractMap extends PersistentObject implements Map {
 	protected PersistentObject.Accessor createAccessor() throws RemoteException {
 		return new Accessor();
 	}
@@ -79,7 +79,7 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 		// Comparison and hashing
 
 		public synchronized boolean persistentEquals(PersistentObject o) {
-			if (o == PersistentAbstractMap.this)
+			if (o == AbstractMap.this)
 				return true;
 
 			if (!(o instanceof Map))
@@ -129,8 +129,8 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 				Entry e = (Entry) (i.next());
 				Object key = e.getKey();
 				Object value = e.getValue();
-				buf.append((key == PersistentAbstractMap.this ?  "(this Map)" : key) + "=" +
-					(value == PersistentAbstractMap.this ? "(this Map)": value));
+				buf.append((key == AbstractMap.this ?  "(this Map)" : key) + "=" +
+					(value == AbstractMap.this ? "(this Map)": value));
 
 				hasNext = i.hasNext();
 				if (hasNext)
@@ -254,11 +254,11 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 				}
 
 				public int size() {
-					return PersistentAbstractMap.this.size();
+					return AbstractMap.this.size();
 				}
 
 				public boolean contains(Object k) {
-					return PersistentAbstractMap.this.containsKey(k);
+					return AbstractMap.this.containsKey(k);
 				}
 			};
 		}
@@ -287,11 +287,11 @@ public abstract class PersistentAbstractMap extends PersistentObject implements 
 				}
 
 				public int size() {
-					return PersistentAbstractMap.this.size();
+					return AbstractMap.this.size();
 				}
 
 				public boolean contains(Object v) {
-					return PersistentAbstractMap.this.containsValue(v);
+					return AbstractMap.this.containsValue(v);
 				}
 			};
 		}

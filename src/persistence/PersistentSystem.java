@@ -4,14 +4,14 @@ import java.rmi.RemoteException;
 import java.util.Collection;
 import java.util.Map;
 import persistence.PersistentObject.MethodCall;
-import persistence.util.PersistentArrayList;
-import persistence.util.PersistentLinkedHashMap;
+import persistence.util.ArrayList;
+import persistence.util.LinkedHashMap;
 
 public class PersistentSystem extends PersistentObject {
 	public void init() {
-		setUsers((Map)create(PersistentLinkedHashMap.class));
-		setClasses((Map)create(PersistentLinkedHashMap.class));
-		setTransactions((Collection)create(PersistentArrayList.class));
+		setUsers((Map)create(LinkedHashMap.class));
+		setClasses((Map)create(LinkedHashMap.class));
+		setTransactions((Collection)create(ArrayList.class));
 	}
 
 	protected PersistentObject.Accessor createAccessor() throws RemoteException {

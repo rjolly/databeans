@@ -13,27 +13,27 @@ import java.util.Set;
 import persistence.PersistentClass;
 import persistence.PersistentObject;
 
-public class PersistentHashSet extends PersistentAbstractSet
+public class HashSet extends AbstractSet
 					 implements Set, Cloneable
 {
 	protected PersistentObject.Accessor createAccessor() throws RemoteException {
 		return new Accessor();
 	}
 
-	protected class Accessor extends PersistentAbstractSet.Accessor {
+	protected class Accessor extends AbstractSet.Accessor {
 		public Accessor() throws RemoteException {}
 
-		public void init(PersistentHashMap map) {
+		public void init(HashMap map) {
 			setMap(map);
 		}
 
-		public PersistentHashMap map() {
+		public HashMap map() {
 			return getMap();
 		}
 
 		public synchronized PersistentObject persistentClone() {
-			PersistentHashSet newSet = (PersistentHashSet)super.persistentClone();
-			newSet.setMap((PersistentHashMap)getMap().clone());
+			HashSet newSet = (HashSet)super.persistentClone();
+			newSet.setMap((HashMap)getMap().clone());
 			return newSet;
 		}
 	}
@@ -42,43 +42,43 @@ public class PersistentHashSet extends PersistentAbstractSet
 		return (PersistentClass)create(HashSetClass.class,new Class[] {Class.class},new Object[] {getClass()});
 	}
 
-	PersistentHashMap map() {
-		return (PersistentHashMap)execute(
+	HashMap map() {
+		return (HashMap)execute(
 			new MethodCall("map",new Class[] {},new Object[] {}));
 	}
 
-	public PersistentHashMap getMap() {
-		return (PersistentHashMap)get("map");
+	public HashMap getMap() {
+		return (HashMap)get("map");
 	}
 
-	public void setMap(PersistentHashMap map) {
+	public void setMap(HashMap map) {
 		set("map",map);
 	}
 
-	void init(PersistentHashMap map) {
+	void init(HashMap map) {
 		execute(
-			new MethodCall("init",new Class[] {PersistentHashMap.class},new Object[] {map}));
+			new MethodCall("init",new Class[] {HashMap.class},new Object[] {map}));
 	}
 
 	public void init() {
-		init((PersistentHashMap)create(PersistentHashMap.class));
+		init((HashMap)create(HashMap.class));
 	}
 
 	public void init(Collection c) {
-		init((PersistentHashMap)create(PersistentHashMap.class,new Class[] {int.class},new Object[] {new Integer(Math.max((int) (c.size()/.75f) + 1, 16))}));
+		init((HashMap)create(HashMap.class,new Class[] {int.class},new Object[] {new Integer(Math.max((int) (c.size()/.75f) + 1, 16))}));
 		addAll(c);
 	}
 
 	public void init(int initialCapacity, float loadFactor) {
-		init((PersistentHashMap)create(PersistentHashMap.class,new Class[] {int.class,float.class},new Object[] {new Integer(initialCapacity),new Float(loadFactor)}));
+		init((HashMap)create(HashMap.class,new Class[] {int.class,float.class},new Object[] {new Integer(initialCapacity),new Float(loadFactor)}));
 	}
 
 	public void init(int initialCapacity) {
-		init((PersistentHashMap)create(PersistentHashMap.class,new Class[] {int.class},new Object[] {new Integer(initialCapacity)}));
+		init((HashMap)create(HashMap.class,new Class[] {int.class},new Object[] {new Integer(initialCapacity)}));
 	}
 
 	public void init(int initialCapacity, float loadFactor, boolean dummy) {
-		init((PersistentHashMap)create(PersistentLinkedHashMap.class,new Class[] {int.class,float.class},new Object[] {new Integer(initialCapacity),new Float(loadFactor)}));
+		init((HashMap)create(LinkedHashMap.class,new Class[] {int.class,float.class},new Object[] {new Integer(initialCapacity),new Float(loadFactor)}));
 	}
 
 	public Iterator iterator() {

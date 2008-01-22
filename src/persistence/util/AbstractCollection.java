@@ -11,7 +11,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import persistence.PersistentObject;
 
-public abstract class PersistentAbstractCollection extends PersistentObject implements Collection {
+public abstract class AbstractCollection extends PersistentObject implements Collection {
 	protected PersistentObject.Accessor createAccessor() throws RemoteException {
 		return new Accessor();
 	}
@@ -61,7 +61,7 @@ public abstract class PersistentAbstractCollection extends PersistentObject impl
 			boolean hasNext = i.hasNext();
 			while (hasNext) {
 				Object o = i.next();
-				buf.append(o == PersistentAbstractCollection.this ? "(this Collection)" : String.valueOf(o));
+				buf.append(o == AbstractCollection.this ? "(this Collection)" : String.valueOf(o));
 				hasNext = i.hasNext();
 				if (hasNext)
 					buf.append(", ");

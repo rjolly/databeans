@@ -12,18 +12,18 @@ import java.util.Iterator;
 import java.util.Set;
 import persistence.PersistentObject;
 
-public abstract class PersistentAbstractSet extends PersistentAbstractCollection implements Set {
+public abstract class AbstractSet extends AbstractCollection implements Set {
 	protected PersistentObject.Accessor createAccessor() throws RemoteException {
 		return new Accessor();
 	}
 
-	protected class Accessor extends PersistentAbstractCollection.Accessor {
+	protected class Accessor extends AbstractCollection.Accessor {
 		public Accessor() throws RemoteException {}
 
 		// Comparison and hashing
 
 		public synchronized boolean persistentEquals(PersistentObject o) {
-			if (o == PersistentAbstractSet.this)
+			if (o == AbstractSet.this)
 				return true;
 
 			if (!(o instanceof Set))

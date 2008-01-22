@@ -7,9 +7,6 @@
 package persistence.util;
 
 import java.rmi.RemoteException;
-import java.util.AbstractCollection;
-import java.util.AbstractMap;
-import java.util.AbstractSet;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.ConcurrentModificationException;
@@ -21,14 +18,14 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 import persistence.PersistentObject;
 
-public class PersistentTreeMap extends PersistentAbstractMap
+public class TreeMap extends AbstractMap
 					 implements SortedMap, Cloneable
 {
 	protected PersistentObject.Accessor createAccessor() throws RemoteException {
 		return new Accessor();
 	}
 
-	protected class Accessor extends PersistentAbstractMap.Accessor {
+	protected class Accessor extends AbstractMap.Accessor {
 		public Accessor() throws RemoteException {}
 
 		public void init(Comparator c) {
@@ -176,7 +173,7 @@ public class PersistentTreeMap extends PersistentAbstractMap
 		}
 
 		public synchronized PersistentObject persistentClone() {
-			PersistentTreeMap clone = (PersistentTreeMap)super.persistentClone();
+			TreeMap clone = (TreeMap)super.persistentClone();
 
 			// Put clone into "virgin" state (except for comparator)
 			clone.setRoot(null);
@@ -401,7 +398,7 @@ public class PersistentTreeMap extends PersistentAbstractMap
 				}
 
 				public int size() {
-					return PersistentTreeMap.this.size();
+					return TreeMap.this.size();
 				}
 
 				public boolean contains(Object o) {
@@ -409,9 +406,9 @@ public class PersistentTreeMap extends PersistentAbstractMap
 				}
 
 				public boolean remove(Object o) {
-					int oldSize = PersistentTreeMap.this.size();
-					PersistentTreeMap.this.remove(o);
-					return PersistentTreeMap.this.size() != oldSize;
+					int oldSize = TreeMap.this.size();
+					TreeMap.this.remove(o);
+					return TreeMap.this.size() != oldSize;
 				}
 
 //				public void clear() {
@@ -430,7 +427,7 @@ public class PersistentTreeMap extends PersistentAbstractMap
 				}
 
 				public int size() {
-					return PersistentTreeMap.this.size();
+					return TreeMap.this.size();
 				}
 
 				public boolean contains(Object o) {
@@ -488,7 +485,7 @@ public class PersistentTreeMap extends PersistentAbstractMap
 				}
 
 				public int size() {
-					return PersistentTreeMap.this.size();
+					return TreeMap.this.size();
 				}
 
 //				public void clear() {
@@ -553,23 +550,23 @@ public class PersistentTreeMap extends PersistentAbstractMap
 		}
 
 		public boolean containsKey(Object key) {
-			return inRange(key) && PersistentTreeMap.this.containsKey(key);
+			return inRange(key) && TreeMap.this.containsKey(key);
 		}
 
 		public Object get(Object key) {
 			if (!inRange(key))
 				return null;
-			return PersistentTreeMap.this.get(key);
+			return TreeMap.this.get(key);
 		}
 
 		public Object put(Object key, Object value) {
 			if (!inRange(key))
 				throw new IllegalArgumentException("key out of range");
-			return PersistentTreeMap.this.put(key, value);
+			return TreeMap.this.put(key, value);
 		}
 
 		public Comparator comparator() {
-			return PersistentTreeMap.this.comparator();
+			return TreeMap.this.comparator();
 		}
 
 		public Object firstKey() {
@@ -618,7 +615,7 @@ public class PersistentTreeMap extends PersistentAbstractMap
 				Object key = entry.getKey();
 				if (!inRange(key))
 					return false;
-				PersistentTreeMap.Entry node = getEntry(key);
+				TreeMap.Entry node = getEntry(key);
 				return node != null &&
 					   valEquals(node.getValue(), entry.getValue());
 			}
@@ -630,7 +627,7 @@ public class PersistentTreeMap extends PersistentAbstractMap
 				Object key = entry.getKey();
 				if (!inRange(key))
 					return false;
-				PersistentTreeMap.Entry node = getEntry(key);
+				TreeMap.Entry node = getEntry(key);
 				if (node!=null && valEquals(node.getValue(),entry.getValue())){
 					deleteEntry(node);
 					return true;

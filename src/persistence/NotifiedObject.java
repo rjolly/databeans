@@ -4,8 +4,8 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyVetoException;
 import java.beans.VetoableChangeListener;
 import java.rmi.RemoteException;
-import persistence.beans.PersistentPropertyChangeSupport;
-import persistence.beans.PersistentVetoableChangeSupport;
+import persistence.beans.PropertyChangeSupport;
+import persistence.beans.VetoableChangeSupport;
 
 public abstract class NotifiedObject extends PersistentObject {
 	protected PersistentObject.Accessor createAccessor() throws RemoteException {
@@ -18,36 +18,36 @@ public abstract class NotifiedObject extends PersistentObject {
 		synchronized Object set(Field field, Object value) {
 			Object oldValue=get(field);
 			try {
-				PersistentVetoableChangeSupport support=getVetoableChangeSupport();
+				VetoableChangeSupport support=getVetoableChangeSupport();
 				if(support!=null) support.fireVetoableChange(field.name,oldValue,value);
 			} catch (PropertyVetoException e) {
 				throw new RuntimeException(e);
 			}
-			PersistentPropertyChangeSupport support=getPropertyChangeSupport();
+			PropertyChangeSupport support=getPropertyChangeSupport();
 			if(support!=null) support.firePropertyChange(field.name,oldValue,value);
 			return super.set(field,value);
 		}
 	}
 
-	public PersistentPropertyChangeSupport getPropertyChangeSupport() {
-		return (PersistentPropertyChangeSupport)get("propertyChangeSupport");
+	public PropertyChangeSupport getPropertyChangeSupport() {
+		return (PropertyChangeSupport)get("propertyChangeSupport");
 	}
 
-	public void setPropertyChangeSupport(PersistentPropertyChangeSupport support) {
+	public void setPropertyChangeSupport(PropertyChangeSupport support) {
 		set("propertyChangeSupport",support);
 	}
 
-	public PersistentVetoableChangeSupport getVetoableChangeSupport() {
-		return (PersistentVetoableChangeSupport)get("vetoableChangeSupport");
+	public VetoableChangeSupport getVetoableChangeSupport() {
+		return (VetoableChangeSupport)get("vetoableChangeSupport");
 	}
 
-	public void setVetoableChangeSupport(PersistentVetoableChangeSupport support) {
+	public void setVetoableChangeSupport(VetoableChangeSupport support) {
 		set("vetoableChangeSupport",support);
 	}
 
 	public void init() {
-		setPropertyChangeSupport((PersistentPropertyChangeSupport)create(PersistentPropertyChangeSupport.class, new Class[] {Object.class}, new Object[] {this}));
-		setVetoableChangeSupport((PersistentVetoableChangeSupport)create(PersistentVetoableChangeSupport.class, new Class[] {Object.class}, new Object[] {this}));
+		setPropertyChangeSupport((PropertyChangeSupport)create(PropertyChangeSupport.class, new Class[] {Object.class}, new Object[] {this}));
+		setVetoableChangeSupport((VetoableChangeSupport)create(VetoableChangeSupport.class, new Class[] {Object.class}, new Object[] {this}));
 	}
 
 	public final void addPropertyChangeListener(PropertyChangeListener listener) {

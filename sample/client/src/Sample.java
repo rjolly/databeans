@@ -23,7 +23,7 @@ public class Sample {
 		e.setSalary(2000.);
 		e.setManager(e);
 		e.setJob("Manager");
-		Collection employees=(Collection)conn.create("persistence.util.PersistentArrayList");
+		Collection employees=(Collection)conn.create("persistence.util.ArrayList");
 		employees.add(e);
 		conn.setRoot(employees);
 		Employee m=e;

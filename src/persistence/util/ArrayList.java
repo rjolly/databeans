@@ -14,14 +14,14 @@ import persistence.Array;
 import persistence.PersistentArray;
 import persistence.PersistentObject;
 
-public class PersistentArrayList extends PersistentAbstractList
+public class ArrayList extends AbstractList
 		implements List, RandomAccess, Cloneable
 {
 	protected PersistentObject.Accessor createAccessor() throws RemoteException {
 		return new Accessor();
 	}
 
-	protected class Accessor extends PersistentAbstractList.Accessor {
+	protected class Accessor extends AbstractList.Accessor {
 		public Accessor() throws RemoteException {}
 
 		public void init(int initialCapacity) {
@@ -155,7 +155,7 @@ public class PersistentArrayList extends PersistentAbstractList
 		}
 
 		public synchronized PersistentObject persistentClone() {
-			PersistentArrayList v = (PersistentArrayList)super.persistentClone();
+			ArrayList v = (ArrayList)super.persistentClone();
 			v.setElementData(create(Object.class,getSize()));
 			PersistentArray.copy(getElementData(), 0, v.getElementData(), 0, getSize());
 			v.setModCount(0);

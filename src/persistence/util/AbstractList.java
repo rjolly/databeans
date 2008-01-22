@@ -7,7 +7,6 @@
 package persistence.util;
 
 import java.rmi.RemoteException;
-import java.util.AbstractList;
 import java.util.Collection;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
@@ -17,8 +16,9 @@ import java.util.NoSuchElementException;
 import java.util.RandomAccess;
 import persistence.PersistentObject;
 
-public abstract class PersistentAbstractList extends PersistentAbstractCollection implements List {
-	protected abstract class Accessor extends PersistentAbstractCollection.Accessor {
+
+public abstract class AbstractList extends AbstractCollection implements List {
+	protected abstract class Accessor extends AbstractCollection.Accessor {
 		public Accessor() throws RemoteException {}
 
 		abstract public Object get(int index);
@@ -38,7 +38,7 @@ public abstract class PersistentAbstractList extends PersistentAbstractCollectio
 		// Comparison and hashing
 
 		public synchronized boolean persistentEquals(PersistentObject o) {
-			if (o == PersistentAbstractList.this)
+			if (o == AbstractList.this)
 				return true;
 			if (!(o instanceof List))
 				return false;
@@ -192,7 +192,7 @@ public abstract class PersistentAbstractList extends PersistentAbstractCollectio
 			checkForComodification();
 
 			try {
-				PersistentAbstractList.this.remove(lastRet);
+				AbstractList.this.remove(lastRet);
 				if (lastRet < cursor)
 					cursor--;
 				lastRet = -1;
@@ -244,7 +244,7 @@ public abstract class PersistentAbstractList extends PersistentAbstractCollectio
 			checkForComodification();
 
 			try {
-				PersistentAbstractList.this.set(lastRet, o);
+				AbstractList.this.set(lastRet, o);
 				expectedModCount = modCount();
 			} catch(IndexOutOfBoundsException e) {
 				throw new ConcurrentModificationException();
@@ -255,7 +255,7 @@ public abstract class PersistentAbstractList extends PersistentAbstractCollectio
 			checkForComodification();
 
 			try {
-				PersistentAbstractList.this.add(cursor++, o);
+				AbstractList.this.add(cursor++, o);
 				lastRet = -1;
 				expectedModCount = modCount();
 			} catch(IndexOutOfBoundsException e) {
@@ -286,14 +286,13 @@ public abstract class PersistentAbstractList extends PersistentAbstractCollectio
 		set("modCount",new Integer(n));
 	}
 }
-
-class SubList extends AbstractList {
-	PersistentAbstractList l;
+class SubList extends java.util.AbstractList {
+	AbstractList l;
 	int offset;
 	private int size;
 	private int expectedModCount;
 
-	SubList(PersistentAbstractList list, int fromIndex, int toIndex) {
+	SubList(AbstractList list, int fromIndex, int toIndex) {
 		if (fromIndex < 0)
 			throw new IndexOutOfBoundsException("fromIndex = " + fromIndex);
 		if (toIndex > list.size())
@@ -307,7 +306,7 @@ class SubList extends AbstractList {
 		expectedModCount = l.modCount();
 	}
 
-	SubList(PersistentAbstractList list, int offset, int fromIndex, int toIndex, int size) {
+	SubList(AbstractList list, int offset, int fromIndex, int toIndex, int size) {
 		if (fromIndex < 0)
 			throw new IndexOutOfBoundsException("fromIndex = " + fromIndex);
 		if (toIndex > size)
@@ -466,7 +465,7 @@ class SubList extends AbstractList {
 }
 
 class RandomAccessSubList extends SubList implements RandomAccess {
-	RandomAccessSubList(PersistentAbstractList list, int fromIndex, int toIndex) {
+	RandomAccessSubList(AbstractList list, int fromIndex, int toIndex) {
 		super(list, fromIndex, toIndex);
 	}
 

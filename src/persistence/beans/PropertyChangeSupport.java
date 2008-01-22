@@ -12,16 +12,15 @@ package persistence.beans;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.rmi.RemoteException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import persistence.PersistentObject;
-import persistence.util.PersistentArrayList;
-import persistence.util.PersistentHashMap;
+import persistence.util.ArrayList;
+import persistence.util.HashMap;
 
-public class PersistentPropertyChangeSupport extends PersistentObject {
+public class PropertyChangeSupport extends PersistentObject {
 	protected PersistentObject.Accessor createAccessor() throws RemoteException {
 		return new Accessor();
 	}
@@ -31,7 +30,7 @@ public class PersistentPropertyChangeSupport extends PersistentObject {
 
 		public void addPropertyChangeListener(PropertyChangeListener listener) {
 			if (getListeners() == null) {
-				setListeners((List)create(PersistentArrayList.class));
+				setListeners((List)create(ArrayList.class));
 			}
 			getListeners().add(listener);
 		}
@@ -45,11 +44,11 @@ public class PersistentPropertyChangeSupport extends PersistentObject {
 
 		public void addPropertyChangeListener(String propertyName, PropertyChangeListener listener) {
 			if (getChildren() == null) {
-				setChildren((Map)create(PersistentHashMap.class));
+				setChildren((Map)create(HashMap.class));
 			}
-			PersistentPropertyChangeSupport child = (PersistentPropertyChangeSupport)getChildren().get(propertyName);
+			PropertyChangeSupport child = (PropertyChangeSupport)getChildren().get(propertyName);
 			if (child == null) {
-				child = (PersistentPropertyChangeSupport)create(PersistentPropertyChangeSupport.class, new Class[] {Object.class}, new Object[] {getSource()});
+				child = (PropertyChangeSupport)create(PropertyChangeSupport.class, new Class[] {Object.class}, new Object[] {getSource()});
 				getChildren().put(propertyName, child);
 			}
 			child.addPropertyChangeListener(listener);
@@ -59,7 +58,7 @@ public class PersistentPropertyChangeSupport extends PersistentObject {
 			if (getChildren() == null) {
 				return;
 			}
-			PersistentPropertyChangeSupport child = (PersistentPropertyChangeSupport)getChildren().get(propertyName);
+			PropertyChangeSupport child = (PropertyChangeSupport)getChildren().get(propertyName);
 			if (child == null) {
 				return;
 			}
@@ -151,13 +150,13 @@ public class PersistentPropertyChangeSupport extends PersistentObject {
 		}
 
 		Collection targets = null;
-		PersistentPropertyChangeSupport child = null;
+		PropertyChangeSupport child = null;
 		{
 			if (getListeners() != null) {
-				targets = new ArrayList(getListeners());
+				targets = getListeners();
 			}
 			if (getChildren() != null && propertyName != null) {
-				child = (PersistentPropertyChangeSupport)getChildren().get(propertyName);
+				child = (PropertyChangeSupport)getChildren().get(propertyName);
 			}
 		}
 
@@ -180,7 +179,7 @@ public class PersistentPropertyChangeSupport extends PersistentObject {
 			return true;
 		}
 		if (getChildren() != null) {
-			PersistentPropertyChangeSupport child = (PersistentPropertyChangeSupport)getChildren().get(propertyName);
+			PropertyChangeSupport child = (PropertyChangeSupport)getChildren().get(propertyName);
 			if (child != null && child.getListeners() != null) {
 				return !child.getListeners().isEmpty();
 			}

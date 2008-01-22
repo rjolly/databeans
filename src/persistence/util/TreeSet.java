@@ -16,14 +16,14 @@ import java.util.SortedSet;
 import persistence.PersistentClass;
 import persistence.PersistentObject;
 
-public class PersistentTreeSet extends PersistentAbstractSet
+public class TreeSet extends AbstractSet
 					 implements SortedSet, Cloneable
 {
 	protected PersistentObject.Accessor createAccessor() throws RemoteException {
 		return new Accessor();
 	}
 
-	protected class Accessor extends PersistentAbstractSet.Accessor {
+	protected class Accessor extends AbstractSet.Accessor {
 		public Accessor() throws RemoteException {}
 
 		public void init(SortedMap map) {
@@ -35,8 +35,8 @@ public class PersistentTreeSet extends PersistentAbstractSet
 		}
 
 		public synchronized PersistentObject persistentClone() {
-			PersistentTreeSet clone = (PersistentTreeSet)super.persistentClone();
-			clone.setM((SortedMap)create(PersistentTreeMap.class,new Class[] {SortedMap.class},new Object[] {getM()}));
+			TreeSet clone = (TreeSet)super.persistentClone();
+			clone.setM((SortedMap)create(TreeMap.class,new Class[] {SortedMap.class},new Object[] {getM()}));
 			return clone;
 		}
 	}
@@ -68,11 +68,11 @@ public class PersistentTreeSet extends PersistentAbstractSet
 	}
 
 	public void init() {
-		init((SortedMap)create(PersistentTreeMap.class));
+		init((SortedMap)create(TreeMap.class));
 	}
 
 	public void init(Comparator c) {
-		init((SortedMap)create(PersistentTreeMap.class,new Class[] {Comparator.class},new Object[] {c}));
+		init((SortedMap)create(TreeMap.class,new Class[] {Comparator.class},new Object[] {c}));
 	}
 
 	public void init(Collection c) {
@@ -116,9 +116,9 @@ public class PersistentTreeSet extends PersistentAbstractSet
 	public boolean addAll(Collection c) {
 		// Use linear-time version if applicable
 		if (m().size()==0 && c.size() > 0 && c instanceof SortedSet && 
-			m() instanceof PersistentTreeMap) {
+			m() instanceof TreeMap) {
 			SortedSet set = (SortedSet)c;
-			PersistentTreeMap map = (PersistentTreeMap)m();
+			TreeMap map = (TreeMap)m();
 			Comparator cc = set.comparator();
 			Comparator mc = map.comparator();
 			if (cc==mc || (cc != null && cc.equals(mc))) {
@@ -130,15 +130,15 @@ public class PersistentTreeSet extends PersistentAbstractSet
 	}
 
 	public SortedSet subSet(Object fromElement, Object toElement) {
-		return (SortedSet)create(PersistentTreeSet.class,new Class[] {SortedMap.class},new Object[] {m().subMap(fromElement, toElement)});
+		return (SortedSet)create(TreeSet.class,new Class[] {SortedMap.class},new Object[] {m().subMap(fromElement, toElement)});
 	}
 
 	public SortedSet headSet(Object toElement) {
-		return (SortedSet)create(PersistentTreeSet.class,new Class[] {SortedMap.class},new Object[] {m().headMap(toElement)});
+		return (SortedSet)create(TreeSet.class,new Class[] {SortedMap.class},new Object[] {m().headMap(toElement)});
 	}
 
 	public SortedSet tailSet(Object fromElement) {
-		return (SortedSet)create(PersistentTreeSet.class,new Class[] {SortedMap.class},new Object[] {m().tailMap(fromElement)});
+		return (SortedSet)create(TreeSet.class,new Class[] {SortedMap.class},new Object[] {m().tailMap(fromElement)});
 	}
 
 	public Comparator comparator() {

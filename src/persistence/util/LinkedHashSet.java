@@ -9,7 +9,7 @@ package persistence.util;
 import java.util.Collection;
 import java.util.Set;
 
-public class PersistentLinkedHashSet extends PersistentHashSet
+public class LinkedHashSet extends HashSet
 	implements Set, Cloneable {
 	public void init(int initialCapacity, float loadFactor) {
 		super.init(initialCapacity, loadFactor, true);

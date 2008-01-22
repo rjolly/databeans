@@ -378,8 +378,8 @@ class java_util_AbstractCollection_PersistenceDelegate extends java_util_Collect
 	}
 }
 
-class persistence_util_PersistentAbstractCollection_PersistenceDelegate extends java_util_Collection_PersistenceDelegate {
-	public persistence_util_PersistentAbstractCollection_PersistenceDelegate(Connection connection) {
+class persistence_util_AbstractCollection_PersistenceDelegate extends java_util_Collection_PersistenceDelegate {
+	public persistence_util_AbstractCollection_PersistenceDelegate(Connection connection) {
 		super(connection);
 	}
 }
@@ -390,8 +390,8 @@ class java_util_AbstractList_PersistenceDelegate extends java_util_List_Persiste
 	}
 }
 
-class persistence_util_PersistentAbstractList_PersistenceDelegate extends java_util_List_PersistenceDelegate {
-	public persistence_util_PersistentAbstractList_PersistenceDelegate(Connection connection) {
+class persistence_util_AbstractList_PersistenceDelegate extends java_util_List_PersistenceDelegate {
+	public persistence_util_AbstractList_PersistenceDelegate(Connection connection) {
 		super(connection);
 	}
 }
@@ -408,8 +408,8 @@ class java_util_Hashtable_PersistenceDelegate extends java_util_Map_PersistenceD
 	}
 }
 
-class persistence_util_PersistentAbstractMap_PersistenceDelegate extends java_util_Map_PersistenceDelegate {
-	public persistence_util_PersistentAbstractMap_PersistenceDelegate(Connection connection) {
+class persistence_util_AbstractMap_PersistenceDelegate extends java_util_Map_PersistenceDelegate {
+	public persistence_util_AbstractMap_PersistenceDelegate(Connection connection) {
 		super(connection);
 	}
 }

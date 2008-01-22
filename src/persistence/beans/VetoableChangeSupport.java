@@ -13,16 +13,15 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyVetoException;
 import java.beans.VetoableChangeListener;
 import java.rmi.RemoteException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import persistence.PersistentObject;
-import persistence.util.PersistentArrayList;
-import persistence.util.PersistentHashMap;
+import persistence.util.ArrayList;
+import persistence.util.HashMap;
 
-public class PersistentVetoableChangeSupport extends PersistentObject {
+public class VetoableChangeSupport extends PersistentObject {
 	protected PersistentObject.Accessor createAccessor() throws RemoteException {
 		return new Accessor();
 	}
@@ -32,7 +31,7 @@ public class PersistentVetoableChangeSupport extends PersistentObject {
 
 		public void addVetoableChangeListener(VetoableChangeListener listener) {
 			if (getListeners() == null) {
-				setListeners((List)create(PersistentArrayList.class));
+				setListeners((List)create(ArrayList.class));
 			}
 			getListeners().add(listener);
 		}
@@ -46,11 +45,11 @@ public class PersistentVetoableChangeSupport extends PersistentObject {
 
 		public void addVetoableChangeListener(String propertyName, VetoableChangeListener listener) {
 			if (getChildren() == null) {
-				setChildren((Map)create(PersistentHashMap.class));
+				setChildren((Map)create(HashMap.class));
 			}
-			PersistentVetoableChangeSupport child = (PersistentVetoableChangeSupport)getChildren().get(propertyName);
+			VetoableChangeSupport child = (VetoableChangeSupport)getChildren().get(propertyName);
 			if (child == null) {
-				child = (PersistentVetoableChangeSupport)create(PersistentVetoableChangeSupport.class, new Class[] {Object.class}, new Object[] {getSource()});
+				child = (VetoableChangeSupport)create(VetoableChangeSupport.class, new Class[] {Object.class}, new Object[] {getSource()});
 				getChildren().put(propertyName, child);
 			}
 			child.addVetoableChangeListener(listener);
@@ -60,7 +59,7 @@ public class PersistentVetoableChangeSupport extends PersistentObject {
 			if (getChildren() == null) {
 				return;
 			}
-			PersistentVetoableChangeSupport child = (PersistentVetoableChangeSupport)getChildren().get(propertyName);
+			VetoableChangeSupport child = (VetoableChangeSupport)getChildren().get(propertyName);
 			if (child == null) {
 				return;
 			}
@@ -152,13 +151,13 @@ public class PersistentVetoableChangeSupport extends PersistentObject {
 		}
 
 		Collection targets = null;
-		PersistentVetoableChangeSupport child = null;
+		VetoableChangeSupport child = null;
 		{
 			if (getListeners() != null) {
-				targets = new ArrayList(getListeners());
+				targets = getListeners();
 			}
 			if (getChildren() != null && propertyName != null) {
-				child = (PersistentVetoableChangeSupport)getChildren().get(propertyName);
+				child = (VetoableChangeSupport)getChildren().get(propertyName);
 			}
 		}
 
@@ -197,7 +196,7 @@ public class PersistentVetoableChangeSupport extends PersistentObject {
 			return true;
 		}
 		if (getChildren() != null) {
-			PersistentVetoableChangeSupport child = (PersistentVetoableChangeSupport)getChildren().get(propertyName);
+			VetoableChangeSupport child = (VetoableChangeSupport)getChildren().get(propertyName);
 			if (child != null && child.getListeners() != null) {
 				return !child.getListeners().isEmpty();
 			}
