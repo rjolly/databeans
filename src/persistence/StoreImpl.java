@@ -129,12 +129,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	}
 
 	PersistentClass get(Class componentType, int length) {
-		synchronized(classes) {
-			String name=ArrayClass.name(componentType,length);
-			PersistentClass c=(PersistentClass)classes.get(name);
-			if(c==null) classes.put(name,c=ArrayClass.create(componentType,length,this));
-			return c;
-		}
+		return ArrayClass.create(componentType,length,this);
 	}
 
 	AccessorImpl create(PersistentClass clazz) {
@@ -380,6 +375,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 
 	void gc(boolean keep) {
 		if(keep) mark();
+		markClasses();
 		mark(boot);
 		sweep();
 	}
@@ -390,6 +386,16 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 			long ptr=((Long)t.next()).longValue();
 			if(heap.status(ptr)) {
 				if(inuse(ptr)) mark(ptr);
+			}
+		}
+	}
+
+	void markClasses() {
+		Iterator t=heap.iterator();
+		while(t.hasNext()) {
+			long ptr=((Long)t.next()).longValue();
+			if(heap.status(ptr)) {
+				if(isClass(ptr)) mark(ptr);
 			}
 		}
 	}
@@ -408,7 +414,6 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		if(heap.mark(base,true)) return;
 		AccessorImpl c=getClass(base);
 		if(c!=null) {
-			mark(c.base.longValue());
 			Iterator t=((PersistentClass)c.object()).fieldIterator();
 			while(t.hasNext()) {
 				Field field=(Field)t.next();
@@ -431,6 +436,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 					throw new PersistentException("internal error");
 				}
 			}
+			mark(c.base.longValue());
 		}
 	}
 
@@ -440,8 +446,6 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		heap.free(base);
 		AccessorImpl c=getClass(patch,base);
 		if(c!=null) {
-//			Field.CLASS.set(patch,base,new Long(0));
-			decRefCount(c.base.longValue());
 			Iterator t=((PersistentClass)c.object()).fieldIterator();
 			while(t.hasNext()) {
 				Field field=(Field)t.next();
@@ -465,6 +469,8 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 					throw new PersistentException("internal error");
 				}
 			}
+//			Field.CLASS.set(patch,base,new Long(0));
+			decRefCount(c.base.longValue());
 		}
 	}
 
@@ -558,6 +564,12 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		long ptr=clazz==null?base:clazz.base.longValue();
 		incRefCount(ptr);
 		Field.CLASS.set(heap,base,new Long(ptr));
+	}
+
+	boolean isClass(long base) {
+		long ptr=((Long)Field.CLASS.get(heap,base)).longValue();
+		ptr=ptr==0?0:((Long)Field.CLASS.get(heap,ptr)).longValue();
+		return ptr==0?false:ptr==((Long)Field.CLASS.get(heap,ptr)).longValue();
 	}
 
 	AccessorImpl getLock(long base) {
