@@ -86,18 +86,21 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	void instantiate() {
 		system=(PersistentSystem)instantiate(boot).object();
 		classes=system.getClasses();
+		if(readOnly) return;
+		rollback();
 		clear();
 	}
 
-	void clear() {
-		if(readOnly) return;
+	void rollback() {
 		for(Iterator it=system.getTransactions().iterator();it.hasNext();it.remove()) {
 			((Transaction)it.next()).rollback(null);
 		}
-		gc(false);
-		for(Iterator it=classes.values().iterator();it.hasNext();) {
-			if(refCount(((PersistentClass)it.next()).accessor().base())==1) it.remove();
-		}
+	}
+
+	void clear() {
+		mark(false);
+		mark(boot);
+		sweep();
 	}
 
 	MethodCall attach(MethodCall call) {
@@ -370,34 +373,25 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	}
 
 	public void gc() {
-		gc(true);
-	}
-
-	void gc(boolean keep) {
-		if(keep) mark();
-		markClasses();
+		mark(true);
 		mark(boot);
 		sweep();
 	}
 
-	void mark() {
+	void mark(boolean keep) {
 		Iterator t=heap.iterator();
 		while(t.hasNext()) {
 			long ptr=((Long)t.next()).longValue();
 			if(heap.status(ptr)) {
-				if(inuse(ptr)) mark(ptr);
+				markClass(ptr);
+				if(keep && inuse(ptr)) mark(ptr);
 			}
 		}
 	}
 
-	void markClasses() {
-		Iterator t=heap.iterator();
-		while(t.hasNext()) {
-			long ptr=((Long)t.next()).longValue();
-			if(heap.status(ptr)) {
-				if(isClass(ptr)) mark(ptr);
-			}
-		}
+	void markClass(long base) {
+		long ptr=((Long)Field.CLASS.get(heap,base)).longValue();
+		if (ptr!=0) mark(ptr);
 	}
 
 	void sweep() {
@@ -414,6 +408,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		if(heap.mark(base,true)) return;
 		AccessorImpl c=getClass(base);
 		if(c!=null) {
+			mark(c.base());
 			Iterator t=((PersistentClass)c.object()).fieldIterator();
 			while(t.hasNext()) {
 				Field field=(Field)t.next();
@@ -436,7 +431,6 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 					throw new PersistentException("internal error");
 				}
 			}
-			mark(c.base.longValue());
 		}
 	}
 
@@ -446,6 +440,9 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		heap.free(base);
 		AccessorImpl c=getClass(patch,base);
 		if(c!=null) {
+//			Field.CLASS.set(patch,base,new Long(0));
+			decRefCount(c.base());
+			if(refCount(c.base())==1) classes.remove(((PersistentClass)c.object()).getName());
 			Iterator t=((PersistentClass)c.object()).fieldIterator();
 			while(t.hasNext()) {
 				Field field=(Field)t.next();
@@ -469,8 +466,6 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 					throw new PersistentException("internal error");
 				}
 			}
-//			Field.CLASS.set(patch,base,new Long(0));
-			decRefCount(c.base.longValue());
 		}
 	}
 
@@ -486,7 +481,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 			long s=r&MemoryModel.model.pointerMinValue;
 			r=r^s;
 			s=MemoryModel.model.pointerMinValue;
-			Field.REF_COUNT.set(heap,base,new Long(r^s));
+			Field.REF_COUNT.set(heap,base,new Long(r|s));
 		}
 	}
 
@@ -496,7 +491,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 			long s=r&MemoryModel.model.pointerMinValue;
 			r=r^s;
 			s=0;
-			Field.REF_COUNT.set(heap,base,new Long(r^s));
+			Field.REF_COUNT.set(heap,base,new Long(r|s));
 			if(r==0) free(base);
 		}
 	}
@@ -506,7 +501,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 			long r=((Long)Field.REF_COUNT.get(heap,base)).longValue();
 			long s=r&MemoryModel.model.pointerMinValue;
 			r=(r^s)+1;
-			Field.REF_COUNT.set(heap,base,new Long(r^s));
+			Field.REF_COUNT.set(heap,base,new Long(r|s));
 		}
 	}
 
@@ -516,7 +511,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 			long r=((Long)Field.REF_COUNT.get(heap,base)).longValue();
 			long s=r&MemoryModel.model.pointerMinValue;
 			r=(r^s)-1;
-			Field.REF_COUNT.set(heap,base,new Long(r^s));
+			Field.REF_COUNT.set(heap,base,new Long(r|s));
 			if(r==0 && !inuse(base)) free(base);
 		}
 	}
@@ -544,7 +539,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	void setReference(long base, Field field, Object value) {
 		synchronized(heap) {
 			long src=((Long)field.get(heap,base)).longValue();
-			long dst=value==null?0:value instanceof AccessorImpl?((AccessorImpl)value).base.longValue():writeObject(value);
+			long dst=value==null?0:value instanceof AccessorImpl?((AccessorImpl)value).base():writeObject(value);
 			if(dst!=0) incRefCount(dst);
 			field.set(heap,base,new Long(dst));
 			if(src!=0) decRefCount(src);
@@ -561,15 +556,9 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	}
 
 	void setClass(long base, AccessorImpl clazz) {
-		long ptr=clazz==null?base:clazz.base.longValue();
+		long ptr=clazz==null?base:clazz.base();
 		incRefCount(ptr);
 		Field.CLASS.set(heap,base,new Long(ptr));
-	}
-
-	boolean isClass(long base) {
-		long ptr=((Long)Field.CLASS.get(heap,base)).longValue();
-		ptr=ptr==0?0:((Long)Field.CLASS.get(heap,ptr)).longValue();
-		return ptr==0?false:ptr==((Long)Field.CLASS.get(heap,ptr)).longValue();
 	}
 
 	AccessorImpl getLock(long base) {

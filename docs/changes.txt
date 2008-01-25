@@ -6,7 +6,7 @@ Changes between 1.0 and 2.0rc13:
 - synchronization on PersistentObject fixed, now on Accessor (the former are not unique)
 - strengthened concurrency, removed synchronizations where not needed
 - improved the exceptions
-- PersistentClass now extends PersistentObject
+- PersistentClass now extends PersistentObject which allows to emulate static fields
 - PersistentObject constructors replaced by init() methods
 - "Persistent" prefix removed from Collection (and PropertyChangeSupport) classes
 - persistent HashSet, TreeMap, TreeSet, LinkedHashMap, LinkedHashSet
