@@ -1,10 +1,7 @@
-Changes between 2.0rc14 and 2.0rc15:
-
-+ persistence.util.*Class non public
-
-Changes between 2.0rc13 and 2.0rc14:
+Changes between 2.0rc13 and 2.0rc15:
 
 + class cache improved
++ persistence.util.*Class non public
 
 Changes between 1.0 and 2.0rc13:
 
