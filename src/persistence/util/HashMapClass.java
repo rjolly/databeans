@@ -4,7 +4,7 @@ import java.rmi.RemoteException;
 import persistence.PersistentClass;
 import persistence.PersistentObject;
 
-public final class HashMapClass extends PersistentClass {
+final class HashMapClass extends PersistentClass {
 	public void init(Class clazz) {
 		super.init(clazz);
 		setNULL_KEY(create(PersistentObject.class));

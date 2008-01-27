@@ -4,7 +4,7 @@ import java.rmi.RemoteException;
 import persistence.PersistentClass;
 import persistence.PersistentObject;
 
-public final class AbstractMapClass extends PersistentClass {
+final class AbstractMapClass extends PersistentClass {
 	public void init(Class clazz) {
 		super.init(clazz);
 		setNULL(create(PersistentObject.class));

@@ -1,15 +1,23 @@
+Changes between 2.0rc14 and 2.0rc15:
+
++ persistence.util.*Class non public
+
+Changes between 2.0rc13 and 2.0rc14:
+
++ class cache improved
+
 Changes between 1.0 and 2.0rc13:
 
-- redesigned the transaction mechanism, which was unstable in case of concurrent access (notably to collections) based on atomic actions and method call logging
-- class access permission based security system
-- data beans no more remote objects, which allows to implement non-remote interfaces and greatly simplifies the task of persisting classes (for instance : collections)
-- synchronization on PersistentObject fixed, now on Accessor (the former are not unique)
-- strengthened concurrency, removed synchronizations where not needed
-- improved the exceptions
-- PersistentClass now extends PersistentObject which allows to emulate static fields
-- PersistentObject constructors replaced by init() methods
-- "Persistent" prefix removed from Collection (and PropertyChangeSupport) classes
-- persistent HashSet, TreeMap, TreeSet, LinkedHashMap, LinkedHashSet
-- import/export on client rather than server side
-- imported the project in netbeans
-- "getting_started" tour entirely based on ant tasks
++ redesigned the transaction mechanism, which was unstable in case of concurrent access (notably to collections) based on atomic actions and method call logging
++ class access permission based security system
++ data beans no more remote objects, which allows collections (for instance) to implement non-remote interfaces
++ synchronization on PersistentObject fixed, now on Accessor (the former are not unique)
++ strengthened concurrency, removed synchronizations where not needed
++ improved the exceptions
++ PersistentClass now extends PersistentObject which allows to emulate static fields
++ PersistentObject constructors replaced by init() methods
++ "Persistent" prefix removed from Collection (and PropertyChangeSupport) classes
++ persistent HashSet, TreeMap, TreeSet, LinkedHashMap, LinkedHashSet
++ import/export on client rather than server side
++ imported the project in netbeans
++ "getting_started" tour entirely based on ant tasks

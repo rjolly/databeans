@@ -4,7 +4,7 @@ import java.rmi.RemoteException;
 import persistence.PersistentClass;
 import persistence.PersistentObject;
 
-public final class TreeSetClass extends PersistentClass {
+final class TreeSetClass extends PersistentClass {
 	public void init(Class clazz) {
 		super.init(clazz);
 		setPRESENT(create(PersistentObject.class));
