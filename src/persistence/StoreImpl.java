@@ -89,6 +89,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		if(readOnly) return;
 		rollback();
 		clear();
+		updateClasses();
 	}
 
 	void rollback() {
@@ -101,6 +102,12 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		mark(false);
 		mark(boot);
 		sweep();
+	}
+
+	void updateClasses() {
+		for(Iterator it=classes.values().iterator();it.hasNext();) {
+			if(refCount(((PersistentClass)it.next()).accessor().base())==1) it.remove();
+		}
 	}
 
 	MethodCall attach(MethodCall call) {
@@ -409,8 +416,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		AccessorImpl c=getClass(base);
 		if(c!=null) {
 			mark(c.base());
-			PersistentClass clazz=(PersistentClass)c.object();
-			Iterator t=clazz.fieldIterator();
+			Iterator t=((PersistentClass)c.object()).fieldIterator();
 			while(t.hasNext()) {
 				Field field=(Field)t.next();
 				switch (field.typeCode) {
@@ -443,9 +449,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		if(c!=null) {
 //			Field.CLASS.set(patch,base,new Long(0));
 			decRefCount(c.base());
-			PersistentClass clazz=(PersistentClass)c.object();
-			if(refCount(c.base())==1 && !(clazz instanceof ArrayClass)) classes.remove(clazz.getName());
-			Iterator t=clazz.fieldIterator();
+			Iterator t=((PersistentClass)c.object()).fieldIterator();
 			while(t.hasNext()) {
 				Field field=(Field)t.next();
 				switch (field.typeCode) {
