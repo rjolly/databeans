@@ -4,7 +4,7 @@ import java.rmi.RemoteException;
 import persistence.PersistentClass;
 import persistence.PersistentObject;
 
-final class HashSetClass extends PersistentClass {
+public final class HashSetClass extends PersistentClass {
 	public void init(Class clazz) {
 		super.init(clazz);
 		setPRESENT(create(PersistentObject.class));
