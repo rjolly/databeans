@@ -17,4 +17,5 @@ Changes between 1.0 and 2.0rc13:
 + persistent HashSet, TreeMap, TreeSet, LinkedHashMap, LinkedHashSet
 + import/export on client rather than server side
 + imported the project in netbeans
++ distinct admin port supressed
 + "getting_started" tour entirely based on ant tasks
