@@ -6,8 +6,8 @@ import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.rmi.RemoteException;
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class PersistentClass extends PersistentObject {
@@ -69,7 +69,7 @@ public class PersistentClass extends PersistentObject {
 	}
 
 	void setup() {
-		map=new HashMap();
+		map=new LinkedHashMap();
 		size=Field.HEADER_SIZE;
 		String str=getFields();
 		String fields[]=str.length()==0?new String[0]:str.split(";");
