@@ -128,4 +128,8 @@
     <java classname="bsh.Console" classpath="lib/bsh-2.0b4.jar:databeans.jar" fork="true"/>
   </target>
 
+  <target name="admin" depends="compile">
+    <java classname="persistence.client.AdminUI" classpath="classes:lib/jlfgr-1_0.jar" fork="true"/>
+  </target>
+
 </project>
