@@ -13,15 +13,10 @@ import java.lang.ref.WeakReference;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.security.AccessController;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.util.Arrays;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Random;
 import java.util.WeakHashMap;
 import javax.security.auth.Subject;
 import javax.security.auth.callback.CallbackHandler;
@@ -80,7 +75,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 
 	void createUsers() {
 		Map users=system.getUsers();
-		users.put("admin",crypt(""));
+		users.put("admin",new Password(""));
 	}
 
 	void instantiate() {
@@ -184,42 +179,14 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		}
 	}
 
-	static char salt(byte pw[]) {
-		return (char)((pw[0] << 8) | pw[1]);
-	}
-
-	static byte[] crypt(String password) {
-		Random r=new SecureRandom();
-		byte b[]=new byte[2];
-		r.nextBytes(b);
-		return crypt(password,(char)((b[0] << 8) | b[1]));
-	}
-
-	static byte[] crypt(String password, char salt) {
-		byte b[]=password.getBytes();
-		byte a[]=new byte[2+b.length];
-		a[0]=(byte)(salt >> 8);
-		a[1]=(byte)(salt & 0xff);
-		System.arraycopy(b,0,a,2,b.length);
-		try {
-			b=MessageDigest.getInstance("MD5").digest(a);
-			byte c[]=new byte[2+b.length];
-			System.arraycopy(a,0,c,0,2);
-			System.arraycopy(b,0,c,2,b.length);
-			return c;
-		} catch (NoSuchAlgorithmException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
 	synchronized void changePassword(String username, String oldPassword, String newPassword) {
 		if(oldPassword==null) AccessController.checkPermission(new AdminPermission("changePassword"));
 		Map users=system.getUsers();
 		synchronized(users) {
-			byte pw[]=(byte[])users.get(username);
+			Password pw=(Password)users.get(username);
 			if(pw==null) throw new PersistentException("the user "+username+" doesn't exist");
 			else {
-				if(oldPassword==null || Arrays.equals(pw,crypt(oldPassword,salt(pw)))) users.put(username,crypt(newPassword));
+				if(oldPassword==null || pw.match(oldPassword)) users.put(username,new Password(newPassword));
 				else throw new PersistentException("old password doesn't match");
 			}
 		}
@@ -230,7 +197,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		Map users=system.getUsers();
 		synchronized(users) {
 			if(users.containsKey(username)) throw new PersistentException("the user "+username+" already exists");
-			else users.put(username,crypt(password));
+			else users.put(username,new Password(password));
 		}
 	}
 
@@ -264,8 +231,8 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	}
 
 	public synchronized boolean authenticate(String username, char[] password) {
-		byte pw[]=(byte[])system.getUsers().get(username);
-		return pw==null?false:Arrays.equals(pw,crypt(new String(password),salt(pw)));
+		Password pw=(Password)system.getUsers().get(username);
+		return pw==null?false:pw.match(password);
 	}
 
 	public synchronized Connection getConnection(CallbackHandler handler) throws RemoteException {

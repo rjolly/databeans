@@ -32,7 +32,12 @@ public final class PersistentArray extends PersistentObject implements Array {
 		}
 
 		public String persistentToString() {
-			return dump();
+			StringBuffer s=new StringBuffer();
+			s.append("{");
+			int n=length();
+			for(int i=0;i<n;i++) s.append((i==0?"":", ")+get(i));
+			s.append("}");
+			return s.toString();
 		}
 	}
 
@@ -119,15 +124,6 @@ public final class PersistentArray extends PersistentObject implements Array {
 		execute(
 			new MethodCall("set",new Class[] {int.class,Object.class},new Object[] {new Integer(index),value}),
 			new MethodCall("set",new Class[] {int.class,Object.class},new Object[] {new Integer(index),null}),1);
-	}
-
-	public String dump() {
-		StringBuffer s=new StringBuffer();
-		s.append("{");
-		int n=length();
-		for(int i=0;i<n;i++) s.append((i==0?"":", ")+get(i));
-		s.append("}");
-		return s.toString();
 	}
 
 	public static void copy(Array src, int src_position, Array dst, int dst_position, int length) {

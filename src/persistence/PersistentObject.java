@@ -3,7 +3,6 @@ package persistence;
 import java.io.Serializable;
 import java.rmi.RemoteException;
 import java.security.PrivilegedAction;
-import java.util.Iterator;
 import javax.security.auth.Subject;
 
 public class PersistentObject implements Cloneable, Serializable {
@@ -157,19 +156,6 @@ public class PersistentObject implements Cloneable, Serializable {
 	public String toString() {
 		return (String)execute(
 			new MethodCall("persistentToString",new Class[] {},new Object[] {}));
-	}
-
-	public String dump() {
-		StringBuffer s=new StringBuffer();
-		s.append("[");
-		Iterator t=persistentClass().fieldIterator();
-		while(t.hasNext()) {
-			Field field=(Field)t.next();
-			Object obj=get(field.name);
-			s.append(field.name+"="+obj+(t.hasNext()?", ":""));
-		}
-		s.append("]");
-		return s.toString();
 	}
 
 	public Object clone() {

@@ -147,6 +147,6 @@ public class Transaction extends PersistentObject {
 	}
 
 	public String toString() {
-		return "["+getClient()+", "+getCalls()+", "+getUndos()+", "+getPairs()+", "+isRollbackOnly()+"]";
+		return Long.toHexString(base())+"("+getClient()+")";
 	}
 }
