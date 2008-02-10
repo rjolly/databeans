@@ -10,6 +10,10 @@ public final class HashMapClass extends PersistentClass {
 		setNULL_KEY(create(PersistentObject.class));
 	}
 
+	protected boolean banned(String property) {
+		return super.banned(property) || property.equals("empty");
+	}
+
 	protected PersistentObject.Accessor createAccessor() throws RemoteException {
 		return new Accessor();
 	}

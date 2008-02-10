@@ -1,10 +1,9 @@
 package persistence.util;
 
 import java.rmi.RemoteException;
-import persistence.PersistentClass;
 import persistence.PersistentObject;
 
-public final class TreeSetClass extends PersistentClass {
+public final class TreeSetClass extends AbstractCollectionClass {
 	public void init(Class clazz) {
 		super.init(clazz);
 		setPRESENT(create(PersistentObject.class));
@@ -14,7 +13,7 @@ public final class TreeSetClass extends PersistentClass {
 		return new Accessor();
 	}
 
-	protected class Accessor extends PersistentClass.Accessor {
+	protected class Accessor extends AbstractCollectionClass.Accessor {
 		public Accessor() throws RemoteException {}
 
 		public PersistentObject PRESENT() {

@@ -29,12 +29,16 @@ public class PersistentClass extends PersistentObject {
 		for(int i=0;i<desc.length;i++) {
 			PropertyDescriptor d=desc[i];
 			if(d instanceof IndexedPropertyDescriptor) continue;
-			if(d.getName().equals("class")) continue;
+			if(banned(d.getName())) continue;
 			buffer.append(first?"":";").append(new Field(d));
 			first=false;
 		}
 		setFields(buffer.toString());
 		setName(clazz.getName());
+	}
+
+	protected boolean banned(String property) {
+		return property.equals("class");
 	}
 
 	protected PersistentObject.Accessor createAccessor() throws RemoteException {

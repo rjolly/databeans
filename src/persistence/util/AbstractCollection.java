@@ -9,6 +9,7 @@ package persistence.util;
 import java.rmi.RemoteException;
 import java.util.Collection;
 import java.util.Iterator;
+import persistence.PersistentClass;
 import persistence.PersistentObject;
 
 public abstract class AbstractCollection extends PersistentObject implements Collection {
@@ -70,6 +71,10 @@ public abstract class AbstractCollection extends PersistentObject implements Col
 			buf.append("]");
 			return buf.toString();
 		}
+	}
+
+	protected PersistentClass createClass() {
+		return (PersistentClass)create(AbstractCollectionClass.class,new Class[] {Class.class},new Object[] {getClass()});
 	}
 
 	// Query Operations
