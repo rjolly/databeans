@@ -1,7 +1,7 @@
 /*
  * AdminUI.java
  *
- * Created on January 30, 2008, 7:19 PM
+ * Created on February 10, 2008, 12:35 PM
  */
 
 package persistence.client;
@@ -12,7 +12,6 @@ import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import javax.swing.UIManager;
 import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
@@ -33,8 +32,8 @@ import persistence.PersistentObject;
  */
 public class AdminUI extends javax.swing.JFrame {
 	AdminConnection conn;
-	DefaultTreeModel model=new DefaultTreeModel(null);
-	
+	DefaultTreeModel model=new DefaultTreeModel(ObjectTreeNode.node(null,"system"));
+
 	/** Creates new form AdminUI */
 	public AdminUI() {
 		initComponents();
@@ -44,7 +43,14 @@ public class AdminUI extends javax.swing.JFrame {
 			public void valueChanged(TreeSelectionEvent e) {
 				ObjectTreeNode node = (ObjectTreeNode)jTree1.getLastSelectedPathComponent();
 				if (node == null) return;
-				jTextArea1.setText(String.valueOf(node.object));
+				int n=jSplitPane1.getDividerLocation();
+				if (node instanceof ArrayTreeNode || node instanceof ListTreeNode || node instanceof MapTreeNode || (node instanceof ObjectTreeNode && ((ObjectTreeNode)node).object instanceof PersistentObject)) {
+					jSplitPane1.setRightComponent(jScrollPane3);
+				} else {
+					jTextArea1.setText(String.valueOf(node.object));
+					jSplitPane1.setRightComponent(jScrollPane2);
+				}
+				jSplitPane1.setDividerLocation(n);
 			}
 		});
 		jTree1.addTreeWillExpandListener(new TreeWillExpandListener() {
@@ -59,14 +65,14 @@ public class AdminUI extends javax.swing.JFrame {
 	void open() {
 		try {
 			conn=Connections.getAdminConnection("//localhost/store");
-			model.setRoot(ObjectTreeNode.node(conn.system(),"system",null));
+			model.setRoot(ObjectTreeNode.node(conn.system(),"system"));
 			model.reload();
 			jTree1.setModel(model);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
-	
+
 	/** This method is called from within the constructor to
 	 * initialize the form.
 	 * WARNING: Do NOT modify this code. The content of this method is
@@ -75,6 +81,8 @@ public class AdminUI extends javax.swing.JFrame {
         // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
         private void initComponents() {
 
+                jScrollPane3 = new javax.swing.JScrollPane();
+                jTable1 = new javax.swing.JTable();
                 jTabbedPane1 = new javax.swing.JTabbedPane();
                 jSplitPane1 = new javax.swing.JSplitPane();
                 jScrollPane1 = new javax.swing.JScrollPane();
@@ -88,18 +96,27 @@ public class AdminUI extends javax.swing.JFrame {
                 helpMenu = new javax.swing.JMenu();
                 aboutMenuItem = new javax.swing.JMenuItem();
 
+                jTable1.setModel(new javax.swing.table.DefaultTableModel(
+                        new Object [][] {
+                                {null, null},
+                                {null, null},
+                                {null, null},
+                                {null, null}
+                        },
+                        new String [] {
+                                "Title 1", "Title 2"
+                        }
+                ));
+                jScrollPane3.setViewportView(jTable1);
+
                 setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
-                jSplitPane1.setDividerLocation(120);
-
-                jTree1.setModel(null);
                 jScrollPane1.setViewportView(jTree1);
 
                 jSplitPane1.setLeftComponent(jScrollPane1);
 
                 jTextArea1.setColumns(20);
                 jTextArea1.setEditable(false);
-                jTextArea1.setLineWrap(true);
                 jTextArea1.setRows(5);
                 jScrollPane2.setViewportView(jTextArea1);
 
@@ -140,20 +157,20 @@ public class AdminUI extends javax.swing.JFrame {
 
                 setJMenuBar(menuBar);
 
-                javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
+                org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(getContentPane());
                 getContentPane().setLayout(layout);
                 layout.setHorizontalGroup(
-                        layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addComponent(jTabbedPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 494, Short.MAX_VALUE)
+                        layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                        .add(jTabbedPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 400, Short.MAX_VALUE)
                 );
                 layout.setVerticalGroup(
-                        layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addComponent(jTabbedPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 325, Short.MAX_VALUE)
+                        layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                        .add(jTabbedPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 258, Short.MAX_VALUE)
                 );
 
                 pack();
         }// </editor-fold>//GEN-END:initComponents
-	
+
 	private void exitMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exitMenuItemActionPerformed
 		System.exit(0);
 	}//GEN-LAST:event_exitMenuItemActionPerformed
@@ -161,7 +178,7 @@ public class AdminUI extends javax.swing.JFrame {
 	private void openMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_openMenuItemActionPerformed
 		open();
 	}//GEN-LAST:event_openMenuItemActionPerformed
-	
+
 	/**
 	 * @param args the command line arguments
 	 */
@@ -172,7 +189,7 @@ public class AdminUI extends javax.swing.JFrame {
 			}
 		});
 	}
-	
+
         // Variables declaration - do not modify//GEN-BEGIN:variables
         private javax.swing.JMenuItem aboutMenuItem;
         private javax.swing.JMenuItem exitMenuItem;
@@ -180,14 +197,15 @@ public class AdminUI extends javax.swing.JFrame {
         private javax.swing.JMenu helpMenu;
         private javax.swing.JScrollPane jScrollPane1;
         private javax.swing.JScrollPane jScrollPane2;
+        private javax.swing.JScrollPane jScrollPane3;
         private javax.swing.JSplitPane jSplitPane1;
         private javax.swing.JTabbedPane jTabbedPane1;
+        private javax.swing.JTable jTable1;
         private javax.swing.JTextArea jTextArea1;
         private javax.swing.JTree jTree1;
         private javax.swing.JMenuBar menuBar;
         private javax.swing.JMenuItem openMenuItem;
         // End of variables declaration//GEN-END:variables
-	
 }
 
 class ObjectTreeNode implements TreeNode {
@@ -279,6 +297,10 @@ class ObjectTreeNode implements TreeNode {
 
 	public String toString() {
 		return name;
+	}
+
+	static ObjectTreeNode node(Object object, String name) {
+		return node(object,name,null);
 	}
 
 	static ObjectTreeNode node(Object object, String name, TreeNode parent) {
