@@ -49,7 +49,7 @@ public class AdminUI extends javax.swing.JFrame {
 					jTable1.setModel(ObjectTableModel.model(object));
 					jSplitPane1.setRightComponent(jScrollPane3);
 				} else {
-					jTextArea1.setText(object==null?null:object.toString());
+					jTextArea1.setText(String.valueOf(object));
 					jSplitPane1.setRightComponent(jScrollPane2);
 				}
 				jSplitPane1.setDividerLocation(n);
