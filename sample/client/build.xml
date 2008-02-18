@@ -11,7 +11,10 @@
   </target>
 
   <target name="run" depends="compile">
-    <java fork="true" classpath="databeans.jar:classes" classname="Sample"/>
+    <java fork="true" classpath="databeans.jar:classes" classname="Sample">
+      <sysproperty key="java.security.manager" value=""/>
+      <sysproperty key="java.security.policy" value="policy"/>
+    </java>
   </target>
 
   <target name="debug" depends="compile-debug">
@@ -19,6 +22,8 @@
       <classpath path="databeans.jar:classes"/>
     </nbjpdastart>
     <java fork="true" classpath="databeans.jar:classes" classname="Sample">
+      <sysproperty key="java.security.manager" value=""/>
+      <sysproperty key="java.security.policy" value="policy"/>
       <jvmarg value="-Xdebug"/>
       <jvmarg value="-Xnoagent"/>
       <jvmarg value="-Djava.compiler=none"/>
@@ -28,10 +33,6 @@
 
   <target name="clean">
     <delete dir="classes" quiet="true"/>
-  </target>
-
-  <target name="console">
-    <java classname="bsh.Console" classpath="bsh-2.0b4.jar:databeans.jar:classes" fork="true"/>
   </target>
 
 </project>

@@ -1,18 +1,14 @@
 package persistence;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.rmi.RemoteException;
 import javax.security.auth.Subject;
-import persistence.beans.XMLDecoder;
-import persistence.beans.XMLEncoder;
 
 public class AdminConnection extends Connection {
+	RemoteAdminConnection connection;
+
 	AdminConnection(StoreImpl store, boolean readOnly, Subject subject) throws RemoteException {
-		connection=new RemoteAdmin(store,readOnly,subject);
+		super.connection=new RemoteAdmin(store,readOnly,subject);
+		connection=(RemoteAdminConnection)super.connection;
 	}
 
 	class RemoteAdmin extends RemoteAdminConnectionImpl {
@@ -25,13 +21,21 @@ public class AdminConnection extends Connection {
 		}
 	}
 
+	public PersistentSystem system() {
+		try {
+			return (PersistentSystem)attach(connection.system());
+		} catch (RemoteException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	public void changePassword(String username, String password) {
 		changePassword(username,null,password);
 	}
 
 	public void changePassword(String username, String oldPassword, String newPassword) {
 		try {
-			((persistence.RemoteAdminConnection)connection).changePassword(username,oldPassword,newPassword);
+			connection.changePassword(username,oldPassword,newPassword);
 		} catch (RemoteException e) {
 			throw new RuntimeException(e);
 		}
@@ -39,7 +43,7 @@ public class AdminConnection extends Connection {
 
 	public void addUser(String username, String password) {
 		try {
-			((persistence.RemoteAdminConnection)connection).addUser(username,password);
+			connection.addUser(username,password);
 		} catch (RemoteException e) {
 			throw new RuntimeException(e);
 		}
@@ -47,7 +51,7 @@ public class AdminConnection extends Connection {
 
 	public void deleteUser(String username) {
 		try {
-			((persistence.RemoteAdminConnection)connection).deleteUser(username);
+			connection.deleteUser(username);
 		} catch (RemoteException e) {
 			throw new RuntimeException(e);
 		}
@@ -55,27 +59,23 @@ public class AdminConnection extends Connection {
 
 	public void inport(String name) {
 		try {
-			XMLDecoder d = new XMLDecoder(this,new BufferedInputStream(new FileInputStream(name)));
-			setRoot(d.readObject());
-			d.close();
-		} catch (IOException e) {
+			connection.inport(name);
+		} catch (RemoteException e) {
 			throw new RuntimeException(e);
 		}
 	}
 
 	public void export(String name) {
 		try {
-			XMLEncoder e = new XMLEncoder(this,new BufferedOutputStream(new FileOutputStream(name)));
-			e.writeObject(root());
-			e.close();
-		} catch (IOException e) {
+			connection.export(name);
+		} catch (RemoteException e) {
 			throw new RuntimeException(e);
 		}
 	}
 
 	public void shutdown() {
 		try {
-			((persistence.RemoteAdminConnection)connection).shutdown();
+			connection.shutdown();
 		} catch (RemoteException e) {
 			throw new RuntimeException(e);
 		}
@@ -83,7 +83,7 @@ public class AdminConnection extends Connection {
 
 	public void gc() {
 		try {
-			((persistence.RemoteAdminConnection)connection).gc();
+			connection.gc();
 		} catch (RemoteException e) {
 			throw new RuntimeException(e);
 		}
@@ -91,7 +91,7 @@ public class AdminConnection extends Connection {
 
 	public long allocatedSpace() {
 		try {
-			return ((persistence.RemoteAdminConnection)connection).allocatedSpace();
+			return connection.allocatedSpace();
 		} catch (RemoteException e) {
 			throw new RuntimeException(e);
 		}
@@ -99,7 +99,7 @@ public class AdminConnection extends Connection {
 
 	public long maxSpace() {
 		try {
-			return ((persistence.RemoteAdminConnection)connection).maxSpace();
+			return connection.maxSpace();
 		} catch (RemoteException e) {
 			throw new RuntimeException(e);
 		}

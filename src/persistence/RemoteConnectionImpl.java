@@ -53,6 +53,14 @@ abstract class RemoteConnectionImpl extends UnicastRemoteObject implements Remot
 		}
 	}
 
+	public synchronized PersistentClass get(String name) {
+		try {
+			return get(Class.forName(name));
+		} catch (ClassNotFoundException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	public synchronized PersistentClass get(Class clazz) {
 		return store.get(clazz);
 	}
@@ -63,6 +71,14 @@ abstract class RemoteConnectionImpl extends UnicastRemoteObject implements Remot
 
 	public PersistentSystem system() {
 		return store.system;
+	}
+
+	public Object root() {
+		return system().root();
+	}
+
+	public void setRoot(Object obj) {
+		system().setRoot(store.attach(obj));
 	}
 
 	public int getTransactionIsolation() {

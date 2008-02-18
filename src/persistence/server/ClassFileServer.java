@@ -12,6 +12,11 @@ package persistence.server;
 
 import java.io.*;
 import java.net.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.StringTokenizer;
+import java.util.jar.JarFile;
+import java.util.zip.ZipEntry;
 
 /**
  * The ClassFileServer implements a ClassServer that
@@ -21,7 +26,7 @@ import java.net.*;
  */
 public class ClassFileServer extends ClassServer {
     
-    private String classpath;
+    private Object classpath[];
     
     private static int DefaultServerPort = 2001;
     
@@ -33,7 +38,13 @@ public class ClassFileServer extends ClassServer {
     public ClassFileServer(int port, String classpath) throws IOException
     {
 	super(port);
-	this.classpath = classpath;
+	List l=new ArrayList();
+	StringTokenizer t=new StringTokenizer(classpath,":");
+	while(t.hasMoreTokens()) {
+	    String s=t.nextToken();
+	    l.add(new File(s).isFile()?new JarFile(s):(Object)s);
+	}
+	this.classpath = l.toArray();
     }
 
     /**
@@ -50,6 +61,18 @@ public class ClassFileServer extends ClassServer {
 	throws IOException, ClassNotFoundException 
     {
 	System.out.println("reading: " + path);
+	for(int i=0;i<classpath.length;i++) {
+	    try {
+		if(classpath[i] instanceof String) return getBytes(path,(String)classpath[i]);
+		else return getBytes(path,(JarFile)classpath[i]);
+	    } catch (Exception e) {}
+	}
+	throw new IOException("File length is zero: " + path);
+    }
+
+    byte[] getBytes(String path, String classpath)
+	throws IOException, ClassNotFoundException 
+    {
 	File f = new File(classpath + File.separator +
 			  path.replace('.', File.separatorChar) + ".class");
 	int length = (int)(f.length());
@@ -58,6 +81,23 @@ public class ClassFileServer extends ClassServer {
 	} else {
 	    FileInputStream fin = new FileInputStream(f);
 	    DataInputStream in = new DataInputStream(fin);
+	    
+	    byte[] bytecodes = new byte[length];
+	    in.readFully(bytecodes);
+	    return bytecodes;
+	}
+    }
+
+    byte[] getBytes(String path, JarFile classpath)
+	throws IOException, ClassNotFoundException 
+    {
+	ZipEntry e = classpath.getEntry(path.replace('.', File.separatorChar) + ".class");
+	int length = (int)(e.getSize());
+	if (length == 0) {
+	    throw new IOException("File length is zero: " + path);
+	} else {
+	    InputStream is = classpath.getInputStream(e);
+	    DataInputStream in = new DataInputStream(is);
 	    
 	    byte[] bytecodes = new byte[length];
 	    in.readFully(bytecodes);

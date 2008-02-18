@@ -1,10 +1,17 @@
 package persistence;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.rmi.RemoteException;
 import java.security.PrivilegedAction;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
 import javax.security.auth.Subject;
+import persistence.beans.XMLDecoder;
+import persistence.beans.XMLEncoder;
 
 abstract class RemoteAdminConnectionImpl extends RemoteConnectionImpl implements RemoteAdminConnection {
 	RemoteAdminConnectionImpl(StoreImpl store, boolean readOnly, Subject subject) throws RemoteException {
@@ -36,6 +43,26 @@ abstract class RemoteAdminConnectionImpl extends RemoteConnectionImpl implements
 				return null;
 			}
 		},null);
+	}
+
+	public void inport(String name) {
+		try {
+			XMLDecoder d = new XMLDecoder(connection(),new BufferedInputStream(new FileInputStream(name)));
+			setRoot(d.readObject());
+			d.close();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public void export(String name) {
+		try {
+			XMLEncoder e = new XMLEncoder(connection(),new BufferedOutputStream(new FileOutputStream(name)));
+			e.writeObject(root());
+			e.close();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	public void shutdown() throws RemoteException {

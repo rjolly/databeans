@@ -27,7 +27,7 @@ public abstract class AbstractList extends AbstractCollection implements List {
 			throw new UnsupportedOperationException();
 		}
 
-		public void add(int index, Object element) {
+		public int add(int index, Object element) {
 			throw new UnsupportedOperationException();
 		}
 

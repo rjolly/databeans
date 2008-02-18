@@ -126,7 +126,7 @@ public class ArrayList extends AbstractList
 			return oldValue;
 		}
 
-		public synchronized void add(int index, Object element) {
+		public synchronized int add(int index, Object element) {
 			if (index > getSize() || index < 0)
 				throw new IndexOutOfBoundsException(
 					"Index: "+index+", Size: "+getSize());
@@ -136,6 +136,7 @@ public class ArrayList extends AbstractList
 				getSize() - index);
 			getElementData().set(index,element);
 			setSize(getSize()+1);
+			return index;
 		}
 
 		public synchronized Object remove(int index) {

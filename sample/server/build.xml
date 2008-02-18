@@ -45,9 +45,9 @@
   </target>
 
   <target name="class_file_server">
-    <java fork="true" classpath="databeans.jar" classname="persistence.server.ClassFileJarServer">
+    <java fork="true" classpath="databeans.jar" classname="persistence.server.ClassFileServer">
       <arg value="2001"/>
-      <arg value="databeans.jar"/>
+      <arg value="databeans.jar:classes"/>
     </java>
   </target>
 

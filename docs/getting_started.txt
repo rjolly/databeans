@@ -2,7 +2,7 @@ Software requirements
 ---------------------
 
 Java 1.4 or higher
-Apache Ant (I used the one bundled in netbeans 5.0)
+Apache Ant (I used the one bundled in netbeans 6.0)
 BeanShell (optional ; I used version 2.0b4)
 
 BeanShell can be used for running databeans admin scripts. It can provide client interaction too, with the right classpath and import statements (see below : Running a beanshell client). It is available from:
@@ -71,7 +71,7 @@ And likewise for the client:
 Running a beanshell client
 --------------------------
 
-It is possible to connect to the server in interactive mode with a beanshell console:
+It is possible to connect to the server in interactive mode with a beanshell console. In the installation directory:
   ant console
 
 The following statements will just get the connection, commit the transaction, and exit. Feel free to try anything in between (after perhaps you have read the databeans manual !)

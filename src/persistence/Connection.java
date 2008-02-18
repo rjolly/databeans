@@ -40,15 +40,11 @@ public class Connection implements Serializable {
 	}
 
 	public PersistentObject create(String name) {
-		try {
-			return create(Class.forName(name));
-		} catch (ClassNotFoundException e) {
-			throw new RuntimeException(e);
-		}
+		return create(get(name),new Class[] {},new Object[] {});
 	}
 
 	public PersistentObject create(Class clazz) {
-		return create(clazz,new Class[] {},new Object[] {});
+		return create(get(clazz),new Class[] {},new Object[] {});
 	}
 
 	public PersistentObject create(Class clazz, Class types[], Object args[]) {
@@ -73,6 +69,14 @@ public class Connection implements Serializable {
 		}
 	}
 
+	PersistentClass get(String name) {
+		try {
+			return (PersistentClass)attach(connection.get(name));
+		} catch (RemoteException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	public PersistentClass get(Class clazz) {
 		try {
 			return (PersistentClass)attach(connection.get(clazz));
@@ -89,20 +93,20 @@ public class Connection implements Serializable {
 		}
 	}
 
-	public PersistentSystem system() {
+	public Object root() {
 		try {
-			return (PersistentSystem)attach(connection.system());
+			return attach(connection.root());
 		} catch (RemoteException e) {
 			throw new RuntimeException(e);
 		}
 	}
 
-	public Object root() {
-		return system().root();
-	}
-
 	public void setRoot(Object obj) {
-		system().setRoot(obj);
+		try {
+			connection.setRoot(obj);
+		} catch (RemoteException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	public int getTransactionIsolation() {
