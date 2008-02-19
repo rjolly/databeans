@@ -21,7 +21,7 @@
 
   <target name="compile">
     <mkdir dir="classes"/>
-    <javac srcdir="src" destdir="classes" source="1.4" target="1.4" classpath="lib/sun_reflect_misc.jar:lib/swing-layout-1.0.3.jar"/>
+    <javac srcdir="src" destdir="classes" source="1.4" target="1.4" classpath="lib/sun_reflect_misc.jar:lib/bsh-2.0b4.jar:lib/swing-layout-1.0.3.jar"/>
     <rmic base="classes"
           includes="persistence/*Impl.class
                     persistence/server/*Impl.class"
@@ -30,7 +30,7 @@
 
   <target name="compile-debug">
     <mkdir dir="classes"/>
-    <javac debug="on" srcdir="src" destdir="classes" source="1.4" target="1.4" classpath="lib/sun_reflect_misc.jar:lib/swing-layout-1.0.3.jar"/>
+    <javac debug="on" srcdir="src" destdir="classes" source="1.4" target="1.4" classpath="lib/sun_reflect_misc.jar:lib/bsh-2.0b4.jar:lib/swing-layout-1.0.3.jar"/>
     <rmic debug="on"
           base="classes"
           includes="persistence/*Impl.class
@@ -122,15 +122,8 @@
 		   databeans/sample/server/nbproject/private/**"/>
   </target>
 
-  <target name="console">
-    <java classname="bsh.Console" classpath="lib/bsh-2.0b4.jar:databeans.jar" fork="true">
-      <sysproperty key="java.security.manager" value=""/>
-      <sysproperty key="java.security.policy" value="policy"/>
-    </java>
-  </target>
-
   <target name="admin">
-    <java classname="persistence.client.AdminUI" classpath="databeans.jar:lib/jlfgr-1_0.jar:lib/swing-layout-1.0.3.jar" fork="true">
+    <java classname="persistence.client.AdminUI" classpath="databeans.jar:lib/bsh-2.0b4.jar:lib/jlfgr-1_0.jar:lib/swing-layout-1.0.3.jar" fork="true">
       <sysproperty key="java.security.manager" value=""/>
       <sysproperty key="java.security.policy" value="policy"/>
     </java>

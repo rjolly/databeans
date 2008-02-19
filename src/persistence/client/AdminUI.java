@@ -6,6 +6,7 @@
 
 package persistence.client;
 
+import bsh.Interpreter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
@@ -34,6 +35,7 @@ import persistence.PersistentObject;
 public class AdminUI extends javax.swing.JFrame {
 	AdminConnection conn;
 	DefaultTreeModel model=new DefaultTreeModel(ObjectTreeNode.node(null,"system"));
+	Interpreter interpreter;
 
 	/** Creates new form AdminUI */
 	public AdminUI() {
@@ -62,6 +64,8 @@ public class AdminUI extends javax.swing.JFrame {
 				model.reload((TreeNode)event.getPath().getLastPathComponent());
 			}
 		});
+		interpreter = new Interpreter( jConsole1 );
+		new Thread( interpreter ).start(); // start a thread to call the run() method
 	}
 
 	void open() {
@@ -70,6 +74,7 @@ public class AdminUI extends javax.swing.JFrame {
 			model.setRoot(ObjectTreeNode.node(conn.system(),"system"));
 			model.reload();
 			jTree1.setModel(model);
+			interpreter.set("conn",conn);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -91,6 +96,7 @@ public class AdminUI extends javax.swing.JFrame {
                 jTree1 = new javax.swing.JTree();
                 jScrollPane2 = new javax.swing.JScrollPane();
                 jTextArea1 = new javax.swing.JTextArea();
+                jConsole1 = new bsh.util.JConsole();
                 menuBar = new javax.swing.JMenuBar();
                 fileMenu = new javax.swing.JMenu();
                 openMenuItem = new javax.swing.JMenuItem();
@@ -126,6 +132,7 @@ public class AdminUI extends javax.swing.JFrame {
                 jSplitPane1.setRightComponent(jScrollPane2);
 
                 jTabbedPane1.addTab("system", jSplitPane1);
+                jTabbedPane1.addTab("console", jConsole1);
 
                 fileMenu.setText("Connection");
 
@@ -198,6 +205,7 @@ public class AdminUI extends javax.swing.JFrame {
         private javax.swing.JMenuItem exitMenuItem;
         private javax.swing.JMenu fileMenu;
         private javax.swing.JMenu helpMenu;
+        private bsh.util.JConsole jConsole1;
         private javax.swing.JScrollPane jScrollPane1;
         private javax.swing.JScrollPane jScrollPane2;
         private javax.swing.JScrollPane jScrollPane3;

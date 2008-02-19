@@ -176,6 +176,15 @@
             </Container>
           </SubComponents>
         </Container>
+        <Component class="bsh.util.JConsole" name="jConsole1">
+          <Constraints>
+            <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">
+              <JTabbedPaneConstraints tabName="console">
+                <Property name="tabTitle" type="java.lang.String" value="console"/>
+              </JTabbedPaneConstraints>
+            </Constraint>
+          </Constraints>
+        </Component>
       </SubComponents>
     </Container>
   </SubComponents>

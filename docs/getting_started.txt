@@ -3,11 +3,9 @@ Software requirements
 
 Java 1.4 or higher
 Apache Ant (I used the one bundled in netbeans 6.0)
-BeanShell (optional ; I used version 2.0b4)
+BeanShell 2.0b4 (included)
 
-BeanShell can be used for running databeans admin scripts. It can provide client interaction too, with the right classpath and import statements (see below : Running a beanshell client). It is available from:
-
-http://www.beanshell.org/download.html
+BeanShell is used to run databeans admin scripts, and to provide console access, see below "Running the admin user interface".
 
 As of databeans 2.0, this "getting_started" tour is entirely based on ant tasks so as to be independant of the underlying system. Of course they can be run graphically from your preferred IDE.
 
@@ -32,7 +30,7 @@ The output should read:
 
 store bound in registry
 
-That's all. You may now connect to a bare databeans instance (i.e. without business classes) suited to get acquainted with admin tasks, but not much more. See below "Running a beanshell client" for that.
+That's all. You may now connect to a bare databeans instance (i.e. without business classes) suited to get acquainted with admin tasks, but not much more. See below "Running the admin user interface" for that.
 
 Then, stop the server with a simple CTRL-C (or IDE equivalent) and likewise for the class file server. We will now have a look on how to deploy and run a more interesting sample application.
 
@@ -68,18 +66,15 @@ We may now shutdown the server. Type CTRL-C in the server window. To re-enter th
 And likewise for the client:
   ant
 
-Running a beanshell client
---------------------------
+Running the admin user interface
+--------------------------------
 
-It is possible to connect to the server in interactive mode with a beanshell console. In the installation directory:
-  ant console
+The admin user interface is run from the installation directory:
+  ant admin
 
-The following statements will just get the connection, commit the transaction, and exit. Feel free to try anything in between (after perhaps you have read the databeans manual !)
+To connect to the data store, select "Connection->Open" and enter the location of the store (default : "//localhost/store"). Various admin tasks are available. To talk directly to the server, you can use the "console" tab, which gives access to a beanshell console. The following statement will just print the store root element. Feel free to try anything you please (after perhaps you have read the databeans manual !)
 
-import persistence.*;
-conn=Connections.getConnection("//localhost/store");
-conn.commit();
-exit();
+print(conn.root());
 
 Reading the manual
 ------------------
