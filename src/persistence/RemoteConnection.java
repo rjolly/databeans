@@ -10,8 +10,7 @@ interface RemoteConnection extends Remote {
 	PersistentClass get(Class clazz) throws RemoteException;
 	PersistentClass get(Class componentType, int length) throws RemoteException;
 
-	Object root() throws RemoteException;
-	void setRoot(Object obj) throws RemoteException;
+	PersistentSystem system() throws RemoteException;
 
 	int getTransactionIsolation() throws RemoteException;
 	void setTransactionIsolation(int level) throws RemoteException;

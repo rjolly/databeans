@@ -73,14 +73,6 @@ abstract class RemoteConnectionImpl extends UnicastRemoteObject implements Remot
 		return store.system;
 	}
 
-	public Object root() {
-		return system().root();
-	}
-
-	public void setRoot(Object obj) {
-		system().setRoot(store.attach(obj));
-	}
-
 	public int getTransactionIsolation() {
 		return level;
 	}
