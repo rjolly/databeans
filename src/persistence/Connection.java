@@ -102,7 +102,7 @@ public class Connection implements Serializable {
 	}
 
 	public Object root() {
-		return system().getRoot();
+		return system().root();
 	}
 
 	public void setRoot(Object obj) {

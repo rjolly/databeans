@@ -21,14 +21,6 @@ public class AdminConnection extends Connection {
 		}
 	}
 
-	public PersistentSystem system() {
-		try {
-			return (PersistentSystem)attach(connection.system());
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
 	public void changePassword(String username, String password) {
 		changePassword(username,null,password);
 	}
