@@ -7,6 +7,9 @@
 package persistence.client;
 
 import bsh.Interpreter;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Point;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
@@ -40,6 +43,8 @@ public class AdminUI extends javax.swing.JFrame {
 	/** Creates new form AdminUI */
 	public AdminUI() {
 		initComponents();
+		jDialog1.pack();
+		jDialog2.pack();
 		jTree1.setModel(model);
 		jTree1.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
 		jTree1.addTreeSelectionListener(new TreeSelectionListener() {
@@ -70,14 +75,32 @@ public class AdminUI extends javax.swing.JFrame {
 
 	void open() {
 		try {
-			conn=Connections.getAdminConnection("//localhost/store");
+			conn=Connections.getAdminConnection(jTextField1.getText());
 			model.setRoot(ObjectTreeNode.node(conn.system(),"system"));
 			model.reload();
-			jTree1.setModel(model);
 			interpreter.set("conn",conn);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	void close() {
+		try {
+			interpreter.set("conn",null);
+			model.setRoot(ObjectTreeNode.node(null,"system"));
+			model.reload();
+			conn.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	void setDialogLocation(Component dialog) {
+		Point location=this.getLocation();
+		Dimension size=this.getSize();
+		Dimension s=dialog.getSize();
+		location.translate((size.width-s.width)>>1,(size.height-s.height)>>1);
+		dialog.setLocation(location);
 	}
 
 	/** This method is called from within the constructor to
@@ -90,6 +113,14 @@ public class AdminUI extends javax.swing.JFrame {
 
                 jScrollPane3 = new javax.swing.JScrollPane();
                 jTable1 = new javax.swing.JTable();
+                jDialog1 = new javax.swing.JDialog();
+                jLabel1 = new javax.swing.JLabel();
+                jTextField1 = new javax.swing.JTextField();
+                jButton1 = new javax.swing.JButton();
+                jButton2 = new javax.swing.JButton();
+                jDialog2 = new javax.swing.JDialog();
+                jLabel2 = new javax.swing.JLabel();
+                jButton3 = new javax.swing.JButton();
                 jTabbedPane1 = new javax.swing.JTabbedPane();
                 jSplitPane1 = new javax.swing.JSplitPane();
                 jScrollPane1 = new javax.swing.JScrollPane();
@@ -100,6 +131,7 @@ public class AdminUI extends javax.swing.JFrame {
                 menuBar = new javax.swing.JMenuBar();
                 fileMenu = new javax.swing.JMenu();
                 openMenuItem = new javax.swing.JMenuItem();
+                closeMenuItem = new javax.swing.JMenuItem();
                 exitMenuItem = new javax.swing.JMenuItem();
                 helpMenu = new javax.swing.JMenu();
                 aboutMenuItem = new javax.swing.JMenuItem();
@@ -116,6 +148,89 @@ public class AdminUI extends javax.swing.JFrame {
                         }
                 ));
                 jScrollPane3.setViewportView(jTable1);
+
+                jDialog1.setTitle("Open connection");
+
+                jLabel1.setText("Location :");
+
+                jTextField1.setText("//localhost/store");
+
+                jButton1.setText("Ok");
+                jButton1.addActionListener(new java.awt.event.ActionListener() {
+                        public void actionPerformed(java.awt.event.ActionEvent evt) {
+                                jButton1ActionPerformed(evt);
+                        }
+                });
+
+                jButton2.setText("Cancel");
+                jButton2.addActionListener(new java.awt.event.ActionListener() {
+                        public void actionPerformed(java.awt.event.ActionEvent evt) {
+                                jButton2ActionPerformed(evt);
+                        }
+                });
+
+                org.jdesktop.layout.GroupLayout jDialog1Layout = new org.jdesktop.layout.GroupLayout(jDialog1.getContentPane());
+                jDialog1.getContentPane().setLayout(jDialog1Layout);
+                jDialog1Layout.setHorizontalGroup(
+                        jDialog1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                        .add(jDialog1Layout.createSequentialGroup()
+                                .addContainerGap()
+                                .add(jDialog1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                        .add(jDialog1Layout.createSequentialGroup()
+                                                .add(jLabel1)
+                                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                                .add(jTextField1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 302, Short.MAX_VALUE))
+                                        .add(org.jdesktop.layout.GroupLayout.TRAILING, jDialog1Layout.createSequentialGroup()
+                                                .add(jButton1)
+                                                .add(18, 18, 18)
+                                                .add(jButton2)))
+                                .addContainerGap())
+                );
+                jDialog1Layout.setVerticalGroup(
+                        jDialog1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                        .add(jDialog1Layout.createSequentialGroup()
+                                .addContainerGap()
+                                .add(jDialog1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                                        .add(jLabel1)
+                                        .add(jTextField1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .add(jDialog1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                                        .add(jButton2)
+                                        .add(jButton1))
+                                .addContainerGap())
+                );
+
+                jLabel2.setText("<html>databeans : a new, fully object oriented persistence framework for java<br/> Copyright (C) 2007-2008 Databeans</html>");
+
+                jButton3.setText("Ok");
+                jButton3.addActionListener(new java.awt.event.ActionListener() {
+                        public void actionPerformed(java.awt.event.ActionEvent evt) {
+                                jButton3ActionPerformed(evt);
+                        }
+                });
+
+                org.jdesktop.layout.GroupLayout jDialog2Layout = new org.jdesktop.layout.GroupLayout(jDialog2.getContentPane());
+                jDialog2.getContentPane().setLayout(jDialog2Layout);
+                jDialog2Layout.setHorizontalGroup(
+                        jDialog2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                        .add(jDialog2Layout.createSequentialGroup()
+                                .addContainerGap()
+                                .add(jLabel2)
+                                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .add(org.jdesktop.layout.GroupLayout.TRAILING, jDialog2Layout.createSequentialGroup()
+                                .addContainerGap(433, Short.MAX_VALUE)
+                                .add(jButton3)
+                                .addContainerGap())
+                );
+                jDialog2Layout.setVerticalGroup(
+                        jDialog2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                        .add(jDialog2Layout.createSequentialGroup()
+                                .addContainerGap()
+                                .add(jLabel2)
+                                .add(18, 18, 18)
+                                .add(jButton3)
+                                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                );
 
                 setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -146,6 +261,14 @@ public class AdminUI extends javax.swing.JFrame {
                 });
                 fileMenu.add(openMenuItem);
 
+                closeMenuItem.setText("Close");
+                closeMenuItem.addActionListener(new java.awt.event.ActionListener() {
+                        public void actionPerformed(java.awt.event.ActionEvent evt) {
+                                closeMenuItemActionPerformed(evt);
+                        }
+                });
+                fileMenu.add(closeMenuItem);
+
                 exitMenuItem.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_W, java.awt.event.InputEvent.CTRL_MASK));
                 exitMenuItem.setText("Exit");
                 exitMenuItem.addActionListener(new java.awt.event.ActionListener() {
@@ -161,6 +284,11 @@ public class AdminUI extends javax.swing.JFrame {
 
                 aboutMenuItem.setIcon(new javax.swing.ImageIcon(getClass().getResource("/toolbarButtonGraphics/general/About16.gif"))); // NOI18N
                 aboutMenuItem.setText("About");
+                aboutMenuItem.addActionListener(new java.awt.event.ActionListener() {
+                        public void actionPerformed(java.awt.event.ActionEvent evt) {
+                                aboutMenuItemActionPerformed(evt);
+                        }
+                });
                 helpMenu.add(aboutMenuItem);
 
                 menuBar.add(helpMenu);
@@ -186,8 +314,31 @@ public class AdminUI extends javax.swing.JFrame {
 	}//GEN-LAST:event_exitMenuItemActionPerformed
 
 	private void openMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_openMenuItemActionPerformed
-		open();
+		setDialogLocation(jDialog1);
+		jDialog1.setVisible(true);
 	}//GEN-LAST:event_openMenuItemActionPerformed
+
+	private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+		jDialog1.setVisible(false);
+		open();
+	}//GEN-LAST:event_jButton1ActionPerformed
+
+	private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+		jDialog1.setVisible(false);
+	}//GEN-LAST:event_jButton2ActionPerformed
+
+	private void aboutMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_aboutMenuItemActionPerformed
+		setDialogLocation(jDialog2);
+		jDialog2.setVisible(true);
+	}//GEN-LAST:event_aboutMenuItemActionPerformed
+
+	private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
+		jDialog2.setVisible(false);
+	}//GEN-LAST:event_jButton3ActionPerformed
+
+	private void closeMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_closeMenuItemActionPerformed
+		close();
+	}//GEN-LAST:event_closeMenuItemActionPerformed
 
 	/**
 	 * @param args the command line arguments
@@ -202,10 +353,18 @@ public class AdminUI extends javax.swing.JFrame {
 
         // Variables declaration - do not modify//GEN-BEGIN:variables
         private javax.swing.JMenuItem aboutMenuItem;
+        private javax.swing.JMenuItem closeMenuItem;
         private javax.swing.JMenuItem exitMenuItem;
         private javax.swing.JMenu fileMenu;
         private javax.swing.JMenu helpMenu;
+        private javax.swing.JButton jButton1;
+        private javax.swing.JButton jButton2;
+        private javax.swing.JButton jButton3;
         private bsh.util.JConsole jConsole1;
+        private javax.swing.JDialog jDialog1;
+        private javax.swing.JDialog jDialog2;
+        private javax.swing.JLabel jLabel1;
+        private javax.swing.JLabel jLabel2;
         private javax.swing.JScrollPane jScrollPane1;
         private javax.swing.JScrollPane jScrollPane2;
         private javax.swing.JScrollPane jScrollPane3;
@@ -213,6 +372,7 @@ public class AdminUI extends javax.swing.JFrame {
         private javax.swing.JTabbedPane jTabbedPane1;
         private javax.swing.JTable jTable1;
         private javax.swing.JTextArea jTextArea1;
+        private javax.swing.JTextField jTextField1;
         private javax.swing.JTree jTree1;
         private javax.swing.JMenuBar menuBar;
         private javax.swing.JMenuItem openMenuItem;
