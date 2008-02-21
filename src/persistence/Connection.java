@@ -20,23 +20,15 @@ public class Connection implements Serializable {
 	static final int TRANSACTION_REPEATABLE_READ = 3;
 	static final int TRANSACTION_SERIALIZABLE = 4;
 
-	persistence.RemoteConnection connection;
+	RemoteConnection connection;
 	transient Map cache;
 
-	Connection() {}
-
-	Connection(StoreImpl store, int level, Subject subject) throws RemoteException {
-		connection=new RemoteConnection(store,level,subject);
+	Connection(RemoteConnection connection) {
+		this.connection=connection;
 	}
 
-	class RemoteConnection extends RemoteConnectionImpl {
-		RemoteConnection(StoreImpl store, int level, Subject subject) throws RemoteException {
-			super(store,level,false,subject);
-		}
-
-		Connection connection() {
-			return Connection.this;
-		}
+	Connection(StoreImpl store, int level, Subject subject) throws RemoteException {
+		this(new RemoteConnectionImpl(store,level,false,subject));
 	}
 
 	public PersistentObject create(String name) {

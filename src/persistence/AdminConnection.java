@@ -7,18 +7,8 @@ public class AdminConnection extends Connection {
 	RemoteAdminConnection connection;
 
 	AdminConnection(StoreImpl store, boolean readOnly, Subject subject) throws RemoteException {
-		super.connection=new RemoteAdmin(store,readOnly,subject);
+		super(new RemoteAdminConnectionImpl(store,readOnly,subject));
 		connection=(RemoteAdminConnection)super.connection;
-	}
-
-	class RemoteAdmin extends RemoteAdminConnectionImpl {
-		public RemoteAdmin(StoreImpl store, boolean readOnly, Subject subject) throws RemoteException {
-			super(store,readOnly,subject);
-		}
-
-		Connection connection() {
-			return AdminConnection.this;
-		}
 	}
 
 	public void changePassword(String username, String password) {

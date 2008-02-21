@@ -8,7 +8,7 @@ import javax.security.auth.Subject;
 import persistence.PersistentObject.MethodCall;
 import persistence.server.DatabeansPrincipal;
 
-abstract class RemoteConnectionImpl extends UnicastRemoteObject implements RemoteConnection {
+class RemoteConnectionImpl extends UnicastRemoteObject implements RemoteConnection {
 	final StoreImpl store;
 	Transaction transaction;
 	int level;
@@ -36,8 +36,6 @@ abstract class RemoteConnectionImpl extends UnicastRemoteObject implements Remot
 		} catch (ServerNotActiveException e) {}
 		return name;
 	}
-
-	abstract Connection connection();
 
 	public PersistentObject create(PersistentClass clazz, Class types[], Object args[]) {
 		return create((PersistentClass)store.attach(clazz),types,store.attach(args),true);
@@ -122,7 +120,6 @@ abstract class RemoteConnectionImpl extends UnicastRemoteObject implements Remot
 
 	synchronized void close() throws RemoteException {
 		UnicastRemoteObject.unexportObject(this,true);
-		connection().close();
 	}
 
 	protected final void finalize() {

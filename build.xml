@@ -91,13 +91,11 @@
   <target name="setup_sample">
     <copy file="databeans.jar" todir="sample/server"/>
     <copy file="databeans.jar" todir="sample/client"/>
-    <copy file="lib/bsh-2.0b4.jar" todir="sample/client"/>
   </target>
 
   <target name="clean_sample">
     <delete file="sample/server/databeans.jar" quiet="true"/>
     <delete file="sample/client/databeans.jar" quiet="true"/>
-    <delete file="sample/client/bsh-2.0b4.jar" quiet="true"/>
     <ant dir="sample/client" target="clean"/>
     <ant dir="sample/server" target="clean"/>
   </target>
