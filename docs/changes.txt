@@ -1,3 +1,13 @@
+Changes between 2.0rc14 and 2.0rc15:
+
++ graphical admin UI
++ restored 1.4 compatibility
++ a Password class
++ a mechanism to discard unwanted properties in PersistentObjectS
++ client-side security manager to enable class download
++ put back import/export on server
++ RemoteConnection no more Connection inner class
+
 Changes between 2.0rc13 and 2.0rc14:
 
 + array classes not put in cache
