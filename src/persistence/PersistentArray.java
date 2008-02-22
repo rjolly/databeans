@@ -1,7 +1,6 @@
 package persistence;
 
 import java.rmi.RemoteException;
-import persistence.PersistentObject.MethodCall;
 
 public final class PersistentArray extends PersistentObject implements Array {
 	public void init(Object component[]) {

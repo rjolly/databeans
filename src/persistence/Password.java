@@ -1,7 +1,6 @@
 package persistence;
 
 import java.io.Serializable;
-import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -52,6 +51,8 @@ public class Password implements Serializable {
 	}
 
 	public String toString() {
-		return new BigInteger(encrypted).toString(16);
+		StringBuffer buffer=new StringBuffer();
+		for(int i=0;i<encrypted.length;i++) buffer.append((i>0?" ":"")+Integer.toHexString(0x100|(encrypted[i]&0xff)).substring(1));
+		return buffer.toString();
 	}
 }

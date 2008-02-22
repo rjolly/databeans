@@ -69,7 +69,7 @@ public class PersistentClass extends PersistentObject {
 	}
 
 	void setClass(PersistentClass clazz) {
-		accessor().setClass(clazz);
+		this.clazz=clazz;
 	}
 
 	void setup() {

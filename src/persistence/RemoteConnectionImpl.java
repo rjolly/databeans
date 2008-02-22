@@ -43,7 +43,7 @@ class RemoteConnectionImpl extends UnicastRemoteObject implements RemoteConnecti
 
 	synchronized PersistentObject create(PersistentClass clazz, Class types[], Object args[], boolean attached) {
 		try {
-			PersistentObject obj=store.create(clazz).object();
+			PersistentObject obj=store.create(clazz);
 			obj.getClass().getMethod("init",types).invoke(obj,args);
 			return obj;
 		} catch (Exception e) {
