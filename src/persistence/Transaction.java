@@ -48,8 +48,8 @@ public class Transaction extends PersistentObject {
 		if(isRollbackOnly()) throw new PersistentException("rollback only");
 		Array pair;
 		Map map=getPairs();
-//		Long base=new Long(obj.accessor().base());
-		Number base=MemoryModel.model.toNumber(obj.accessor().base());
+//		Long base=new Long(obj.base.longValue());
+		Number base=MemoryModel.model.toNumber(obj.base.longValue());
 		if(map.containsKey(base)) pair=(Array)map.get(base);
 		else {
 			pair=(Array)create(new Object[] {obj,obj.clone()});

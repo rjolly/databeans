@@ -2,6 +2,7 @@ package persistence;
 
 import java.io.Serializable;
 import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Iterator;
@@ -21,18 +22,14 @@ public class PersistentObject implements Cloneable, Serializable {
 		return new Accessor();
 	}
 
-	protected class Accessor extends AccessorImpl {
+	protected class Accessor extends UnicastRemoteObject implements persistence.Accessor {
 		public Accessor() throws RemoteException {}
 
 		PersistentObject object() {
 			return PersistentObject.this;
 		}
 
-		Object call(String method, Class types[], Object args[], boolean check) {
-			if(check) {
-				if(method.equals("get") || method.equals("set")) AccessController.checkPermission(new PropertyPermission(clazz.name()+"."+args[0]));
-				else AccessController.checkPermission(new MethodPermission(clazz.name()+"."+method));
-			}
+		Object call(String method, Class types[], Object args[]) {
 			try {
 				return getClass().getMethod(method,types).invoke(this,args);
 			} catch (Exception e) {
@@ -41,21 +38,11 @@ public class PersistentObject implements Cloneable, Serializable {
 		}
 
 		public final Object get(String name) {
-			return get(clazz.getField(name));
+			return PersistentObject.this.get(clazz.getField(name));
 		}
 
 		public final Object set(String name, Object value) {
-			return set(clazz.getField(name),value);
-		}
-
-		Object get(Field field) {
-			return store.get(base.longValue(),field);
-		}
-
-		synchronized Object set(Field field, Object value) {
-			Object obj=get(field);
-			store.set(base.longValue(),field,value);
-			return obj;
+			return PersistentObject.this.set(clazz.getField(name),value);
 		}
 
 		public final long base() {
@@ -83,21 +70,15 @@ public class PersistentObject implements Cloneable, Serializable {
 		}
 
 		public PersistentObject persistentClone() {
-			return ((AccessorImpl)clone()).object();
-		}
-
-		public synchronized final Object clone() {
-			AccessorImpl obj=store.create(clazz).accessor();
-			Iterator t=clazz.fieldIterator();
-			while(t.hasNext()) {
-				Field field=(Field)t.next();
-				obj.set(field,get(field));
+			synchronized(PersistentObject.this) {
+				PersistentObject obj=store.create(clazz);
+				Iterator t=clazz.fieldIterator();
+				while(t.hasNext()) {
+					Field field=(Field)t.next();
+					obj.set(field,PersistentObject.this.get(field));
+				}
+				return obj;
 			}
-			return obj;
-		}
-
-		protected final void finalize() {
-			store.release(PersistentObject.this);
 		}
 	}
 
@@ -187,6 +168,16 @@ public class PersistentObject implements Cloneable, Serializable {
 			new MethodCall("set",new Class[] {String.class,Object.class},new Object[] {name,null}),1);
 	}
 
+	Object get(Field field) {
+		return store.get(base.longValue(),field);
+	}
+
+	synchronized Object set(Field field, Object value) {
+		Object obj=get(field);
+		store.set(base.longValue(),field,value);
+		return obj;
+	}
+
 	protected final Object execute(MethodCall call) {
 		return connection.execute(call);
 	}
@@ -223,12 +214,17 @@ public class PersistentObject implements Cloneable, Serializable {
 		}
 	}
 
-	AccessorImpl accessor() {
-		return (AccessorImpl)accessor;
+	Object call(String method, Class types[], Object args[], boolean check) {
+		if(check) {
+			if(method.equals("get") || method.equals("set")) AccessController.checkPermission(new PropertyPermission(clazz.name()+"."+args[0]));
+			else AccessController.checkPermission(new MethodPermission(clazz.name()+"."+method));
+		}
+		return ((Accessor)accessor).call(method,types,args);
 	}
 
-	Object call(String method, Class types[], Object args[], boolean check) {
-		return accessor().call(method,types,args,check);
+	synchronized void unexport() throws RemoteException {
+		UnicastRemoteObject.unexportObject(accessor,true);
+		close();
 	}
 
 	void close() {
@@ -278,5 +274,9 @@ public class PersistentObject implements Cloneable, Serializable {
 	public Object clone() {
 		return execute(
 			new MethodCall("persistentClone",new Class[] {},new Object[] {}));
+	}
+
+	protected final void finalize() {
+		store.release(this);
 	}
 }

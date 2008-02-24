@@ -39,7 +39,8 @@
   </target>
 
   <target name="jar" depends="compile">
-    <zip destfile="databeans.jar"
+    <jar destfile="databeans.jar"
+	 manifest="manifest.mf"
          basedir="classes"
          compress="false"
          includes="**/*.class"
@@ -121,7 +122,7 @@
   </target>
 
   <target name="admin">
-    <java classname="persistence.client.AdminUI" classpath="databeans.jar:lib/bsh-2.0b4.jar:lib/jlfgr-1_0.jar:lib/swing-layout-1.0.3.jar" fork="true">
+    <java jar="databeans.jar" fork="true">
       <sysproperty key="java.security.manager" value=""/>
       <sysproperty key="java.security.policy" value="policy"/>
     </java>
