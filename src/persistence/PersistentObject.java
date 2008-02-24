@@ -25,10 +25,6 @@ public class PersistentObject implements Cloneable, Serializable {
 	protected class Accessor extends UnicastRemoteObject implements persistence.Accessor {
 		public Accessor() throws RemoteException {}
 
-		PersistentObject object() {
-			return PersistentObject.this;
-		}
-
 		Object call(String method, Class types[], Object args[]) {
 			try {
 				return getClass().getMethod(method,types).invoke(this,args);
