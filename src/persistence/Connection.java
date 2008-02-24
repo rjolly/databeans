@@ -14,11 +14,11 @@ import javax.transaction.xa.Xid;
 import persistence.PersistentObject.MethodCall;
 
 public class Connection implements Serializable {
-	static final int TRANSACTION_NONE = 0;
-	static final int TRANSACTION_READ_UNCOMMITTED = 1;
-	static final int TRANSACTION_READ_COMMITTED = 2;
-	static final int TRANSACTION_REPEATABLE_READ = 3;
-	static final int TRANSACTION_SERIALIZABLE = 4;
+	public static final int TRANSACTION_NONE = 0;
+	public static final int TRANSACTION_READ_UNCOMMITTED = 1;
+	public static final int TRANSACTION_READ_COMMITTED = 2;
+	public static final int TRANSACTION_REPEATABLE_READ = 3;
+	public static final int TRANSACTION_SERIALIZABLE = 4;
 
 	RemoteConnection connection;
 	transient Map cache;
