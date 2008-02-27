@@ -18,12 +18,30 @@ public class PersistentObject implements Cloneable, Serializable {
 
 	public void init() {}
 
+	static PersistentObject newInstance(long base, PersistentClass clazz, StoreImpl store) {
+		try {
+			PersistentObject obj=clazz.newInstance();
+			obj.base=new Long(base);
+			obj.clazz=clazz;
+			obj.store=store;
+			obj.accessor=obj.createAccessor();
+			obj.connection=store.systemConnection;
+			return obj;
+		} catch (RemoteException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	protected Accessor createAccessor() throws RemoteException {
 		return new Accessor();
 	}
 
 	protected class Accessor extends UnicastRemoteObject implements persistence.Accessor {
 		public Accessor() throws RemoteException {}
+
+		PersistentObject object() {
+			return PersistentObject.this;
+		}
 
 		Object call(String method, Class types[], Object args[]) {
 			try {
@@ -34,11 +52,58 @@ public class PersistentObject implements Cloneable, Serializable {
 		}
 
 		public final Object get(String name) {
-			return PersistentObject.this.get(clazz.getField(name));
+			return get(clazz.getField(name));
 		}
 
 		public final Object set(String name, Object value) {
-			return PersistentObject.this.set(clazz.getField(name),value);
+			return set(clazz.getField(name),value);
+		}
+
+		Object get(Field field) {
+			return store.get(base.longValue(),field);
+		}
+
+		synchronized Object set(Field field, Object value) {
+			Object obj=get(field);
+			store.set(base.longValue(),field,value);
+			return obj;
+		}
+
+		synchronized void lock(Transaction transaction) {
+			Transaction t=getLock();
+			if(t==null) setLock(transaction);
+			else if(t==transaction);
+			else {
+				t=getLock(TIMEOUT);
+				if(t==null) setLock(transaction);
+				else throw new PersistentException(object()+" locked by "+t);
+			}
+		}
+
+		synchronized void unlock() {
+			setLock(null);
+			notify();
+		}
+
+		Transaction getLock() {
+			return getLock(0);
+		}
+
+		Transaction getLock(int timeout) {
+			if(timeout>0 && !store.closed) try {
+				wait(timeout);
+			} catch (InterruptedException e) {
+				throw new RuntimeException(e);
+			}
+			return store.getLock(base.longValue());
+		}
+
+		void setLock(Transaction transaction) {
+			store.setLock(base.longValue(),transaction);
+		}
+
+		synchronized void close() throws RemoteException {
+			UnicastRemoteObject.unexportObject(this,true);
 		}
 
 		public final long base() {
@@ -66,63 +131,18 @@ public class PersistentObject implements Cloneable, Serializable {
 		}
 
 		public PersistentObject persistentClone() {
-			synchronized(PersistentObject.this) {
-				PersistentObject obj=store.create(clazz);
-				Iterator t=clazz.fieldIterator();
-				while(t.hasNext()) {
-					Field field=(Field)t.next();
-					obj.set(field,PersistentObject.this.get(field));
-				}
-				return obj;
+			return ((Accessor)clone()).object();
+		}
+
+		public synchronized final Object clone() {
+			Accessor obj=(Accessor)store.create(clazz).accessor;
+			Iterator t=clazz.fieldIterator();
+			while(t.hasNext()) {
+				Field field=(Field)t.next();
+				obj.set(field,get(field));
 			}
-		}
-	}
-
-	static PersistentObject newInstance(long base, PersistentClass clazz, StoreImpl store) {
-		try {
-			PersistentObject obj=clazz.newInstance();
-			obj.base=new Long(base);
-			obj.clazz=clazz;
-			obj.store=store;
-			obj.accessor=obj.createAccessor();
-			obj.connection=store.systemConnection;
 			return obj;
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
 		}
-	}
-
-	synchronized void lock(Transaction transaction) {
-		Transaction t=getLock();
-		if(t==null) setLock(transaction);
-		else if(t==transaction);
-		else {
-			t=getLock(TIMEOUT);
-			if(t==null) setLock(transaction);
-			else throw new PersistentException(PersistentObject.this+" locked by "+t);
-		}
-	}
-
-	synchronized void unlock() {
-		setLock(null);
-		notify();
-	}
-
-	Transaction getLock() {
-		return getLock(0);
-	}
-
-	Transaction getLock(int timeout) {
-		if(timeout>0 && !store.closed) try {
-			wait(timeout);
-		} catch (InterruptedException e) {
-			throw new RuntimeException(e);
-		}
-		return store.getLock(base.longValue());
-	}
-
-	void setLock(Transaction transaction) {
-		store.setLock(base.longValue(),transaction);
 	}
 
 	protected PersistentClass createClass() {
@@ -162,16 +182,6 @@ public class PersistentObject implements Cloneable, Serializable {
 		return execute(
 			new MethodCall("set",new Class[] {String.class,Object.class},new Object[] {name,value}),
 			new MethodCall("set",new Class[] {String.class,Object.class},new Object[] {name,null}),1);
-	}
-
-	Object get(Field field) {
-		return store.get(base.longValue(),field);
-	}
-
-	synchronized Object set(Field field, Object value) {
-		Object obj=get(field);
-		store.set(base.longValue(),field,value);
-		return obj;
 	}
 
 	protected final Object execute(MethodCall call) {
@@ -218,9 +228,12 @@ public class PersistentObject implements Cloneable, Serializable {
 		return ((Accessor)accessor).call(method,types,args);
 	}
 
-	synchronized void unexport() throws RemoteException {
-		UnicastRemoteObject.unexportObject(accessor,true);
-		close();
+	void lock(Transaction transaction) {
+		((Accessor)accessor).lock(transaction);
+	}
+
+	void unlock() {
+		((Accessor)accessor).unlock();
 	}
 
 	void close() {

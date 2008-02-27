@@ -111,25 +111,6 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		}
 	}
 
-	MethodCall attach(MethodCall call) {
-		return attach(call.target()).new MethodCall(call.method,call.types,attach(call.args));
-	}
-
-	Object attach(Object obj) {
-		return obj instanceof PersistentObject?attach((PersistentObject)obj):obj;
-	}
-
-	Object[] attach(Object obj[]) {
-		Object a[]=new Object[obj.length];
-		for(int i=0;i<obj.length;i++) a[i]=attach(obj[i]);
-		return a;
-	}
-
-	PersistentObject attach(PersistentObject obj) {
-		if(!equals(obj.store())) throw new PersistentException("not the same store");
-		return get(obj.base());
-	}
-
 	PersistentClass get(Class clazz) {
 		synchronized(classes) {
 			String name=clazz.getName();
@@ -148,16 +129,22 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		long base=heap.alloc(b.length);
 		heap.writeBytes(base,b);
 		setClass(base,clazz);
-		return cache(PersistentObject.newInstance(base,clazz,this));
+		synchronized(cache) {
+			return cache(PersistentObject.newInstance(base,clazz,this));
+		}
+	}
+
+	PersistentObject instantiate(long base) {
+		synchronized(cache) {
+			PersistentObject obj=get(base);
+			return obj==null?cache(selfClass(base)?PersistentClass.newInstance(base,this):PersistentObject.newInstance(base,getClass(base),this)):obj;
+		}
 	}
 
 	PersistentObject cache(PersistentObject obj) {
-		synchronized(heap) {
-			Long base=obj.base;
-			hold(base.longValue());
-			cache.put(base,new WeakReference(obj));
-			return obj;
-		}
+		hold(obj.base.longValue());
+		cache.put(obj.base,new WeakReference(obj));
+		return obj;
 	}
 
 	PersistentObject get(long base) {
@@ -165,24 +152,34 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		return w==null?null:(PersistentObject)w.get();
 	}
 
-	PersistentObject instantiate(long base) {
-		synchronized(heap) {
-			PersistentObject obj=get(base);
-			if(obj==null) obj=cache(PersistentObject.newInstance(base,getClass(base),this));
-			return obj;
-		}
-	}
-
 	synchronized void release(PersistentObject obj) {
 		if(readOnly) return;
 		if(closed) return;
-		Long base=obj.base;
-		PersistentObject b=get(base.longValue());
-		if(b==null) release(base.longValue());
-		else if(b==obj) {
-			cache.remove(base);
-			release(base.longValue());
+		PersistentObject object=get(obj.base.longValue());
+		if(object==null) release(obj.base.longValue());
+		else if(object==obj) {
+			cache.remove(obj.base);
+			release(obj.base.longValue());
 		}
+	}
+
+	MethodCall attach(MethodCall call) {
+		return attach(call.target()).new MethodCall(call.method,call.types,attach(call.args));
+	}
+
+	Object attach(Object obj) {
+		return obj instanceof PersistentObject?attach((PersistentObject)obj):obj;
+	}
+
+	Object[] attach(Object obj[]) {
+		Object a[]=new Object[obj.length];
+		for(int i=0;i<obj.length;i++) a[i]=attach(obj[i]);
+		return a;
+	}
+
+	PersistentObject attach(PersistentObject obj) {
+		if(!equals(obj.store())) throw new PersistentException("not the same store");
+		return get(obj.base());
 	}
 
 	synchronized void changePassword(String username, String oldPassword, String newPassword) {
@@ -355,15 +352,23 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		while(true) {
 			try {
 				for(Iterator it=cache.keySet().iterator();it.hasNext();it.remove()) {
-					PersistentObject obj=get(((Long)it.next()).longValue());
-					if(obj!=null) obj.unexport();
+					close(((Long)it.next()).longValue());
 				}
 				break;
 			} catch (ConcurrentModificationException e) {}
 		}
+		((RemoteConnectionImpl)systemConnection.connection).close();
 		systemConnection.close();
 		if(!readOnly) heap.mount(false);
 		closed=true;
+	}
+
+	void close(long base) throws RemoteException {
+		PersistentObject obj=get(base);
+		if(obj!=null) {
+			((PersistentObject.Accessor)obj.accessor).close();
+			obj.close();
+		}
 	}
 
 	synchronized void syncGc() {
@@ -553,7 +558,12 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 
 	PersistentClass getClass(Heap heap, long base) {
 		long ptr=((Long)Field.CLASS.get(heap,base)).longValue();
-		return ptr==0?null:(PersistentClass)(ptr==base?PersistentObject.newInstance(base,new ClassClass(),this):instantiate(ptr));
+		return ptr==0?null:(PersistentClass)instantiate(ptr);
+	}
+
+	boolean selfClass(long base) {
+		long ptr=((Long)Field.CLASS.get(heap,base)).longValue();
+		return ptr==base;
 	}
 
 	void setClass(long base, PersistentClass clazz) {

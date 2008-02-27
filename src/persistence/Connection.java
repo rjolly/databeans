@@ -213,12 +213,16 @@ public class Connection implements Serializable {
 		while(true) {
 			try {
 				for(Iterator it=cache.keySet().iterator();it.hasNext();it.remove()) {
-					PersistentObject obj=get((Accessor)it.next());
-					if(obj!=null) obj.close();
+					close((Accessor)it.next());
 				}
 				break;
 			} catch (ConcurrentModificationException e) {}
 		}
+	}
+
+	void close(Accessor accessor) {
+		PersistentObject obj=get(accessor);
+		if(obj!=null) obj.close();
 	}
 
 	public boolean isClosed() {
