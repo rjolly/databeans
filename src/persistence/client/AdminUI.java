@@ -25,8 +25,8 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.ExpandVetoException;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreeSelectionModel;
-import persistence.AdminConnection;
 import persistence.Array;
+import persistence.Connection;
 import persistence.Connections;
 import persistence.PersistentClass;
 import persistence.PersistentObject;
@@ -36,7 +36,7 @@ import persistence.PersistentObject;
  * @author  raphael
  */
 public class AdminUI extends javax.swing.JFrame {
-	AdminConnection conn;
+	Connection conn;
 	DefaultTreeModel model=new DefaultTreeModel(ObjectTreeNode.node(null,"system"));
 	Interpreter interpreter;
 
@@ -75,7 +75,9 @@ public class AdminUI extends javax.swing.JFrame {
 
 	void open() {
 		try {
-			conn=Connections.getAdminConnection(jTextField1.getText());
+			boolean admin=jCheckBox1.isSelected();
+			String location=jTextField1.getText();
+			conn=admin?Connections.getAdminConnection(location):Connections.getConnection(location);
 			model.setRoot(ObjectTreeNode.node(conn.system(),"system"));
 			model.reload();
 			interpreter.set("conn",conn);
@@ -118,6 +120,7 @@ public class AdminUI extends javax.swing.JFrame {
                 jTextField1 = new javax.swing.JTextField();
                 jButton1 = new javax.swing.JButton();
                 jButton2 = new javax.swing.JButton();
+                jCheckBox1 = new javax.swing.JCheckBox();
                 jDialog2 = new javax.swing.JDialog();
                 jLabel2 = new javax.swing.JLabel();
                 jButton3 = new javax.swing.JButton();
@@ -169,6 +172,9 @@ public class AdminUI extends javax.swing.JFrame {
                         }
                 });
 
+                jCheckBox1.setSelected(true);
+                jCheckBox1.setText("Admin");
+
                 org.jdesktop.layout.GroupLayout jDialog1Layout = new org.jdesktop.layout.GroupLayout(jDialog1.getContentPane());
                 jDialog1.getContentPane().setLayout(jDialog1Layout);
                 jDialog1Layout.setHorizontalGroup(
@@ -183,7 +189,8 @@ public class AdminUI extends javax.swing.JFrame {
                                         .add(org.jdesktop.layout.GroupLayout.TRAILING, jDialog1Layout.createSequentialGroup()
                                                 .add(jButton1)
                                                 .add(18, 18, 18)
-                                                .add(jButton2)))
+                                                .add(jButton2))
+                                        .add(jCheckBox1))
                                 .addContainerGap())
                 );
                 jDialog1Layout.setVerticalGroup(
@@ -193,6 +200,8 @@ public class AdminUI extends javax.swing.JFrame {
                                 .add(jDialog1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                                         .add(jLabel1)
                                         .add(jTextField1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(jCheckBox1)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                 .add(jDialog1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                                         .add(jButton2)
@@ -200,7 +209,7 @@ public class AdminUI extends javax.swing.JFrame {
                                 .addContainerGap())
                 );
 
-                jLabel2.setText("<html>databeans : a new, fully object oriented persistence framework for java<br/> Copyright (C) 2007-2008 Databeans</html>");
+                jLabel2.setText("<html>databeans : a new, fully object oriented persistence framework for java<br/>Copyright (C) 2007-2008 Databeans</html>");
 
                 jButton3.setText("Ok");
                 jButton3.addActionListener(new java.awt.event.ActionListener() {
@@ -229,7 +238,7 @@ public class AdminUI extends javax.swing.JFrame {
                                 .add(jLabel2)
                                 .add(18, 18, 18)
                                 .add(jButton3)
-                                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                .addContainerGap(29, Short.MAX_VALUE))
                 );
 
                 setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -360,6 +369,7 @@ public class AdminUI extends javax.swing.JFrame {
         private javax.swing.JButton jButton1;
         private javax.swing.JButton jButton2;
         private javax.swing.JButton jButton3;
+        private javax.swing.JCheckBox jCheckBox1;
         private bsh.util.JConsole jConsole1;
         private javax.swing.JDialog jDialog1;
         private javax.swing.JDialog jDialog2;

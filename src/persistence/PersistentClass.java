@@ -59,6 +59,13 @@ public class PersistentClass extends PersistentObject {
 		}
 	}
 
+	static PersistentClass newInstance(long base, StoreImpl store) {
+		PersistentClass c=(PersistentClass)newInstance(base,new ClassClass(),store);
+		c.setup();
+		c.setClass(c);
+		return c;
+	}
+
 	protected PersistentClass createClass() {
 		if(getClass()==PersistentClass.class) {
 			PersistentClass c=(PersistentClass)connection.create(new ClassClass(),new Class[] {Class.class},new Object[] {getClass()});

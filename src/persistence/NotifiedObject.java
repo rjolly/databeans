@@ -3,21 +3,30 @@ package persistence;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyVetoException;
 import java.beans.VetoableChangeListener;
+import java.rmi.RemoteException;
 import persistence.beans.PropertyChangeSupport;
 import persistence.beans.VetoableChangeSupport;
 
 public abstract class NotifiedObject extends PersistentObject {
-	synchronized Object set(Field field, Object value) {
-		Object oldValue=get(field);
-		try {
-			VetoableChangeSupport support=getVetoableChangeSupport();
-			if(support!=null) support.fireVetoableChange(field.name,oldValue,value);
-		} catch (PropertyVetoException e) {
-			throw new RuntimeException(e);
+	protected PersistentObject.Accessor createAccessor() throws RemoteException {
+		return new Accessor();
+	}
+
+	protected class Accessor extends PersistentObject.Accessor {
+		public Accessor() throws RemoteException {}
+
+		synchronized Object set(Field field, Object value) {
+			Object oldValue=get(field);
+			try {
+				VetoableChangeSupport support=getVetoableChangeSupport();
+				if(support!=null) support.fireVetoableChange(field.name,oldValue,value);
+			} catch (PropertyVetoException e) {
+				throw new RuntimeException(e);
+			}
+			PropertyChangeSupport support=getPropertyChangeSupport();
+			if(support!=null) support.firePropertyChange(field.name,oldValue,value);
+			return super.set(field,value);
 		}
-		PropertyChangeSupport support=getPropertyChangeSupport();
-		if(support!=null) support.firePropertyChange(field.name,oldValue,value);
-		return super.set(field,value);
 	}
 
 	public PropertyChangeSupport getPropertyChangeSupport() {

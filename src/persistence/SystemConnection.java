@@ -13,11 +13,6 @@ class SystemConnection extends Connection {
 	}
 
 	public void close() {
-		try {
-			((RemoteConnectionImpl)connection).close();
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
 		connection=null;
 	}
 }

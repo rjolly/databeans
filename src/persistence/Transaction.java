@@ -1,5 +1,6 @@
 package persistence;
 
+import java.rmi.RemoteException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
@@ -16,6 +17,18 @@ public class Transaction extends PersistentObject {
 		setCalls((List)create(ArrayList.class));
 		setUndos((List)create(ArrayList.class));
 		setPairs((Map)create(LinkedHashMap.class));
+	}
+
+	protected PersistentObject.Accessor createAccessor() throws RemoteException {
+		return new Accessor();
+	}
+
+	protected class Accessor extends PersistentObject.Accessor {
+		public Accessor() throws RemoteException {}
+
+		public String persistentToString() {
+			return Long.toHexString(base())+"("+getClient()+")";
+		}
 	}
 
 	Object execute(MethodCall call, MethodCall undo, int index, int level, boolean read, boolean readOnly, Subject subject) {
@@ -144,9 +157,5 @@ public class Transaction extends PersistentObject {
 
 	public void setRollbackOnly(boolean b) {
 		set("rollbackOnly",new Boolean(b));
-	}
-
-	public String toString() {
-		return Long.toHexString(base())+"("+getClient()+")";
 	}
 }

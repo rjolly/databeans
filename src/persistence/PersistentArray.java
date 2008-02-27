@@ -23,11 +23,11 @@ public final class PersistentArray extends PersistentObject implements Array {
 		}
 
 		public Object get(int index) {
-			return PersistentArray.this.get(((ArrayClass)clazz).getField(index));
+			return get(((ArrayClass)clazz).getField(index));
 		}
 
 		public Object set(int index, Object value) {
-			return PersistentArray.this.set(((ArrayClass)clazz).getField(index),value);
+			return set(((ArrayClass)clazz).getField(index),value);
 		}
 
 		public String persistentToString() {

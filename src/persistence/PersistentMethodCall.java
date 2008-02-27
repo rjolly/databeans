@@ -1,11 +1,25 @@
 package persistence;
 
+import java.rmi.RemoteException;
+
 public class PersistentMethodCall extends PersistentObject {
 	public void init(MethodCall call) {
 		setTarget(call.target());
 		setMethod(call.method);
 		setTypes(create(call.types));
 		setArgs(create(call.args));
+	}
+
+	protected PersistentObject.Accessor createAccessor() throws RemoteException {
+		return new Accessor();
+	}
+
+	protected class Accessor extends PersistentObject.Accessor {
+		public Accessor() throws RemoteException {}
+
+		public String persistentToString() {
+			return getMethod();
+		}
 	}
 
 	public MethodCall call() {
@@ -48,9 +62,5 @@ public class PersistentMethodCall extends PersistentObject {
 
 	public void setArgs(Array array) {
 		set("args",array);
-	}
-
-	public String toString() {
-		return getMethod();
 	}
 }
