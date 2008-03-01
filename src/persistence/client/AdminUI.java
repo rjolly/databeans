@@ -10,7 +10,10 @@ import bsh.Interpreter;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Point;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -48,6 +51,7 @@ public class AdminUI extends javax.swing.JFrame {
 		initComponents();
 		jDialog1.pack();
 		jDialog2.pack();
+		jDialog3.pack();
 		jTree1.setModel(model);
 		jTree1.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
 		jTree1.addTreeSelectionListener(new TreeSelectionListener() {
@@ -105,7 +109,7 @@ public class AdminUI extends javax.swing.JFrame {
 			if(admin) refresh();
 			enableTabs(new boolean[] {true,admin,admin,admin,admin,true});
 		} catch (Exception e) {
-			e.printStackTrace();
+			error(e);
 		}
 	}
 
@@ -117,7 +121,7 @@ public class AdminUI extends javax.swing.JFrame {
 			conn.close();
 			enableTabs(new boolean[] {false,false,false,false,false,true});
 		} catch (Exception e) {
-			e.printStackTrace();
+			error(e);
 		}
 	}
 
@@ -200,6 +204,14 @@ public class AdminUI extends javax.swing.JFrame {
 		}
 	}
 
+	void error(Exception e) {
+		OutputStream out=new ByteArrayOutputStream();
+		e.printStackTrace(new PrintStream(out));
+		setDialogLocation(jDialog3);
+		jDialog3.setVisible(true);
+		jTextArea2.setText(out.toString());
+	}
+
 	/** This method is called from within the constructor to
 	 * initialize the form.
 	 * WARNING: Do NOT modify this code. The content of this method is
@@ -219,6 +231,9 @@ public class AdminUI extends javax.swing.JFrame {
                 jDialog2 = new javax.swing.JDialog();
                 jLabel2 = new javax.swing.JLabel();
                 jButton3 = new javax.swing.JButton();
+                jDialog3 = new javax.swing.JDialog();
+                jScrollPane4 = new javax.swing.JScrollPane();
+                jTextArea2 = new javax.swing.JTextArea();
                 jTabbedPane1 = new javax.swing.JTabbedPane();
                 jSplitPane1 = new javax.swing.JSplitPane();
                 jScrollPane1 = new javax.swing.JScrollPane();
@@ -365,6 +380,27 @@ public class AdminUI extends javax.swing.JFrame {
                                 .add(18, 18, 18)
                                 .add(jButton3)
                                 .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                );
+
+                jDialog3.setTitle("Error");
+
+                jScrollPane4.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+
+                jTextArea2.setColumns(20);
+                jTextArea2.setEditable(false);
+                jTextArea2.setLineWrap(true);
+                jTextArea2.setRows(5);
+                jScrollPane4.setViewportView(jTextArea2);
+
+                org.jdesktop.layout.GroupLayout jDialog3Layout = new org.jdesktop.layout.GroupLayout(jDialog3.getContentPane());
+                jDialog3.getContentPane().setLayout(jDialog3Layout);
+                jDialog3Layout.setHorizontalGroup(
+                        jDialog3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                        .add(jScrollPane4, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 400, Short.MAX_VALUE)
+                );
+                jDialog3Layout.setVerticalGroup(
+                        jDialog3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                        .add(jScrollPane4, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 300, Short.MAX_VALUE)
                 );
 
                 setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -809,6 +845,7 @@ public class AdminUI extends javax.swing.JFrame {
         private bsh.util.JConsole jConsole1;
         private javax.swing.JDialog jDialog1;
         private javax.swing.JDialog jDialog2;
+        private javax.swing.JDialog jDialog3;
         private javax.swing.JLabel jLabel1;
         private javax.swing.JLabel jLabel10;
         private javax.swing.JLabel jLabel11;
@@ -830,10 +867,12 @@ public class AdminUI extends javax.swing.JFrame {
         private javax.swing.JScrollPane jScrollPane1;
         private javax.swing.JScrollPane jScrollPane2;
         private javax.swing.JScrollPane jScrollPane3;
+        private javax.swing.JScrollPane jScrollPane4;
         private javax.swing.JSplitPane jSplitPane1;
         private javax.swing.JTabbedPane jTabbedPane1;
         private javax.swing.JTable jTable1;
         private javax.swing.JTextArea jTextArea1;
+        private javax.swing.JTextArea jTextArea2;
         private javax.swing.JTextField jTextField1;
         private javax.swing.JTextField jTextField2;
         private javax.swing.JTextField jTextField3;
