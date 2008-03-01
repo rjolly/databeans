@@ -71,6 +71,10 @@ class RemoteConnectionImpl extends UnicastRemoteObject implements RemoteConnecti
 		return store.system;
 	}
 
+	public Subject subject() {
+		return subject;
+	}
+
 	public int getTransactionIsolation() {
 		return level;
 	}

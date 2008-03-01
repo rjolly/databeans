@@ -21,6 +21,7 @@ public class Connection implements Serializable {
 	public static final int TRANSACTION_SERIALIZABLE = 4;
 
 	RemoteConnection connection;
+	transient Subject subject;
 	transient Map cache;
 
 	Connection(RemoteConnection connection) {
@@ -99,6 +100,14 @@ public class Connection implements Serializable {
 
 	public void setRoot(Object obj) {
 		system().setRoot(obj);
+	}
+
+	public Subject subject() {
+		try {
+			return subject==null?subject=connection.subject():subject;
+		} catch (RemoteException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	public int getTransactionIsolation() {

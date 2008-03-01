@@ -2,6 +2,7 @@ package persistence;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import javax.security.auth.Subject;
 import persistence.PersistentObject.MethodCall;
 
 interface RemoteConnection extends Remote {
@@ -11,6 +12,7 @@ interface RemoteConnection extends Remote {
 	PersistentClass get(Class componentType, int length) throws RemoteException;
 
 	PersistentSystem system() throws RemoteException;
+	Subject subject() throws RemoteException;
 
 	int getTransactionIsolation() throws RemoteException;
 	void setTransactionIsolation(int level) throws RemoteException;
