@@ -5,7 +5,7 @@ Java 1.4 or higher
 Apache Ant (I used the one bundled in netbeans 6.0)
 BeanShell 2.0b4 (included)
 
-One can use beanshell to run databeans admin scripts, and to issue console commands, see below "Running the admin user interface".
+BeanShell is for running databeans admin scripts and console commands, see below "Running the admin user interface".
 
 As of databeans 2.0, this "getting_started" tour is entirely based on ant tasks so as to be independant of the underlying system. Of course they can be run graphically from your preferred IDE.
 
@@ -72,12 +72,22 @@ Running the admin user interface
 The admin user interface is run from the installation directory:
   ant admin
 
-Among others it gives access to a beanshell console ("console" tab) which allows to issue direct commands. The following statements will just get the connection, commit the transaction, and exit. Feel free to try anything in between (after perhaps you have read the manual !)
+Among others, it gives access to a beanshell console ("console" tab) which allows to issue direct commands. The following statements will just get the connection, commit the transaction, and exit. Feel free to try anything in between (after perhaps you have read the manual !)
 
 import persistence.*;
 conn=Connections.getConnection("//localhost/store");
 conn.commit();
 exit();
+
+Enabling security
+-----------------
+
+The server can be made to require authentication when opening connections. For that, you just have to switch comments in the file login.config:
+
+	persistence.server.DatabeansLoginModule required debug=true store="//localhost/store";
+//	persistence.server.DummyLoginModule required debug=true user="admin";
+
+, and re-run the server. The available account is "admin", with an empty password.
 
 Reading the manual
 ------------------

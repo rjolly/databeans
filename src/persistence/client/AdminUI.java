@@ -10,10 +10,7 @@ import bsh.Interpreter;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Point;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.OutputStream;
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -30,6 +27,7 @@ import javax.swing.table.AbstractTableModel;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.ExpandVetoException;
 import javax.swing.tree.TreeNode;
+import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 import persistence.AdminConnection;
 import persistence.Array;
@@ -37,6 +35,7 @@ import persistence.Connection;
 import persistence.Connections;
 import persistence.PersistentClass;
 import persistence.PersistentObject;
+import persistence.PersistentSystem;
 
 /**
  *
@@ -73,7 +72,9 @@ public class AdminUI extends javax.swing.JFrame {
 			public void treeWillCollapse(TreeExpansionEvent event) throws ExpandVetoException {}
 
 			public void treeWillExpand(TreeExpansionEvent event) throws ExpandVetoException {
-				model.reload((TreeNode)event.getPath().getLastPathComponent());
+				TreePath path=event.getPath();
+				model.reload((TreeNode)path.getLastPathComponent());
+				if(path.getPathCount()==1) jTree1.setSelectionRow(0);
 			}
 		});
 		interpreter = new Interpreter( jConsole1 );
@@ -97,32 +98,44 @@ public class AdminUI extends javax.swing.JFrame {
 		}
 	}
 
+	void setSystem(PersistentSystem system) {
+		model.setRoot(ObjectTreeNode.node(system,"system"));
+		model.reload();
+		jTree1.setSelectionRow(0);
+	}
+
 	void open() {
 		boolean admin=jCheckBox1.isSelected();
 		String location=jTextField1.getText();
 		try {
 			conn=admin?Connections.getAdminConnection(location):Connections.getConnection(location);
-			model.setRoot(ObjectTreeNode.node(conn.system(),"system"));
-			model.reload();
-			jTree1.setSelectionRow(0);
-			interpreter.set("conn",conn);
-			if(admin) refresh();
-			enableTabs(new boolean[] {true,admin,admin,admin,admin,true});
+			setSystem(conn.system());
 		} catch (Exception e) {
+			setSystem(null);
 			error(e);
 		}
+		try {
+			interpreter.set("conn",conn);
+		} catch (bsh.EvalError e) {
+			error(e);
+		}
+		if(admin) refresh();
+		enableTabs(new boolean[] {true,admin,admin,admin,admin,true});
 	}
 
 	void close() {
 		try {
 			interpreter.set("conn",null);
-			model.setRoot(ObjectTreeNode.node(null,"system"));
-			model.reload();
+		} catch (bsh.EvalError e) {
+			error(e);
+		}
+		try {
+			setSystem(null);
 			conn.close();
-			enableTabs(new boolean[] {false,false,false,false,false,true});
 		} catch (Exception e) {
 			error(e);
 		}
+		enableTabs(new boolean[] {false,false,false,false,false,true});
 	}
 
 	void export() {
@@ -743,7 +756,11 @@ public class AdminUI extends javax.swing.JFrame {
 
 	private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
 		jDialog1.setVisible(false);
-		open();
+		new Thread() {
+			public void run() {
+				open();
+			}
+		}.start();
 	}//GEN-LAST:event_jButton1ActionPerformed
 
 	private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed

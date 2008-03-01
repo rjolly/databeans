@@ -129,13 +129,13 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		long base=heap.alloc(b.length);
 		heap.writeBytes(base,b);
 		setClass(base,clazz);
-		synchronized(cache) {
+		synchronized(heap) {
 			return cache(PersistentObject.newInstance(base,clazz,this));
 		}
 	}
 
 	PersistentObject instantiate(long base) {
-		synchronized(cache) {
+		synchronized(heap) {
 			PersistentObject obj=get(base);
 			return obj==null?cache(selfClass(base)?PersistentClass.newInstance(base,this):PersistentObject.newInstance(base,getClass(base),this)):obj;
 		}
@@ -182,7 +182,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		return get(obj.base());
 	}
 
-	synchronized void changePassword(String username, String oldPassword, String newPassword) {
+	void changePassword(String username, String oldPassword, String newPassword) {
 		if(oldPassword==null) AccessController.checkPermission(new AdminPermission("changePassword"));
 		Map users=system.getUsers();
 		synchronized(users) {
@@ -195,7 +195,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		}
 	}
 
-	synchronized void addUser(String username, String password) {
+	void addUser(String username, String password) {
 		AccessController.checkPermission(new AdminPermission("addUser"));
 		Map users=system.getUsers();
 		synchronized(users) {
@@ -204,7 +204,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		}
 	}
 
-	synchronized void deleteUser(String username) {
+	void deleteUser(String username) {
 		AccessController.checkPermission(new AdminPermission("deleteUser"));
 		Map users=system.getUsers();
 		synchronized(users) {
@@ -255,7 +255,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		return heap.maxSpace();
 	}
 
-	public synchronized boolean authenticate(String username, char[] password) {
+	public boolean authenticate(String username, char[] password) {
 		Password pw=(Password)system.getUsers().get(username);
 		return pw==null?false:pw.match(password);
 	}

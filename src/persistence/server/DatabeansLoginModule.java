@@ -130,10 +130,12 @@ public class DatabeansLoginModule implements LoginModule {
 			for (int i = 0; i < password.length; i++)
 				password[i] = ' ';
 			password = null;
-			if (!usernameCorrect) {
+			if (passwordCorrect) {
 				throw new FailedLoginException("User Name Incorrect");
-			} else {
+			} else if (usernameCorrect) {
 				throw new FailedLoginException("Password Incorrect");
+			} else {
+				throw new FailedLoginException("User Name or Password Incorrect");
 			}
 		}
 	}
