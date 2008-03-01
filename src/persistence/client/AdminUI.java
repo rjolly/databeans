@@ -21,6 +21,7 @@ import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import javax.swing.JOptionPane;
 import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
@@ -51,7 +52,6 @@ public class AdminUI extends javax.swing.JFrame {
 		initComponents();
 		jDialog1.pack();
 		jDialog2.pack();
-		jDialog3.pack();
 		jTree1.setModel(model);
 		jTree1.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
 		jTree1.addTreeSelectionListener(new TreeSelectionListener() {
@@ -125,91 +125,105 @@ public class AdminUI extends javax.swing.JFrame {
 		}
 	}
 
-	AdminConnection admin() {
-		return (AdminConnection)conn;
-	}
-
 	void export() {
-		AdminConnection conn=admin();
+		AdminConnection conn=(AdminConnection)this.conn;
 		boolean overwrite=jCheckBox4.isSelected();
 		String name=jTextField2.getText();
-		if(overwrite || !new File(name).exists()) {
-			jCheckBox4.setSelected(false);
+		if(overwrite || !new File(name).exists()) try {
 			conn.export(name);
+			jCheckBox4.setSelected(false);
+		} catch (Exception e) {
+			error(e);
 		}
 	}
 
 	void inport() {
-		AdminConnection conn=admin();
+		AdminConnection conn=(AdminConnection)this.conn;
 		boolean confirm=jCheckBox5.isSelected();
 		String name=jTextField2.getText();
-		if(confirm) {
-			jCheckBox5.setSelected(false);
+		if(confirm) try {
 			conn.inport(name);
 			model.reload();
 			jTree1.setSelectionRow(0);
+			jCheckBox5.setSelected(false);
+		} catch (Exception e) {
+			error(e);
 		}
 	}
 
 	void addUser() {
-		AdminConnection conn=admin();
+		AdminConnection conn=(AdminConnection)this.conn;
 		String name=jTextField3.getText();
 		char pwd[]=jPasswordField1.getPassword();
 		char conf[]=jPasswordField2.getPassword();
-		if(Arrays.equals(pwd, conf)) conn.addUser(name, String.valueOf(pwd));
+		if(Arrays.equals(pwd, conf)) try {
+			conn.addUser(name, String.valueOf(pwd));
+		} catch (Exception e) {
+			error(e);
+		}
 	}
 
 	void deleteUser() {
-		AdminConnection conn=admin();
+		AdminConnection conn=(AdminConnection)this.conn;
 		String name=jTextField3.getText();
 		boolean confirm=jCheckBox3.isSelected();
-		if(confirm) {
-			jCheckBox3.setSelected(false);
+		if(confirm) try {
 			conn.deleteUser(name);
+			jCheckBox3.setSelected(false);
+		} catch (Exception e) {
+			error(e);
 		}
 	}
 
 	void changePassword() {
-		AdminConnection conn=admin();
+		AdminConnection conn=(AdminConnection)this.conn;
 		String name=jTextField3.getText();
 		char pwd[]=jPasswordField1.getPassword();
 		char conf[]=jPasswordField2.getPassword();
 		char old[]=jPasswordField3.getPassword();
 		boolean enable=jCheckBox6.isSelected();
-		if(Arrays.equals(pwd, conf)) {
+		if(Arrays.equals(pwd, conf)) try {
 			if(enable) conn.changePassword(name, String.valueOf(old), String.valueOf(pwd));
 			else conn.changePassword(name, String.valueOf(pwd));
+		} catch (Exception e) {
+			error(e);
 		}
 	}
 
 	void refresh() {
-		AdminConnection conn=admin();
-		jLabel8.setText(String.valueOf(conn.maxSpace()));
-		jLabel10.setText(String.valueOf(conn.allocatedSpace()));
+		AdminConnection conn=(AdminConnection)this.conn;
+		try {
+			jLabel8.setText(String.valueOf(conn.maxSpace()));
+			jLabel10.setText(String.valueOf(conn.allocatedSpace()));
+		} catch (Exception e) {
+			error(e);
+		}
 	}
 
 	void gc() {
-		AdminConnection conn=admin();
-		conn.gc();
-		refresh();
+		AdminConnection conn=(AdminConnection)this.conn;
+		try {
+			conn.gc();
+			refresh();
+		} catch (Exception e) {
+			error(e);
+		}
 	}
 
 	void shutdown() {
-		AdminConnection conn=admin();
+		AdminConnection conn=(AdminConnection)this.conn;
 		boolean confirm=jCheckBox2.isSelected();
-		if(confirm) {
-			jCheckBox2.setSelected(false);
+		if(confirm) try {
 			conn.shutdown();
+			jCheckBox2.setSelected(false);
 			close();
+		} catch (Exception e) {
+			error(e);
 		}
 	}
 
 	void error(Exception e) {
-		OutputStream out=new ByteArrayOutputStream();
-		e.printStackTrace(new PrintStream(out));
-		setDialogLocation(jDialog3);
-		jDialog3.setVisible(true);
-		jTextArea2.setText(out.toString());
+		JOptionPane.showMessageDialog(this, e.toString(), "Error", JOptionPane.ERROR_MESSAGE);
 	}
 
 	/** This method is called from within the constructor to
@@ -231,9 +245,6 @@ public class AdminUI extends javax.swing.JFrame {
                 jDialog2 = new javax.swing.JDialog();
                 jLabel2 = new javax.swing.JLabel();
                 jButton3 = new javax.swing.JButton();
-                jDialog3 = new javax.swing.JDialog();
-                jScrollPane4 = new javax.swing.JScrollPane();
-                jTextArea2 = new javax.swing.JTextArea();
                 jTabbedPane1 = new javax.swing.JTabbedPane();
                 jSplitPane1 = new javax.swing.JSplitPane();
                 jScrollPane1 = new javax.swing.JScrollPane();
@@ -294,6 +305,7 @@ public class AdminUI extends javax.swing.JFrame {
                 jScrollPane3.setViewportView(jTable1);
 
                 jDialog1.setTitle("Open connection");
+                jDialog1.setModal(true);
 
                 jLabel1.setText("Location :");
 
@@ -350,6 +362,8 @@ public class AdminUI extends javax.swing.JFrame {
                                 .addContainerGap())
                 );
 
+                jDialog2.setModal(true);
+
                 jLabel2.setText("<html>databeans : a new, fully object oriented persistence framework for java<br/>Copyright (C) 2007-2008 Databeans<br/><br/>Version 2.0rc16</html>");
 
                 jButton3.setText("Ok");
@@ -380,27 +394,6 @@ public class AdminUI extends javax.swing.JFrame {
                                 .add(18, 18, 18)
                                 .add(jButton3)
                                 .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                );
-
-                jDialog3.setTitle("Error");
-
-                jScrollPane4.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-
-                jTextArea2.setColumns(20);
-                jTextArea2.setEditable(false);
-                jTextArea2.setLineWrap(true);
-                jTextArea2.setRows(5);
-                jScrollPane4.setViewportView(jTextArea2);
-
-                org.jdesktop.layout.GroupLayout jDialog3Layout = new org.jdesktop.layout.GroupLayout(jDialog3.getContentPane());
-                jDialog3.getContentPane().setLayout(jDialog3Layout);
-                jDialog3Layout.setHorizontalGroup(
-                        jDialog3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                        .add(jScrollPane4, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 400, Short.MAX_VALUE)
-                );
-                jDialog3Layout.setVerticalGroup(
-                        jDialog3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                        .add(jScrollPane4, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 300, Short.MAX_VALUE)
                 );
 
                 setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -507,12 +500,6 @@ public class AdminUI extends javax.swing.JFrame {
                 });
 
                 jCheckBox3.setText("Confirm");
-
-                jPasswordField1.setText("jPasswordField1");
-
-                jPasswordField2.setText("jPasswordField2");
-
-                jPasswordField3.setText("jPasswordField3");
 
                 jLabel11.setText("Old password:");
 
@@ -845,7 +832,6 @@ public class AdminUI extends javax.swing.JFrame {
         private bsh.util.JConsole jConsole1;
         private javax.swing.JDialog jDialog1;
         private javax.swing.JDialog jDialog2;
-        private javax.swing.JDialog jDialog3;
         private javax.swing.JLabel jLabel1;
         private javax.swing.JLabel jLabel10;
         private javax.swing.JLabel jLabel11;
@@ -867,12 +853,10 @@ public class AdminUI extends javax.swing.JFrame {
         private javax.swing.JScrollPane jScrollPane1;
         private javax.swing.JScrollPane jScrollPane2;
         private javax.swing.JScrollPane jScrollPane3;
-        private javax.swing.JScrollPane jScrollPane4;
         private javax.swing.JSplitPane jSplitPane1;
         private javax.swing.JTabbedPane jTabbedPane1;
         private javax.swing.JTable jTable1;
         private javax.swing.JTextArea jTextArea1;
-        private javax.swing.JTextArea jTextArea2;
         private javax.swing.JTextField jTextField1;
         private javax.swing.JTextField jTextField2;
         private javax.swing.JTextField jTextField3;
