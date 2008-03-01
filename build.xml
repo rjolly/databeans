@@ -121,6 +121,13 @@
 		   databeans/sample/server/nbproject/private/**"/>
   </target>
 
+  <target name="ui" depends="compile">
+    <java fork="true" classpath="classes:lib/bsh-2.0b4.jar:lib/jlfgr-1_0.jar:lib/swing-layout-1.0.3.jar" classname="persistence.client.AdminUI">
+      <sysproperty key="java.security.manager" value=""/>
+      <sysproperty key="java.security.policy" value="policy"/>
+    </java>
+  </target>
+
   <target name="admin">
     <java jar="databeans.jar" fork="true">
       <sysproperty key="java.security.manager" value=""/>
