@@ -100,12 +100,13 @@ public class AdminUI extends javax.swing.JFrame {
 			conn=admin?Connections.getAdminConnection(location):Connections.getConnection(location);
 			model.setRoot(ObjectTreeNode.node(conn.system(),"system"));
 			model.reload();
+			jTree1.setSelectionRow(0);
 			interpreter.set("conn",conn);
+			if(admin) refresh();
+			enableTabs(new boolean[] {true,admin,admin,admin,admin,true});
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		if(admin) refresh();
-		enableTabs(new boolean[] {true,admin,admin,admin,admin,true});
 	}
 
 	void close() {
@@ -114,10 +115,10 @@ public class AdminUI extends javax.swing.JFrame {
 			model.setRoot(ObjectTreeNode.node(null,"system"));
 			model.reload();
 			conn.close();
+			enableTabs(new boolean[] {false,false,false,false,false,true});
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		enableTabs(new boolean[] {false,false,false,false,false,true});
 	}
 
 	AdminConnection admin() {
@@ -128,14 +129,22 @@ public class AdminUI extends javax.swing.JFrame {
 		AdminConnection conn=admin();
 		boolean overwrite=jCheckBox4.isSelected();
 		String name=jTextField2.getText();
-		if(overwrite || !new File(name).exists()) conn.export(name);
+		if(overwrite || !new File(name).exists()) {
+			jCheckBox4.setSelected(false);
+			conn.export(name);
+		}
 	}
 
 	void inport() {
 		AdminConnection conn=admin();
 		boolean confirm=jCheckBox5.isSelected();
 		String name=jTextField2.getText();
-		if(confirm) conn.inport(name);
+		if(confirm) {
+			jCheckBox5.setSelected(false);
+			conn.inport(name);
+			model.reload();
+			jTree1.setSelectionRow(0);
+		}
 	}
 
 	void addUser() {
@@ -150,7 +159,10 @@ public class AdminUI extends javax.swing.JFrame {
 		AdminConnection conn=admin();
 		String name=jTextField3.getText();
 		boolean confirm=jCheckBox3.isSelected();
-		if(confirm) conn.deleteUser(name);
+		if(confirm) {
+			jCheckBox3.setSelected(false);
+			conn.deleteUser(name);
+		}
 	}
 
 	void changePassword() {
@@ -182,6 +194,7 @@ public class AdminUI extends javax.swing.JFrame {
 		AdminConnection conn=admin();
 		boolean confirm=jCheckBox2.isSelected();
 		if(confirm) {
+			jCheckBox2.setSelected(false);
 			conn.shutdown();
 			close();
 		}
