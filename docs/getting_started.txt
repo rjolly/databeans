@@ -5,7 +5,7 @@ Java 1.4 or higher
 Apache Ant (I used the one bundled in netbeans 6.0)
 BeanShell 2.0b4 (included)
 
-BeanShell is used to run databeans admin scripts, and to provide console access, see below "Running the admin user interface".
+One can use beanshell to run databeans admin scripts, and to issue console commands, see below "Running the admin user interface".
 
 As of databeans 2.0, this "getting_started" tour is entirely based on ant tasks so as to be independant of the underlying system. Of course they can be run graphically from your preferred IDE.
 
@@ -72,9 +72,12 @@ Running the admin user interface
 The admin user interface is run from the installation directory:
   ant admin
 
-To connect to the data store, select "Connection->Open" and enter the location of the store (default : "//localhost/store"). Various admin tasks are available. To talk directly to the server, you can use the "console" tab, which gives access to a beanshell console. The following statement will just print the store root element. Feel free to try anything you please (after perhaps you have read the databeans manual !)
+Among others it gives access to a beanshell console ("console" tab) which allows to issue direct commands. The following statements will just get the connection, commit the transaction, and exit. Feel free to try anything in between (after perhaps you have read the manual !)
 
-print(conn.root());
+import persistence.*;
+conn=Connections.getConnection("//localhost/store");
+conn.commit();
+exit();
 
 Reading the manual
 ------------------

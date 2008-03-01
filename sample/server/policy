@@ -2,6 +2,7 @@ grant codebase "file:-" {
 	permission java.io.FilePermission "-", "read,write";
 	permission java.net.SocketPermission "localhost:1024-", "accept,connect";
 	permission java.lang.RuntimePermission "shutdownHooks";
+	permission java.lang.RuntimePermission "accessDeclaredMembers";
 	permission java.lang.RuntimePermission "accessClassInPackage.sun.reflect.misc";
 	permission javax.security.auth.AuthPermission "createLoginContext.Databeans";
 	permission javax.security.auth.AuthPermission "modifyPrincipals";
