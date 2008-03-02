@@ -168,13 +168,14 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	}
 
 	Object attach(Object obj) {
-		return obj instanceof PersistentObject?attach((PersistentObject)obj):obj;
+		if(obj instanceof PersistentObject) return attach((PersistentObject)obj);
+		if(obj instanceof Object[]) return attach((Object[])obj);
+		return obj;
 	}
 
 	Object[] attach(Object obj[]) {
-		Object a[]=new Object[obj.length];
-		for(int i=0;i<obj.length;i++) a[i]=attach(obj[i]);
-		return a;
+		for(int i=0;i<obj.length;i++) obj[i]=attach(obj[i]);
+		return obj;
 	}
 
 	PersistentObject attach(PersistentObject obj) {

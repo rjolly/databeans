@@ -125,10 +125,6 @@ public final class PersistentArray extends PersistentObject implements Array {
 			new MethodCall("set",new Class[] {int.class,Object.class},new Object[] {new Integer(index),null}),1);
 	}
 
-	Object call(String method, Class types[], Object args[], boolean check) {
-		return ((Accessor)accessor).call(method,types,args);
-	}
-
 	public static void copy(Array src, int src_position, Array dst, int dst_position, int length) {
 		if(src_position<dst_position) for(int i=length-1;i>=0;i--) dst.set(dst_position+i,src.get(src_position+i));
 		else for(int i=0;i<length;i++) dst.set(dst_position+i,src.get(src_position+i));

@@ -163,7 +163,14 @@ public class Connection implements Serializable {
 	}
 
 	Object attach(Object obj) {
-		return obj instanceof PersistentObject?attach((PersistentObject)obj):obj;
+		if(obj instanceof PersistentObject) return attach((PersistentObject)obj);
+		if(obj instanceof Object[]) return attach((Object[])obj);
+		return obj;
+	}
+
+	Object[] attach(Object obj[]) {
+		for(int i=0;i<obj.length;i++) obj[i]=attach(obj[i]);
+		return obj;
 	}
 
 	PersistentObject attach(PersistentObject obj) {

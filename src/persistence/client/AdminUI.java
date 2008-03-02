@@ -119,7 +119,6 @@ public class AdminUI extends javax.swing.JFrame {
 		} catch (bsh.EvalError e) {
 			error(e);
 		}
-		if(admin) refresh();
 		enableTabs(new boolean[] {true,admin,admin,admin,admin,true});
 	}
 
@@ -290,7 +289,6 @@ public class AdminUI extends javax.swing.JFrame {
                 jLabel8 = new javax.swing.JLabel();
                 jLabel9 = new javax.swing.JLabel();
                 jLabel10 = new javax.swing.JLabel();
-                jButton9 = new javax.swing.JButton();
                 jButton10 = new javax.swing.JButton();
                 jPanel4 = new javax.swing.JPanel();
                 jButton11 = new javax.swing.JButton();
@@ -588,6 +586,12 @@ public class AdminUI extends javax.swing.JFrame {
 
                 jTabbedPane1.addTab("Users", jPanel2);
 
+                jPanel3.addComponentListener(new java.awt.event.ComponentAdapter() {
+                        public void componentShown(java.awt.event.ComponentEvent evt) {
+                                jPanel3ComponentShown(evt);
+                        }
+                });
+
                 jLabel7.setText("Maximum space:");
 
                 jLabel8.setText("9223372036854775808");
@@ -595,13 +599,6 @@ public class AdminUI extends javax.swing.JFrame {
                 jLabel9.setText("Allocated space:");
 
                 jLabel10.setText("9223372036854775808");
-
-                jButton9.setText("Refresh");
-                jButton9.addActionListener(new java.awt.event.ActionListener() {
-                        public void actionPerformed(java.awt.event.ActionEvent evt) {
-                                jButton9ActionPerformed(evt);
-                        }
-                });
 
                 jButton10.setText("Gc");
                 jButton10.addActionListener(new java.awt.event.ActionListener() {
@@ -615,21 +612,16 @@ public class AdminUI extends javax.swing.JFrame {
                 jPanel3Layout.setHorizontalGroup(
                         jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                         .add(jPanel3Layout.createSequentialGroup()
-                                .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                                        .add(jPanel3Layout.createSequentialGroup()
-                                                .add(16, 16, 16)
-                                                .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
-                                                        .add(jLabel9)
-                                                        .add(jLabel7))
-                                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                                .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
-                                                        .add(jLabel10, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                                        .add(jLabel8, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                                        .add(jPanel3Layout.createSequentialGroup()
-                                                .addContainerGap()
-                                                .add(jButton9)
-                                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                                .add(jButton10)))
+                                .add(16, 16, 16)
+                                .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
+                                        .add(jLabel7)
+                                        .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                                .add(jButton10)
+                                                .add(jLabel9)))
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
+                                        .add(jLabel10, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                        .add(jLabel8, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                                 .addContainerGap(450, Short.MAX_VALUE))
                 );
                 jPanel3Layout.setVerticalGroup(
@@ -644,9 +636,7 @@ public class AdminUI extends javax.swing.JFrame {
                                         .add(jLabel9)
                                         .add(jLabel10))
                                 .add(18, 18, 18)
-                                .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                                        .add(jButton9)
-                                        .add(jButton10))
+                                .add(jButton10)
                                 .addContainerGap(319, Short.MAX_VALUE))
                 );
 
@@ -800,10 +790,6 @@ public class AdminUI extends javax.swing.JFrame {
 		deleteUser();
 	}//GEN-LAST:event_jButton8ActionPerformed
 
-	private void jButton9ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton9ActionPerformed
-		refresh();
-	}//GEN-LAST:event_jButton9ActionPerformed
-
 	private void jButton10ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton10ActionPerformed
 		gc();
 	}//GEN-LAST:event_jButton10ActionPerformed
@@ -811,6 +797,10 @@ public class AdminUI extends javax.swing.JFrame {
 	private void jButton11ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton11ActionPerformed
 		shutdown();
 	}//GEN-LAST:event_jButton11ActionPerformed
+
+	private void jPanel3ComponentShown(java.awt.event.ComponentEvent evt) {//GEN-FIRST:event_jPanel3ComponentShown
+		refresh();
+	}//GEN-LAST:event_jPanel3ComponentShown
 
 	/**
 	 * @param args the command line arguments
@@ -839,7 +829,6 @@ public class AdminUI extends javax.swing.JFrame {
         private javax.swing.JButton jButton6;
         private javax.swing.JButton jButton7;
         private javax.swing.JButton jButton8;
-        private javax.swing.JButton jButton9;
         private javax.swing.JCheckBox jCheckBox1;
         private javax.swing.JCheckBox jCheckBox2;
         private javax.swing.JCheckBox jCheckBox3;

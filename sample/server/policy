@@ -17,7 +17,12 @@ grant Principal persistence.server.DatabeansPrincipal "admin" {
 
 grant {
 	permission persistence.MethodPermission "persistence.*";
+	permission persistence.PropertyPermission "persistence.util.SubList.*";
+	permission persistence.PropertyPermission "persistence.util.RandomAccessSublist.*";
+	permission persistence.PropertyPermission "persistence.util.SubMap.*";
+	permission persistence.PropertyPermission "persistence.util.EntrySetView.*";
 
+	permission persistence.PropertyPermission "persistence.PersistentSystem.root";
 	permission persistence.PropertyPermission "Department.*";
 	permission persistence.PropertyPermission "Employee.*";
 };

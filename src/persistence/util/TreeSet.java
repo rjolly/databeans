@@ -62,7 +62,7 @@ public class TreeSet extends AbstractSet
 		set("m",map);
 	}
 
-	void init(SortedMap map) {
+	public void init(SortedMap map) {
 		execute(
 			new MethodCall("init",new Class[] {SortedMap.class},new Object[] {map}));
 	}

@@ -2,7 +2,7 @@ Software requirements
 ---------------------
 
 Java 1.4 or higher
-Apache Ant (I used the one bundled in netbeans 6.0)
+Apache Ant (I used version 1.6.5)
 BeanShell 2.0b4 (included)
 
 BeanShell is for running databeans admin scripts and console commands, see below "Running the admin user interface".
@@ -56,9 +56,23 @@ Take another window. Go to the client directory. Build and run the sample client
 
 The output should read:
 
-[[Clark Research New York Manager $2,000.00 Clark], [Miller Research New York Clerk $1,000.00 Clark]]
+Miller (Accounting) $15,600.00
+Smith (Research) $11,400.00
+Adams (Research) $11,400.00
+Allen (Sales) $16,800.00
+Martin (Sales) $16,800.00
+James (Sales) $11,400.00
+Turner (Sales) $16,800.00
+Ward (Sales) $16,800.00
 
-We've printed the content of the database the sample was intended to create. If you've made it through here, congratulations, you will now be able to play with the sample and later to create a new one from scratch and build your own databeans application.
+Clark (Accounting) $29,400.00
+Blake (Sales) $34,200.00
+Jones (Research) $35,700.00
+Ford (Research) $36,000.00
+Scott (Research) $36,000.00
+King (Accounting) $60,000.00
+
+This is the result of a the query the sample was intended to do. If you've made it through here, congratulations, you will now be able to play with the sample and later to create a new one from scratch and build your own databeans application.
 
 We may now shutdown the server. Type CTRL-C in the server window. To re-enter the running cycle (for instance after some changes to the sample source files), type again:
   ant

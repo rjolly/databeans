@@ -1,7 +1,6 @@
-import java.text.NumberFormat;
 import persistence.PersistentObject;
 
-public class Employee extends PersistentObject {
+public class Employee extends PersistentObject implements Comparable {
 	public String getName() {
 		return (String)get("name");
 	}
@@ -51,6 +50,10 @@ public class Employee extends PersistentObject {
 	}
 
 	public String toString() {
-		return "["+getName()+" "+getDepartment()+" "+getLocation()+" "+getJob()+" "+NumberFormat.getCurrencyInstance().format(getSalary())+" "+getManager().getName()+"]";
+		return getName()+" ("+getDepartment()+")";
+	}
+
+	public int compareTo(Object o) {
+		return getName().compareTo(((Employee)o).getName());
 	}
 }
