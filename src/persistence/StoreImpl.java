@@ -137,7 +137,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	PersistentObject instantiate(long base) {
 		hold(base);
 		synchronized(cache) {
-			PersistentObject o=get(base);
+			PersistentObject o=get(new Long(base));
 			return o==null?cache(selfClass(base)?PersistentClass.newInstance(base,this):PersistentObject.newInstance(base,getClass(base),this)):o;
 		}
 	}
@@ -147,9 +147,11 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		return obj;
 	}
 
-	PersistentObject get(long base) {
-		Reference w=(Reference)cache.get(new Long(base));
-		return w==null?null:(PersistentObject)w.get();
+	PersistentObject get(Long base) {
+		Reference w=(Reference)cache.get(base);
+		PersistentObject o=w==null?null:(PersistentObject)w.get();
+		if(o==null) cache.remove(base);
+		return o;
 	}
 
 	synchronized void release(PersistentObject obj) {
@@ -157,7 +159,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		if(closed) return;
 		PersistentObject o;
 		synchronized(cache) {
-			o=get(obj.base.longValue());
+			o=get(obj.base);
 			if(o==obj) cache.remove(obj.base);
 		}
 		if(o==null || o==obj) release(obj.base.longValue());
@@ -181,7 +183,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	PersistentObject attach(PersistentObject obj) {
 		if(!equals(obj.store())) throw new PersistentException("not the same store");
 		synchronized(cache) {
-			return get(obj.base());
+			return get(new Long(obj.base()));
 		}
 	}
 
@@ -348,7 +350,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 			((RemoteConnectionImpl)it.next()).close();
 		}
 		for(Iterator it=cache.keySet().iterator();it.hasNext();it.remove()) {
-			close(((Long)it.next()).longValue());
+			close((Long)it.next());
 		}
 		((RemoteConnectionImpl)systemConnection.connection).close();
 		systemConnection.close();
@@ -356,7 +358,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		closed=true;
 	}
 
-	void close(long base) throws RemoteException {
+	void close(Long base) throws RemoteException {
 		PersistentObject o;
 		synchronized(cache) {
 			o=get(base);
