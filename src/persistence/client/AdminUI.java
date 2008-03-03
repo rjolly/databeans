@@ -462,7 +462,7 @@ public class AdminUI extends javax.swing.JFrame {
                                                 .add(jButton5)
                                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                                 .add(jCheckBox5))
-                                        .add(jTextField2, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 635, Short.MAX_VALUE))
+                                        .add(jTextField2, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 534, Short.MAX_VALUE))
                                 .addContainerGap())
                 );
                 jPanel1Layout.setVerticalGroup(
@@ -622,7 +622,7 @@ public class AdminUI extends javax.swing.JFrame {
                                 .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
                                         .add(jLabel10, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                         .add(jLabel8, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                                .addContainerGap(450, Short.MAX_VALUE))
+                                .addContainerGap(349, Short.MAX_VALUE))
                 );
                 jPanel3Layout.setVerticalGroup(
                         jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -660,7 +660,7 @@ public class AdminUI extends javax.swing.JFrame {
                                 .add(jButton11)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                 .add(jCheckBox2)
-                                .addContainerGap(566, Short.MAX_VALUE))
+                                .addContainerGap(465, Short.MAX_VALUE))
                 );
                 jPanel4Layout.setVerticalGroup(
                         jPanel4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -725,7 +725,7 @@ public class AdminUI extends javax.swing.JFrame {
                 getContentPane().setLayout(layout);
                 layout.setHorizontalGroup(
                         layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                        .add(jTabbedPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 741, Short.MAX_VALUE)
+                        .add(jTabbedPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 640, Short.MAX_VALUE)
                 );
                 layout.setVerticalGroup(
                         layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)

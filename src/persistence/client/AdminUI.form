@@ -253,7 +253,7 @@
   <Layout>
     <DimensionLayout dim="0">
       <Group type="103" groupAlignment="0" attributes="0">
-          <Component id="jTabbedPane1" alignment="0" pref="741" max="32767" attributes="0"/>
+          <Component id="jTabbedPane1" alignment="0" pref="640" max="32767" attributes="0"/>
       </Group>
     </DimensionLayout>
     <DimensionLayout dim="1">
@@ -344,7 +344,7 @@
                               <EmptySpace max="-2" attributes="0"/>
                               <Component id="jCheckBox5" min="-2" max="-2" attributes="0"/>
                           </Group>
-                          <Component id="jTextField2" alignment="0" pref="635" max="32767" attributes="0"/>
+                          <Component id="jTextField2" alignment="0" pref="534" max="32767" attributes="0"/>
                       </Group>
                       <EmptySpace max="-2" attributes="0"/>
                   </Group>
@@ -598,7 +598,7 @@
                           <Component id="jLabel10" max="32767" attributes="1"/>
                           <Component id="jLabel8" alignment="0" max="32767" attributes="1"/>
                       </Group>
-                      <EmptySpace pref="450" max="32767" attributes="0"/>
+                      <EmptySpace pref="349" max="32767" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
@@ -670,7 +670,7 @@
                       <Component id="jButton11" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="jCheckBox2" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace pref="566" max="32767" attributes="0"/>
+                      <EmptySpace pref="465" max="32767" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
