@@ -24,6 +24,7 @@
     <javac srcdir="src" destdir="classes" source="1.4" target="1.4" classpath="lib/sun_reflect_misc.jar:lib/bsh-2.0b4.jar:lib/swing-layout-1.0.3.jar"/>
     <rmic base="classes"
           includes="persistence/*Impl.class
+                    persistence/PersistentObject$Accessor.class
                     persistence/server/*Impl.class"
     />
   </target>
@@ -34,6 +35,7 @@
     <rmic debug="on"
           base="classes"
           includes="persistence/*Impl.class
+                    persistence/PersistentObject$Accessor.class
                     persistence/server/*Impl.class"
     />
   </target>

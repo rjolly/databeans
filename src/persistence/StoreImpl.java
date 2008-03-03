@@ -142,24 +142,32 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	}
 
 	PersistentObject cache(PersistentObject obj) {
-		hold(obj.base.longValue());
-		cache.put(obj.base,new WeakReference(obj));
+		Long key=obj.base;
+		hold(key.longValue());
+		cache.put(key,new WeakReference(obj));
 		return obj;
 	}
 
 	PersistentObject get(long base) {
-		Reference w=(Reference)cache.get(new Long(base));
-		return w==null?null:(PersistentObject)w.get();
+		Long key=new Long(base);
+		Reference w=(Reference)cache.get(key);
+		if(w==null) return null;
+		else {
+			PersistentObject obj=(PersistentObject)w.get();
+			if(obj==null) cache.remove(key);
+			return obj;
+		}
 	}
 
 	synchronized void release(PersistentObject obj) {
 		if(readOnly) return;
 		if(closed) return;
-		PersistentObject object=get(obj.base.longValue());
-		if(object==null) release(obj.base.longValue());
+		Long key=obj.base;
+		PersistentObject object=get(key.longValue());
+		if(object==null) release(key.longValue());
 		else if(object==obj) {
-			cache.remove(obj.base);
-			release(obj.base.longValue());
+			cache.remove(key);
+			release(key.longValue());
 		}
 	}
 
