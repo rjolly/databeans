@@ -462,7 +462,7 @@ public class AdminUI extends javax.swing.JFrame {
                                                 .add(jButton5)
                                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                                 .add(jCheckBox5))
-                                        .add(jTextField2, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 534, Short.MAX_VALUE))
+                                        .add(jTextField2, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 524, Short.MAX_VALUE))
                                 .addContainerGap())
                 );
                 jPanel1Layout.setVerticalGroup(
@@ -478,7 +478,7 @@ public class AdminUI extends javax.swing.JFrame {
                                         .add(jCheckBox4)
                                         .add(jButton5)
                                         .add(jCheckBox5))
-                                .addContainerGap(332, Short.MAX_VALUE))
+                                .addContainerGap(280, Short.MAX_VALUE))
                 );
 
                 jTabbedPane1.addTab("Export/Import", jPanel1);
@@ -530,9 +530,9 @@ public class AdminUI extends javax.swing.JFrame {
                                                         .add(jLabel4))
                                                 .add(12, 12, 12)
                                                 .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                                                        .add(jTextField3, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 200, Short.MAX_VALUE)
-                                                        .add(jPasswordField2, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 200, Short.MAX_VALUE)
-                                                        .add(jPasswordField1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 200, Short.MAX_VALUE)))
+                                                        .add(jTextField3, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 296, Short.MAX_VALUE)
+                                                        .add(jPasswordField2, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 296, Short.MAX_VALUE)
+                                                        .add(jPasswordField1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 296, Short.MAX_VALUE)))
                                         .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel2Layout.createSequentialGroup()
                                                 .add(41, 41, 41)
                                                 .add(jLabel11)
@@ -543,17 +543,14 @@ public class AdminUI extends javax.swing.JFrame {
                                                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                                                 .add(jButton7))
                                                         .add(org.jdesktop.layout.GroupLayout.TRAILING, jPasswordField3))))
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                 .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                                         .add(jPanel2Layout.createSequentialGroup()
-                                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                                 .add(jButton8)
                                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                                .add(jCheckBox3)
-                                                .addContainerGap())
-                                        .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel2Layout.createSequentialGroup()
-                                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                                .add(jCheckBox6)
-                                                .add(318, 318, 318))))
+                                                .add(jCheckBox3))
+                                        .add(jCheckBox6))
+                                .addContainerGap())
                 );
                 jPanel2Layout.setVerticalGroup(
                         jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -573,15 +570,15 @@ public class AdminUI extends javax.swing.JFrame {
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                 .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                                         .add(jLabel11)
-                                        .add(jCheckBox6)
-                                        .add(jPasswordField3, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                                        .add(jPasswordField3, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                        .add(jCheckBox6))
                                 .add(18, 18, 18)
                                 .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                                         .add(jButton6)
                                         .add(jButton7)
                                         .add(jButton8)
                                         .add(jCheckBox3))
-                                .addContainerGap(231, Short.MAX_VALUE))
+                                .addContainerGap(179, Short.MAX_VALUE))
                 );
 
                 jTabbedPane1.addTab("Users", jPanel2);
@@ -622,7 +619,7 @@ public class AdminUI extends javax.swing.JFrame {
                                 .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
                                         .add(jLabel10, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                         .add(jLabel8, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                                .addContainerGap(349, Short.MAX_VALUE))
+                                .addContainerGap(339, Short.MAX_VALUE))
                 );
                 jPanel3Layout.setVerticalGroup(
                         jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -637,7 +634,7 @@ public class AdminUI extends javax.swing.JFrame {
                                         .add(jLabel10))
                                 .add(18, 18, 18)
                                 .add(jButton10)
-                                .addContainerGap(319, Short.MAX_VALUE))
+                                .addContainerGap(267, Short.MAX_VALUE))
                 );
 
                 jTabbedPane1.addTab("Memory", jPanel3);
@@ -660,7 +657,7 @@ public class AdminUI extends javax.swing.JFrame {
                                 .add(jButton11)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                 .add(jCheckBox2)
-                                .addContainerGap(465, Short.MAX_VALUE))
+                                .addContainerGap(455, Short.MAX_VALUE))
                 );
                 jPanel4Layout.setVerticalGroup(
                         jPanel4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -669,7 +666,7 @@ public class AdminUI extends javax.swing.JFrame {
                                 .add(jPanel4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                                         .add(jButton11)
                                         .add(jCheckBox2))
-                                .addContainerGap(377, Short.MAX_VALUE))
+                                .addContainerGap(325, Short.MAX_VALUE))
                 );
 
                 jTabbedPane1.addTab("Shutdown", jPanel4);
@@ -725,11 +722,11 @@ public class AdminUI extends javax.swing.JFrame {
                 getContentPane().setLayout(layout);
                 layout.setHorizontalGroup(
                         layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                        .add(jTabbedPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 640, Short.MAX_VALUE)
+                        .add(jTabbedPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 630, Short.MAX_VALUE)
                 );
                 layout.setVerticalGroup(
                         layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                        .add(jTabbedPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 455, Short.MAX_VALUE)
+                        .add(jTabbedPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 403, Short.MAX_VALUE)
                 );
 
                 pack();
