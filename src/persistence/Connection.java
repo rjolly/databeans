@@ -4,7 +4,6 @@ import java.io.Serializable;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.rmi.RemoteException;
-import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.WeakHashMap;
@@ -174,9 +173,10 @@ public class Connection implements Serializable {
 	}
 
 	PersistentObject attach(PersistentObject obj) {
-		synchronized(cache()) {
-			PersistentObject object=get(obj.accessor);
-			return object==null?cache(obj):object;
+		cache();
+		synchronized(cache) {
+			PersistentObject o=get(obj.accessor);
+			return o==null?cache(obj):o;
 		}
 	}
 
@@ -188,12 +188,7 @@ public class Connection implements Serializable {
 
 	PersistentObject get(Accessor accessor) {
 		Reference w=(Reference)cache.get(accessor);
-		if(w==null) return null;
-		else {
-			PersistentObject obj=(PersistentObject)w.get();
-			if(obj==null) cache.remove(accessor);
-			return obj;
-		}
+		return w==null?null:(PersistentObject)w.get();
 	}
 
 	Object execute(MethodCall call) {
@@ -230,20 +225,18 @@ public class Connection implements Serializable {
 
 	public void close() {
 		connection=null;
-		Map cache=cache();
-		while(true) {
-			try {
-				for(Iterator it=cache.keySet().iterator();it.hasNext();it.remove()) {
-					close((Accessor)it.next());
-				}
-				break;
-			} catch (ConcurrentModificationException e) {}
+		cache();
+		for(Iterator it=cache.keySet().iterator();it.hasNext();it.remove()) {
+			close((Accessor)it.next());
 		}
 	}
 
 	void close(Accessor accessor) {
-		PersistentObject obj=get(accessor);
-		if(obj!=null) obj.close();
+		PersistentObject o;
+		synchronized(cache) {
+			o=get(accessor);
+		}
+		if(o!=null) o.close();
 	}
 
 	public boolean isClosed() {

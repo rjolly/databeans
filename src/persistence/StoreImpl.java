@@ -17,7 +17,6 @@ import java.lang.ref.WeakReference;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.security.AccessController;
-import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -112,8 +111,8 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	}
 
 	PersistentClass get(Class clazz) {
+		String name=clazz.getName();
 		synchronized(classes) {
-			String name=clazz.getName();
 			PersistentClass c=(PersistentClass)classes.get(name);
 			if(c==null) classes.put(name,c=PersistentClass.create(clazz,this));
 			return c;
@@ -129,46 +128,39 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		long base=heap.alloc(b.length);
 		heap.writeBytes(base,b);
 		setClass(base,clazz);
-		synchronized(heap) {
+		hold(base);
+		synchronized(cache) {
 			return cache(PersistentObject.newInstance(base,clazz,this));
 		}
 	}
 
 	PersistentObject instantiate(long base) {
-		synchronized(heap) {
-			PersistentObject obj=get(base);
-			return obj==null?cache(selfClass(base)?PersistentClass.newInstance(base,this):PersistentObject.newInstance(base,getClass(base),this)):obj;
+		hold(base);
+		synchronized(cache) {
+			PersistentObject o=get(base);
+			return o==null?cache(selfClass(base)?PersistentClass.newInstance(base,this):PersistentObject.newInstance(base,getClass(base),this)):o;
 		}
 	}
 
 	PersistentObject cache(PersistentObject obj) {
-		Long key=obj.base;
-		hold(key.longValue());
-		cache.put(key,new WeakReference(obj));
+		cache.put(obj.base,new WeakReference(obj));
 		return obj;
 	}
 
 	PersistentObject get(long base) {
-		Long key=new Long(base);
-		Reference w=(Reference)cache.get(key);
-		if(w==null) return null;
-		else {
-			PersistentObject obj=(PersistentObject)w.get();
-			if(obj==null) cache.remove(key);
-			return obj;
-		}
+		Reference w=(Reference)cache.get(new Long(base));
+		return w==null?null:(PersistentObject)w.get();
 	}
 
 	synchronized void release(PersistentObject obj) {
 		if(readOnly) return;
 		if(closed) return;
-		Long key=obj.base;
-		PersistentObject object=get(key.longValue());
-		if(object==null) release(key.longValue());
-		else if(object==obj) {
-			cache.remove(key);
-			release(key.longValue());
+		PersistentObject o;
+		synchronized(cache) {
+			o=get(obj.base.longValue());
+			if(o==obj) cache.remove(obj.base);
 		}
+		if(o==null || o==obj) release(obj.base.longValue());
 	}
 
 	MethodCall attach(MethodCall call) {
@@ -188,7 +180,9 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 
 	PersistentObject attach(PersistentObject obj) {
 		if(!equals(obj.store())) throw new PersistentException("not the same store");
-		return get(obj.base());
+		synchronized(cache) {
+			return get(obj.base());
+		}
 	}
 
 	void changePassword(String username, String oldPassword, String newPassword) {
@@ -350,21 +344,11 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		for(Iterator it=system.getTransactions().iterator();it.hasNext();) {
 			((Transaction)it.next()).unlock();
 		}
-		while(true) {
-			try {
-				for(Iterator it=connections.keySet().iterator();it.hasNext();it.remove()) {
-					((RemoteConnectionImpl)it.next()).close();
-				}
-				break;
-			} catch (ConcurrentModificationException e) {}
+		for(Iterator it=connections.keySet().iterator();it.hasNext();it.remove()) {
+			((RemoteConnectionImpl)it.next()).close();
 		}
-		while(true) {
-			try {
-				for(Iterator it=cache.keySet().iterator();it.hasNext();it.remove()) {
-					close(((Long)it.next()).longValue());
-				}
-				break;
-			} catch (ConcurrentModificationException e) {}
+		for(Iterator it=cache.keySet().iterator();it.hasNext();it.remove()) {
+			close(((Long)it.next()).longValue());
 		}
 		((RemoteConnectionImpl)systemConnection.connection).close();
 		systemConnection.close();
@@ -373,10 +357,13 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	}
 
 	void close(long base) throws RemoteException {
-		PersistentObject obj=get(base);
-		if(obj!=null) {
-			((PersistentObject.Accessor)obj.accessor).close();
-			obj.close();
+		PersistentObject o;
+		synchronized(cache) {
+			o=get(base);
+		}
+		if(o!=null) {
+			((PersistentObject.Accessor)o.accessor).close();
+			o.close();
 		}
 	}
 
