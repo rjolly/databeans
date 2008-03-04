@@ -96,7 +96,7 @@ exit();
 Enabling security
 -----------------
 
-The server can be made to require authentication at connection. For that, you just have to switch comments in the file login.config:
+The server can be made to require authentication at connection. For that, you just have to switch comments in login.config:
 
 	persistence.server.DatabeansLoginModule required debug=true store="//localhost/store";
 //	persistence.server.DummyLoginModule required debug=true user="admin";

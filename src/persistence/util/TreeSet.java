@@ -113,21 +113,21 @@ public class TreeSet extends AbstractSet
 		m().clear();
 	}
 
-	public boolean addAll(Collection c) {
-		// Use linear-time version if applicable
-		if (m().size()==0 && c.size() > 0 && c instanceof SortedSet && 
-			m() instanceof TreeMap) {
-			SortedSet set = (SortedSet)c;
-			TreeMap map = (TreeMap)m();
-			Comparator cc = set.comparator();
-			Comparator mc = map.comparator();
-			if (cc==mc || (cc != null && cc.equals(mc))) {
-				map.addAllForTreeSet(set, ((TreeSetClass)persistentClass()).PRESENT());
-				return true;
-			}
-		}
-		return super.addAll(c);
-	}
+//	public boolean addAll(Collection c) {
+//		// Use linear-time version if applicable
+//		if (m().size()==0 && c.size() > 0 && c instanceof SortedSet && 
+//			m() instanceof TreeMap) {
+//			SortedSet set = (SortedSet)c;
+//			TreeMap map = (TreeMap)m();
+//			Comparator cc = set.comparator();
+//			Comparator mc = map.comparator();
+//			if (cc==mc || (cc != null && cc.equals(mc))) {
+//				map.addAllForTreeSet(set, ((TreeSetClass)persistentClass()).PRESENT());
+//				return true;
+//			}
+//		}
+//		return super.addAll(c);
+//	}
 
 	public SortedSet subSet(Object fromElement, Object toElement) {
 		return (SortedSet)create(TreeSet.class,new Class[] {SortedMap.class},new Object[] {m().subMap(fromElement, toElement)});

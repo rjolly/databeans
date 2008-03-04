@@ -15,7 +15,6 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.SortedMap;
-import java.util.SortedSet;
 import persistence.PersistentObject;
 
 public class TreeMap extends AbstractMap
@@ -170,6 +169,55 @@ public class TreeMap extends AbstractMap
 			Object oldValue = p.getValue0();
 			deleteEntry(p);
 			return oldValue;
+		}
+
+		void deleteEntry(Entry p) {
+			decrementSize();
+
+			// If strictly internal, copy successor's element to p and then make p
+			// point to successor.
+			if (p.getLeft() != null && p.getRight() != null) {
+				Entry s = successor (p);
+				p.setKey0(s.getKey0());
+				p.setValue0(s.getValue0());
+				p = s;
+			} // p has 2 children
+
+			// Start fixup at replacement node, if it exists.
+			Entry replacement = (p.getLeft() != null ? p.getLeft() : p.getRight());
+
+			if (replacement != null) {
+				// Link replacement to parent
+				replacement.setParent(p.getParent());
+				if (p.getParent() == null)
+					setRoot(replacement);
+				else if (p == p.getParent().getLeft())
+					p.getParent().setLeft(replacement);
+				else
+					p.getParent().setRight(replacement);
+
+				// Null out links so they are OK to use by fixAfterDeletion.
+				p.setLeft(null);
+				p.setRight(null);
+				p.setParent(null);
+
+				// Fix replacement
+				if (p.getColor() == BLACK)
+					fixAfterDeletion(replacement);
+			} else if (p.getParent() == null) { // return if we are the only node.
+				setRoot(null);
+			} else { //  No children. Use self as phantom replacement and unlink.
+				if (p.getColor() == BLACK)
+					fixAfterDeletion(p);
+
+				if (p.getParent() != null) {
+					if (p == p.getParent().getLeft())
+						p.getParent().setLeft(null);
+					else if (p == p.getParent().getRight())
+						p.getParent().setRight(null);
+					p.setParent(null);
+				}
+			}
 		}
 
 		public synchronized PersistentObject persistentClone() {
@@ -838,52 +886,7 @@ public class TreeMap extends AbstractMap
 	}
 
 	void deleteEntry(Entry p) {
-		decrementSize();
-
-		// If strictly internal, copy successor's element to p and then make p
-		// point to successor.
-		if (p.getLeft() != null && p.getRight() != null) {
-			Entry s = successor (p);
-			p.setKey0(s.getKey0());
-			p.setValue0(s.getValue0());
-			p = s;
-		} // p has 2 children
-
-		// Start fixup at replacement node, if it exists.
-		Entry replacement = (p.getLeft() != null ? p.getLeft() : p.getRight());
-
-		if (replacement != null) {
-			// Link replacement to parent
-			replacement.setParent(p.getParent());
-			if (p.getParent() == null)
-				setRoot(replacement);
-			else if (p == p.getParent().getLeft())
-				p.getParent().setLeft(replacement);
-			else
-				p.getParent().setRight(replacement);
-
-			// Null out links so they are OK to use by fixAfterDeletion.
-			p.setLeft(null);
-			p.setRight(null);
-			p.setParent(null);
-
-			// Fix replacement
-			if (p.getColor() == BLACK)
-				fixAfterDeletion(replacement);
-		} else if (p.getParent() == null) { // return if we are the only node.
-			setRoot(null);
-		} else { //  No children. Use self as phantom replacement and unlink.
-			if (p.getColor() == BLACK)
-				fixAfterDeletion(p);
-
-			if (p.getParent() != null) {
-				if (p == p.getParent().getLeft())
-					p.getParent().setLeft(null);
-				else if (p == p.getParent().getRight())
-					p.getParent().setRight(null);
-				p.setParent(null);
-			}
-		}
+		remove(p.getKey());
 	}
 
 	/** From CLR **/
@@ -950,13 +953,13 @@ public class TreeMap extends AbstractMap
 	}
 
 	/** Intended to be called only from TreeSet.addAll **/
-	void addAllForTreeSet(SortedSet set, Object defaultVal) {
-	  try {
-		  buildFromSorted(set.size(), set.iterator(), null, defaultVal);
-	  } catch (java.io.IOException cannotHappen) {
-	  } catch (ClassNotFoundException cannotHappen) {
-	  }
-	}
+//	void addAllForTreeSet(SortedSet set, Object defaultVal) {
+//	  try {
+//		  buildFromSorted(set.size(), set.iterator(), null, defaultVal);
+//	  } catch (java.io.IOException cannotHappen) {
+//	  } catch (ClassNotFoundException cannotHappen) {
+//	  }
+//	}
 
 	private void buildFromSorted(int size, Iterator it,
 								  java.io.ObjectInputStream str,

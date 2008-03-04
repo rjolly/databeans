@@ -19,6 +19,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
@@ -98,20 +99,46 @@ public class AdminUI extends javax.swing.JFrame {
 		}
 	}
 
-	void setSystem(PersistentSystem system) {
-		model.setRoot(ObjectTreeNode.node(system,"system"));
-		model.reload();
-		jTree1.setSelectionRow(0);
+	void open() {
+		new Thread() {
+			public void run() {
+				try {
+					open0();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}.start();
 	}
 
-	void open() {
+	void open0() throws Exception {
+		try {
+			open1();
+			SwingUtilities.invokeAndWait(new Runnable() {
+				public void run() {
+					open2();
+				}
+			});
+		} catch (final Exception e) {
+			SwingUtilities.invokeAndWait(new Runnable() {
+				public void run() {
+					error(e);
+				}
+			});
+		}
+	}
+
+	void open1() throws Exception {
 		boolean admin=jCheckBox1.isSelected();
 		String location=jTextField1.getText();
+		conn=admin?Connections.getAdminConnection(location):Connections.getConnection(location);
+	}
+
+	void open2() {
+		boolean admin=jCheckBox1.isSelected();
 		try {
-			conn=admin?Connections.getAdminConnection(location):Connections.getConnection(location);
 			setSystem(conn.system());
 		} catch (Exception e) {
-			setSystem(null);
 			error(e);
 		}
 		try {
@@ -120,6 +147,12 @@ public class AdminUI extends javax.swing.JFrame {
 			error(e);
 		}
 		enableTabs(new boolean[] {true,admin,admin,admin,admin,true});
+	}
+
+	void setSystem(PersistentSystem system) {
+		model.setRoot(ObjectTreeNode.node(system,"system"));
+		model.reload();
+		jTree1.setSelectionRow(0);
 	}
 
 	void close() {
@@ -462,7 +495,7 @@ public class AdminUI extends javax.swing.JFrame {
                                                 .add(jButton5)
                                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                                 .add(jCheckBox5))
-                                        .add(jTextField2, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 436, Short.MAX_VALUE))
+                                        .add(jTextField2, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 468, Short.MAX_VALUE))
                                 .addContainerGap())
                 );
                 jPanel1Layout.setVerticalGroup(
@@ -550,37 +583,38 @@ public class AdminUI extends javax.swing.JFrame {
                                         .add(jPanel2Layout.createSequentialGroup()
                                                 .add(jButton8)
                                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                                .add(jCheckBox6))
-                                        .add(jCheckBox3))
-                                .add(62, 62, 62))
+                                                .add(jCheckBox3))
+                                        .add(jCheckBox6))
+                                .add(52, 52, 52))
                 );
                 jPanel2Layout.setVerticalGroup(
                         jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                         .add(jPanel2Layout.createSequentialGroup()
                                 .addContainerGap()
-                                .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                                        .add(jLabel4)
-                                        .add(jTextField3, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                                        .add(jLabel5)
-                                        .add(jPasswordField1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                                .add(8, 8, 8)
-                                .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                                        .add(jLabel6)
-                                        .add(jPasswordField2, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                 .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
-                                        .add(jLabel11)
-                                        .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                                                .add(jPasswordField3, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                                                .add(jCheckBox3)))
+                                        .add(jPanel2Layout.createSequentialGroup()
+                                                .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                                                        .add(jLabel4)
+                                                        .add(jTextField3, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                                .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                                                        .add(jLabel5)
+                                                        .add(jPasswordField1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                                                .add(8, 8, 8)
+                                                .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                                                        .add(jLabel6)
+                                                        .add(jPasswordField2, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                                .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
+                                                        .add(jLabel11)
+                                                        .add(jPasswordField3, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                                        .add(jCheckBox6))
                                 .add(8, 8, 8)
                                 .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                                         .add(jButton6)
                                         .add(jButton7)
                                         .add(jButton8)
-                                        .add(jCheckBox6))
+                                        .add(jCheckBox3))
                                 .addContainerGap(189, Short.MAX_VALUE))
                 );
 
@@ -622,7 +656,7 @@ public class AdminUI extends javax.swing.JFrame {
                                 .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
                                         .add(jLabel10, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                         .add(jLabel8, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                                .addContainerGap(251, Short.MAX_VALUE))
+                                .addContainerGap(283, Short.MAX_VALUE))
                 );
                 jPanel3Layout.setVerticalGroup(
                         jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -660,7 +694,7 @@ public class AdminUI extends javax.swing.JFrame {
                                 .add(jButton11)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                 .add(jCheckBox2)
-                                .addContainerGap(367, Short.MAX_VALUE))
+                                .addContainerGap(399, Short.MAX_VALUE))
                 );
                 jPanel4Layout.setVerticalGroup(
                         jPanel4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -725,7 +759,7 @@ public class AdminUI extends javax.swing.JFrame {
                 getContentPane().setLayout(layout);
                 layout.setHorizontalGroup(
                         layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                        .add(jTabbedPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 542, Short.MAX_VALUE)
+                        .add(jTabbedPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 574, Short.MAX_VALUE)
                 );
                 layout.setVerticalGroup(
                         layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -746,11 +780,7 @@ public class AdminUI extends javax.swing.JFrame {
 
 	private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
 		jDialog1.setVisible(false);
-		new Thread() {
-			public void run() {
-				open();
-			}
-		}.start();
+		open();
 	}//GEN-LAST:event_jButton1ActionPerformed
 
 	private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed

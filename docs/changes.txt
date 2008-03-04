@@ -1,7 +1,6 @@
 Changes between 2.0rc15 and 2.0rc16:
 
 + improved graphical admin UI, in executable jar file
-+ fixed a serious server instability
 + fixed view classes of some persistent collections
 + sample with more data and more elaborate query
 + connection.subject()

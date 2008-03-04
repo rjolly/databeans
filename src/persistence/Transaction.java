@@ -27,7 +27,7 @@ public class Transaction extends PersistentObject {
 		public Accessor() throws RemoteException {}
 
 		public String persistentToString() {
-			return Long.toHexString(base())+"("+getClient()+")";
+			return Long.toHexString(base.longValue())+"("+getClient()+")";
 		}
 	}
 

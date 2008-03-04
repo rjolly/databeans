@@ -1,6 +1,6 @@
 grant codebase "file:-" {
 	permission java.io.FilePermission "-", "read,write";
-	permission java.net.SocketPermission "localhost:1024-", "accept,connect";
+	permission java.net.SocketPermission "*:1024-", "accept,connect";
 	permission java.lang.RuntimePermission "shutdownHooks";
 	permission java.lang.RuntimePermission "accessDeclaredMembers";
 	permission java.lang.RuntimePermission "accessClassInPackage.sun.reflect.misc";
@@ -17,10 +17,6 @@ grant Principal persistence.server.DatabeansPrincipal "admin" {
 
 grant {
 	permission persistence.MethodPermission "persistence.*";
-	permission persistence.PropertyPermission "persistence.util.SubList.*";
-	permission persistence.PropertyPermission "persistence.util.RandomAccessSublist.*";
-	permission persistence.PropertyPermission "persistence.util.SubMap.*";
-	permission persistence.PropertyPermission "persistence.util.EntrySetView.*";
 
 	permission persistence.PropertyPermission "persistence.PersistentSystem.root";
 	permission persistence.PropertyPermission "Department.*";

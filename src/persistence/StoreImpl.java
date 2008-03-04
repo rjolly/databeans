@@ -183,7 +183,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	PersistentObject attach(PersistentObject obj) {
 		if(!equals(obj.store())) throw new PersistentException("not the same store");
 		synchronized(cache) {
-			return get(new Long(obj.base()));
+			return get(obj.base());
 		}
 	}
 
@@ -413,7 +413,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		if(heap.mark(base,true)) return;
 		PersistentClass c=getClass(base);
 		if(c!=null) {
-			mark(c.base());
+			mark(c.base.longValue());
 			Iterator t=c.fieldIterator();
 			while(t.hasNext()) {
 				Field field=(Field)t.next();
@@ -446,7 +446,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		PersistentClass c=getClass(patch,base);
 		if(c!=null) {
 //			Field.CLASS.set(patch,base,new Long(0));
-			decRefCount(c.base());
+			decRefCount(c.base.longValue());
 			Iterator t=c.fieldIterator();
 			while(t.hasNext()) {
 				Field field=(Field)t.next();

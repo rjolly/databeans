@@ -106,8 +106,8 @@ public class PersistentObject implements Cloneable, Serializable {
 			UnicastRemoteObject.unexportObject(this,true);
 		}
 
-		public final long base() {
-			return base.longValue();
+		public final Long base() {
+			return base;
 		}
 
 		public final Store store() {
@@ -222,10 +222,14 @@ public class PersistentObject implements Cloneable, Serializable {
 
 	Object call(String method, Class types[], Object args[], boolean check) {
 		if(check) {
-			if((method.equals("get") || method.equals("set")) && types.length>0 && types[0]==String.class) AccessController.checkPermission(new PropertyPermission(clazz.name()+"."+args[0]));
+			if((method.equals("get") || method.equals("set")) && types.length>0 && types[0]==String.class && !unchecked((String)args[0])) AccessController.checkPermission(new PropertyPermission(clazz.name()+"."+args[0]));
 			else AccessController.checkPermission(new MethodPermission(clazz.name()+"."+method));
 		}
 		return ((Accessor)accessor).call(method,types,args);
+	}
+
+	protected boolean unchecked(String property) {
+		return false;
 	}
 
 	void lock(Transaction transaction) {
@@ -240,7 +244,7 @@ public class PersistentObject implements Cloneable, Serializable {
 		accessor=null;
 	}
 
-	long base() {
+	Long base() {
 		try {
 			return accessor.base();
 		} catch (RemoteException e) {

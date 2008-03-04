@@ -303,7 +303,7 @@ public class HashMap extends AbstractMap implements Map, Cloneable
 			e.setValue(value);
 			e.recordAccess(this);
 			return oldValue;
-		} else return putMapping(key,value);
+		} else return putMapping(key,value).getValue();
 	}
 
 	private void putForCreate(Object key, Object value) {

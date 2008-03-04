@@ -156,4 +156,8 @@ public class SubMap extends AbstractMap
 		return (getFromStart() || getMap().compare(key, getFromKey()) >= 0) &&
 			   (getToEnd() || getMap().compare(key, getToKey()) <= 0);
 	}
+
+	protected boolean unchecked(String property) {
+		return super.unchecked(property) || property.equals("map") || property.equals("fromStart") || property.equals("toEnd") || property.equals("fromKey") || property.equals("toKey");
+	}
 }

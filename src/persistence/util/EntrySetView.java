@@ -87,4 +87,8 @@ public class EntrySetView extends AbstractSet {
 			(getMap().getFromStart() ? getMap().getMap().firstEntry() : getMap().getMap().getCeilEntry(getMap().getFromKey())),
 			(getMap().getToEnd() ? null : getMap().getMap().getCeilEntry(getMap().getToKey())));
 	}
+
+	protected boolean unchecked(String property) {
+		return super.unchecked(property) || property.equals("map") || property.equals("size") || property.equals("sizeModCount");
+	}
 }

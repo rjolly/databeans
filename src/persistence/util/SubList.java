@@ -216,4 +216,8 @@ public class SubList extends AbstractList {
 		if (getL().modCount() != getExpectedModCount())
 			throw new ConcurrentModificationException();
 	}
+
+	protected boolean unchecked(String property) {
+		return super.unchecked(property) || property.equals("l") || property.equals("offset") || property.equals("size") || property.equals("expectedModCount");
+	}
 }
