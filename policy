@@ -1,6 +1,6 @@
 grant codebase "file:databeans.jar" {
 	permission java.io.FilePermission "-", "read,write";
-	permission java.net.SocketPermission "*:1024-", "accept,connect";
+	permission java.net.SocketPermission "localhost:1024-", "accept,connect";
 	permission java.lang.RuntimePermission "shutdownHooks";
 	permission java.lang.RuntimePermission "accessDeclaredMembers";
 	permission java.lang.RuntimePermission "accessClassInPackage.sun.reflect.misc";
@@ -12,7 +12,7 @@ grant codebase "file:databeans.jar" {
 
 grant codebase "file:-" {
 	permission java.util.PropertyPermission "*", "read";
-	permission java.net.SocketPermission "*:1024-", "accept,connect";
+	permission java.net.SocketPermission "localhost:1024-", "accept,connect";
 	permission java.awt.AWTPermission "accessClipboard";
 };
 
