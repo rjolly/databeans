@@ -23,11 +23,10 @@ import java.util.Map;
 import java.util.WeakHashMap;
 import javax.security.auth.Subject;
 import javax.security.auth.callback.CallbackHandler;
-import javax.security.auth.login.LoginContext;
-import javax.security.auth.login.LoginException;
 import persistence.PersistentObject.MethodCall;
 import persistence.beans.XMLDecoder;
 import persistence.beans.XMLEncoder;
+import persistence.server.Login;
 import persistence.storage.Collector;
 import persistence.storage.FileHeap;
 import persistence.storage.Heap;
@@ -88,7 +87,9 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		classes=system.getClasses();
 		if(readOnly) return;
 		rollback();
-		clear();
+		synchronized(heap) {
+			gc0();
+		}
 		updateClasses();
 	}
 
@@ -98,7 +99,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		}
 	}
 
-	void clear() {
+	void gc0() {
 		mark(false);
 		mark(boot);
 		sweep();
@@ -267,64 +268,11 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 
 	public synchronized Connection getConnection(CallbackHandler handler) throws RemoteException {
 		if(readOnly) throw new PersistentException("store in recovery mode");
-		return new Connection(this,Connection.TRANSACTION_READ_UNCOMMITTED,login(handler).getSubject());
+		return new Connection(this,Connection.TRANSACTION_READ_UNCOMMITTED,Login.login(handler).getSubject());
 	}
 
 	public synchronized AdminConnection getAdminConnection(CallbackHandler handler) throws RemoteException {
-		return new AdminConnection(this,readOnly,login(handler).getSubject());
-	}
-
-	static LoginContext login(CallbackHandler handler) {
-
-		// Obtain a LoginContext, needed for authentication. Tell it
-		// to use the LoginModule implementation specified by the
-		// entry named "Sample" in the JAAS login configuration
-		// file and to also use the specified CallbackHandler.
-		LoginContext lc = null;
-		try {
-			lc = new LoginContext("Databeans", handler);
-		} catch (LoginException le) {
-			System.err.println("Cannot create LoginContext. "
-				+ le.getMessage());
-			System.exit(-1);
-		} catch (SecurityException se) {
-			System.err.println("Cannot create LoginContext. "
-				+ se.getMessage());
-			System.exit(-1);
-		}
-
-		// the user has 3 attempts to authenticate successfully
-		int i;
-		for (i = 0; i < 3; i++) {
-			try {
-
-				// attempt authentication
-				lc.login();
-
-				// if we return with no exception, authentication succeeded
-				break;
-
-			} catch (LoginException le) {
-
-				System.err.println("Authentication failed:");
-				System.err.println("  " + le.getMessage());
-				try {
-					Thread.currentThread().sleep(3000);
-				} catch (Exception e) {
-					// ignore
-				}
-
-			}
-		}
-
-		// did they fail three times?
-		if (i == 3) {
-			System.out.println("Sorry");
-			throw new PersistentException("permission denied");
-		}
-
-		System.out.println("Authentication succeeded!");
-		return lc;
+		return new AdminConnection(this,readOnly,Login.login(handler).getSubject());
 	}
 
 	Transaction getTransaction(String client) {
