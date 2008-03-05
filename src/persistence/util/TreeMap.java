@@ -840,7 +840,6 @@ public class TreeMap extends AbstractMap
 		p.setParent(l);
 	}
 
-
 	/** From CLR **/
 	private void fixAfterInsertion(Entry x) {
 		x.setColor(RED);
