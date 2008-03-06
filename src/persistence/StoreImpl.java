@@ -62,7 +62,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		}
 	}
 
-	void create() {
+	synchronized void create() {
 		classes=new LinkedHashMap();
 		createSystem();
 		createUsers();
@@ -82,14 +82,12 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		users.put("admin",new Password(""));
 	}
 
-	void instantiate() {
+	synchronized void instantiate() {
 		system=(PersistentSystem)instantiate(boot);
 		classes=system.getClasses();
 		if(readOnly) return;
 		rollback();
-		synchronized(heap) {
-			gc0();
-		}
+		gc(false);
 		updateClasses();
 	}
 
@@ -97,12 +95,6 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		for(Iterator it=system.getTransactions().iterator();it.hasNext();it.remove()) {
 			((Transaction)it.next()).rollback(null);
 		}
-	}
-
-	void gc0() {
-		mark(false);
-		mark(boot);
-		sweep();
 	}
 
 	void updateClasses() {
@@ -124,7 +116,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		return ArrayClass.create(componentType,length,this);
 	}
 
-	PersistentObject create(PersistentClass clazz) {
+	synchronized PersistentObject create(PersistentClass clazz) {
 		byte b[]=new byte[clazz.size()];
 		long base=heap.alloc(b.length);
 		heap.writeBytes(base,b);
@@ -154,8 +146,8 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	}
 
 	synchronized void release(PersistentObject obj) {
-		if(readOnly) return;
 		if(closed) return;
+		if(readOnly) return;
 		PersistentObject o;
 		synchronized(cache) {
 			o=get(obj.base);
@@ -248,7 +240,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	void userGc() {
 		AccessController.checkPermission(new AdminPermission("gc"));
 		System.gc();
-		syncGc();
+		gc();
 	}
 
 	long allocatedSpace() {
@@ -264,12 +256,12 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		return pw==null?false:pw.match(password);
 	}
 
-	public synchronized Connection getConnection(CallbackHandler handler) throws RemoteException {
+	public Connection getConnection(CallbackHandler handler) throws RemoteException {
 		if(readOnly) throw new PersistentException("store in recovery mode");
 		return new Connection(this,Connection.TRANSACTION_READ_UNCOMMITTED,Login.login(handler).getSubject());
 	}
 
-	public synchronized AdminConnection getAdminConnection(CallbackHandler handler) throws RemoteException {
+	public AdminConnection getAdminConnection(CallbackHandler handler) throws RemoteException {
 		return new AdminConnection(this,readOnly,Login.login(handler).getSubject());
 	}
 
@@ -280,8 +272,8 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	}
 
 	synchronized void release(Transaction transaction, Subject subject) {
-//		if(readOnly) return;
 		if(closed) return;
+//		if(readOnly) return;
 		system.getTransactions().remove(transaction);
 		transaction.rollback(subject);
 	}
@@ -290,7 +282,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		if(closed) return;
 		UnicastRemoteObject.unexportObject(this,true);
 		for(Iterator it=system.getTransactions().iterator();it.hasNext();) {
-			((Transaction)it.next()).unlock();
+			((Transaction)it.next()).abort();
 		}
 		for(Iterator it=connections.keySet().iterator();it.hasNext();it.remove()) {
 			((RemoteConnectionImpl)it.next()).close();
@@ -315,16 +307,14 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		}
 	}
 
-	synchronized void syncGc() {
-		if(readOnly) return;
+	public synchronized void gc() {
 		if(closed) return;
-		synchronized(heap) {
-			gc();
-		}
+		if(readOnly) return;
+		gc(true);
 	}
 
-	public void gc() {
-		mark(true);
+	void gc(boolean keep) {
+		mark(keep);
 		mark(boot);
 		sweep();
 	}
@@ -426,44 +416,36 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	}
 
 	void hold(long base) {
-		synchronized(heap) {
-			long r=((Long)Field.REF_COUNT.get(heap,base)).longValue();
-			long s=r&MemoryModel.model.pointerMinValue;
-			r=r^s;
-			s=MemoryModel.model.pointerMinValue;
-			Field.REF_COUNT.set(heap,base,new Long(r|s));
-		}
+		long r=((Long)Field.REF_COUNT.get(heap,base)).longValue();
+		long s=r&MemoryModel.model.pointerMinValue;
+		r=r^s;
+		s=MemoryModel.model.pointerMinValue;
+		Field.REF_COUNT.set(heap,base,new Long(r|s));
 	}
 
 	void release(long base) {
-		synchronized(heap) {
-			long r=((Long)Field.REF_COUNT.get(heap,base)).longValue();
-			long s=r&MemoryModel.model.pointerMinValue;
-			r=r^s;
-			s=0;
-			Field.REF_COUNT.set(heap,base,new Long(r|s));
-			if(r==0) free(base);
-		}
+		long r=((Long)Field.REF_COUNT.get(heap,base)).longValue();
+		long s=r&MemoryModel.model.pointerMinValue;
+		r=r^s;
+		s=0;
+		Field.REF_COUNT.set(heap,base,new Long(r|s));
+		if(r==0) free(base);
 	}
 
 	void incRefCount(long base) {
-		synchronized(heap) {
-			long r=((Long)Field.REF_COUNT.get(heap,base)).longValue();
-			long s=r&MemoryModel.model.pointerMinValue;
-			r=(r^s)+1;
-			Field.REF_COUNT.set(heap,base,new Long(r|s));
-		}
+		long r=((Long)Field.REF_COUNT.get(heap,base)).longValue();
+		long s=r&MemoryModel.model.pointerMinValue;
+		r=(r^s)+1;
+		Field.REF_COUNT.set(heap,base,new Long(r|s));
 	}
 
 	void decRefCount(long base) {
-		synchronized(heap) {
-			if(!heap.status(base)) return;
-			long r=((Long)Field.REF_COUNT.get(heap,base)).longValue();
-			long s=r&MemoryModel.model.pointerMinValue;
-			r=(r^s)-1;
-			Field.REF_COUNT.set(heap,base,new Long(r|s));
-			if(r==0 && !inuse(base)) free(base);
-		}
+		if(!heap.status(base)) return;
+		long r=((Long)Field.REF_COUNT.get(heap,base)).longValue();
+		long s=r&MemoryModel.model.pointerMinValue;
+		r=(r^s)-1;
+		Field.REF_COUNT.set(heap,base,new Long(r|s));
+		if(r==0 && !inuse(base)) free(base);
 	}
 
 	long refCount(long base) {
@@ -472,11 +454,11 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		return r^s;
 	}
 
-	Object get(long base, Field field) {
+	synchronized Object get(long base, Field field) {
 		return field.reference?getReference(base,field):field.get(heap,base);
 	}
 
-	void set(long base, Field field, Object value) {
+	synchronized void set(long base, Field field, Object value) {
 		if(field.reference) setReference(base,field,value);
 		else field.set(heap,base,value);
 	}
@@ -487,13 +469,11 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	}
 
 	void setReference(long base, Field field, Object value) {
-		synchronized(heap) {
-			long src=((Long)field.get(heap,base)).longValue();
-			long dst=value==null?0:value instanceof PersistentObject?((PersistentObject)value).base.longValue():writeObject(value);
-			if(dst!=0) incRefCount(dst);
-			field.set(heap,base,new Long(dst));
-			if(src!=0) decRefCount(src);
-		}
+		long src=((Long)field.get(heap,base)).longValue();
+		long dst=value==null?0:value instanceof PersistentObject?((PersistentObject)value).base.longValue():writeObject(value);
+		if(dst!=0) incRefCount(dst);
+		field.set(heap,base,new Long(dst));
+		if(src!=0) decRefCount(src);
 	}
 
 	PersistentClass getClass(long base) {
@@ -516,12 +496,12 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		Field.CLASS.set(heap,base,new Long(ptr));
 	}
 
-	Transaction getLock(long base) {
+	synchronized Transaction getLock(long base) {
 		long ptr=((Long)Field.LOCK.get(heap,base)).longValue();
 		return ptr==0?null:(Transaction)instantiate(ptr);
 	}
 
-	void setLock(long base, Transaction transaction) {
+	synchronized void setLock(long base, Transaction transaction) {
 		Field.LOCK.set(heap,base,new Long(transaction==null?0:transaction.base.longValue()));
 	}
 
@@ -618,7 +598,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 			return null;
 		}
 
-		public synchronized boolean readBoolean(long ptr) {
+		public boolean readBoolean(long ptr) {
 			try {
 				is.reset();
 				is.skip(ptr-this.ptr);
@@ -628,7 +608,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 			}
 		}
 
-		public synchronized byte readByte(long ptr) {
+		public byte readByte(long ptr) {
 			try {
 				is.reset();
 				is.skip(ptr-this.ptr);
@@ -638,7 +618,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 			}
 		}
 
-		public synchronized short readShort(long ptr) {
+		public short readShort(long ptr) {
 			try {
 				is.reset();
 				is.skip(ptr-this.ptr);
@@ -648,7 +628,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 			}
 		}
 
-		public synchronized char readChar(long ptr) {
+		public char readChar(long ptr) {
 			try {
 				is.reset();
 				is.skip(ptr-this.ptr);
@@ -658,7 +638,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 			}
 		}
 
-		public synchronized int readInt(long ptr) {
+		public int readInt(long ptr) {
 			try {
 				is.reset();
 				is.skip(ptr-this.ptr);
@@ -668,7 +648,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 			}
 		}
 
-		public synchronized long readLong(long ptr) {
+		public long readLong(long ptr) {
 			try {
 				is.reset();
 				is.skip(ptr-this.ptr);
@@ -678,7 +658,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 			}
 		}
 
-		public synchronized float readFloat(long ptr) {
+		public float readFloat(long ptr) {
 			try {
 				is.reset();
 				is.skip(ptr-this.ptr);
@@ -688,7 +668,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 			}
 		}
 
-		public synchronized double readDouble(long ptr) {
+		public double readDouble(long ptr) {
 			try {
 				is.reset();
 				is.skip(ptr-this.ptr);

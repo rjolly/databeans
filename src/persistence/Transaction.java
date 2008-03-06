@@ -108,7 +108,7 @@ public class Transaction extends PersistentObject {
 		setRollbackOnly(false);
 	}
 
-	synchronized void unlock() {
+	synchronized void abort() {
 		clear();
 		setRollbackOnly(true);
 	}

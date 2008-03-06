@@ -56,7 +56,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 		MemoryModel.model.writePointer(this,3*Long_SIZE,n?1:0);
 	}
 
-	public synchronized long alloc(int size) {
+	public long alloc(int size) {
 		long s;
 		Chunk c;
 		if((c=get(last,s=normalized(size)))==null) {
@@ -71,7 +71,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 		return (last=c.pos)+Integer_SIZE;
 	}
 
-	public synchronized long realloc(long ptr, int size) {
+	public long realloc(long ptr, int size) {
 		long p=alloc(size);
 		new Chunk(ptr-Integer_SIZE).copyInto(new Chunk(p-Integer_SIZE));
 		free(ptr);
@@ -79,21 +79,21 @@ public class FileHeap extends RandomAccessFile implements Heap {
 	}
 
 
-	public synchronized void free(long ptr) {
+	public void free(long ptr) {
 		Chunk c=new Chunk(ptr-Integer_SIZE);
 		allocatedSpace-=c.size;
 		c.free();
 	}
 
-	public synchronized boolean mark(long ptr, boolean n) {
+	public boolean mark(long ptr, boolean n) {
 		return new Chunk(ptr-Integer_SIZE).mark(n);
 	}
 
-	public synchronized boolean status(long ptr) {
+	public boolean status(long ptr) {
 		return new Chunk(ptr-Integer_SIZE).status();
 	}
 
-	public synchronized long allocatedSpace() {
+	public long allocatedSpace() {
 		return allocatedSpace;
 	}
 
@@ -101,11 +101,11 @@ public class FileHeap extends RandomAccessFile implements Heap {
 		return maxSpace;
 	}
 
-	public synchronized Iterator iterator() {
+	public Iterator iterator() {
 		return new FileHeapIterator();
 	}
 
-	public synchronized boolean readBoolean(long ptr) {
+	public boolean readBoolean(long ptr) {
 		try {
 			seek(ptr);
 			return readBoolean();
@@ -114,7 +114,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 		}
 	}
 
-	public synchronized byte readByte(long ptr) {
+	public byte readByte(long ptr) {
 		try {
 			seek(ptr);
 			return readByte();
@@ -123,7 +123,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 		}
 	}
 
-	public synchronized short readShort(long ptr) {
+	public short readShort(long ptr) {
 		try {
 			seek(ptr);
 			return readShort();
@@ -132,7 +132,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 		}
 	}
 
-	public synchronized char readChar(long ptr) {
+	public char readChar(long ptr) {
 		try {
 			seek(ptr);
 			return readChar();
@@ -141,7 +141,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 		}
 	}
 
-	public synchronized int readInt(long ptr) {
+	public int readInt(long ptr) {
 		try {
 			seek(ptr);
 			return readInt();
@@ -150,7 +150,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 		}
 	}
 
-	public synchronized long readLong(long ptr) {
+	public long readLong(long ptr) {
 		try {
 			seek(ptr);
 			return readLong();
@@ -159,7 +159,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 		}
 	}
 
-	public synchronized float readFloat(long ptr) {
+	public float readFloat(long ptr) {
 		try {
 			seek(ptr);
 			return readFloat();
@@ -168,7 +168,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 		}
 	}
 
-	public synchronized double readDouble(long ptr) {
+	public double readDouble(long ptr) {
 		try {
 			seek(ptr);
 			return readDouble();
@@ -177,7 +177,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 		}
 	}
 
-	public synchronized byte[] readBytes(long ptr) {
+	public byte[] readBytes(long ptr) {
 		byte b[]=new byte[realized(new Chunk(ptr-Integer_SIZE).size)];
 		try {
 			seek(ptr);
@@ -188,7 +188,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 		return b;
 	}
 
-	public synchronized void writeBoolean(long ptr, boolean v) {
+	public void writeBoolean(long ptr, boolean v) {
 		try {
 			seek(ptr);
 			writeBoolean(v);
@@ -197,7 +197,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 		}
 	}
 
-	public synchronized void writeByte(long ptr, int v) {
+	public void writeByte(long ptr, int v) {
 		try {
 			seek(ptr);
 			writeByte(v);
@@ -206,7 +206,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 		}
 	}
 
-	public synchronized void writeShort(long ptr, int v) {
+	public void writeShort(long ptr, int v) {
 		try {
 			seek(ptr);
 			writeShort(v);
@@ -215,7 +215,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 		}
 	}
 
-	public synchronized void writeChar(long ptr, int v) {
+	public void writeChar(long ptr, int v) {
 		try {
 			seek(ptr);
 			writeChar(v);
@@ -224,7 +224,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 		}
 	}
 
-	public synchronized void writeInt(long ptr, int v) {
+	public void writeInt(long ptr, int v) {
 		try {
 			seek(ptr);
 			writeInt(v);
@@ -233,7 +233,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 		}
 	}
 
-	public synchronized void writeLong(long ptr, long v) {
+	public void writeLong(long ptr, long v) {
 		try {
 			seek(ptr);
 			writeLong(v);
@@ -242,7 +242,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 		}
 	}
 
-	public synchronized void writeFloat(long ptr, float v) {
+	public void writeFloat(long ptr, float v) {
 		try {
 			seek(ptr);
 			writeFloat(v);
@@ -251,7 +251,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 		}
 	}
 
-	public synchronized void writeDouble(long ptr, double v) {
+	public void writeDouble(long ptr, double v) {
 		try {
 			seek(ptr);
 			writeDouble(v);
@@ -260,7 +260,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 		}
 	}
 
-	public synchronized void writeBytes(long ptr, byte b[]) {
+	public void writeBytes(long ptr, byte b[]) {
 		try {
 			seek(ptr);
 			write(b);
