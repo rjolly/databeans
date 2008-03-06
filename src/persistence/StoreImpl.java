@@ -239,7 +239,6 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 
 	void userGc() {
 		AccessController.checkPermission(new AdminPermission("gc"));
-		System.gc();
 		gc();
 	}
 
@@ -310,6 +309,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	public synchronized void gc() {
 		if(closed) return;
 		if(readOnly) return;
+		System.gc();
 		gc(true);
 	}
 
