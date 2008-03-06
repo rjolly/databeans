@@ -188,9 +188,7 @@ public class Connection implements Serializable {
 
 	PersistentObject get(Accessor accessor) {
 		Reference w=(Reference)cache.get(accessor);
-		PersistentObject o=w==null?null:(PersistentObject)w.get();
-		if(o==null) cache.remove(accessor);
-		return o;
+		return w==null?null:(PersistentObject)w.get();
 	}
 
 	Object execute(MethodCall call) {

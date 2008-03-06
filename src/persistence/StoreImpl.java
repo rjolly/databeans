@@ -150,9 +150,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 
 	PersistentObject get(Long base) {
 		Reference w=(Reference)cache.get(base);
-		PersistentObject o=w==null?null:(PersistentObject)w.get();
-		if(o==null) cache.remove(base);
-		return o;
+		return w==null?null:(PersistentObject)w.get();
 	}
 
 	synchronized void release(PersistentObject obj) {
