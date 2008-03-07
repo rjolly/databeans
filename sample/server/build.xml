@@ -9,12 +9,12 @@
 
   <target name="compile">
     <mkdir dir="classes"/>
-    <javac srcdir="src" destdir="classes" classpath="databeans.jar"/>
+    <javac srcdir="src" destdir="classes" source="1.4" target="1.4" classpath="databeans.jar"/>
   </target>
 
   <target name="compile-debug">
     <mkdir dir="classes"/>
-    <javac debug="on" srcdir="src" destdir="classes" classpath="databeans.jar"/>
+    <javac debug="on" srcdir="src" destdir="classes" source="1.4" target="1.4" classpath="databeans.jar"/>
   </target>
 
   <target name="run" depends="compile">
