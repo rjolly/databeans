@@ -14,22 +14,53 @@ public class PersistentObject implements Cloneable, Serializable {
 	transient Connection connection;
 	transient PersistentClass clazz;
 	transient StoreImpl store;
-	transient Long base;
+	transient long base;
 
 	public void init() {}
 
 	static PersistentObject newInstance(long base, PersistentClass clazz, StoreImpl store) {
+		PersistentObject obj=clazz.newInstance();
+		obj.init(base,clazz,store);
+		return obj;
+	}
+
+	void init(long base, PersistentClass clazz, StoreImpl store) {
+		this.base=base;
+		this.clazz=clazz;
+		this.store=store;
 		try {
-			PersistentObject obj=clazz.newInstance();
-			obj.base=new Long(base);
-			obj.clazz=clazz;
-			obj.store=store;
-			obj.accessor=obj.createAccessor();
-			obj.connection=store.systemConnection;
-			return obj;
+			accessor=createAccessor();
+			connection=store.systemConnection;
 		} catch (RemoteException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	static PersistentObject newInstance(long base) {
+		PersistentObject obj=new PersistentObject();
+		obj.init(base);
+		return obj;
+	}
+
+	void init(long base) {
+		this.base=base;
+		accessor=new persistence.Accessor() {
+			public long base() {
+				return PersistentObject.this.base;
+			}
+
+			public Store store() throws RemoteException {
+				return PersistentObject.this.store;
+			}
+
+			public int hashCode() {
+				return new Long(PersistentObject.this.base).hashCode();
+			}
+
+			public boolean equals(Object obj) {
+				return obj instanceof Accessor && PersistentObject.this.base==((Accessor)obj).object().base;
+			}
+		};
 	}
 
 	protected Accessor createAccessor() throws RemoteException {
@@ -38,6 +69,10 @@ public class PersistentObject implements Cloneable, Serializable {
 
 	protected class Accessor extends UnicastRemoteObject implements persistence.Accessor {
 		public Accessor() throws RemoteException {}
+
+		PersistentObject object() {
+			return PersistentObject.this;
+		}
 
 		Object call(String method, Class types[], Object args[]) {
 			try {
@@ -56,12 +91,12 @@ public class PersistentObject implements Cloneable, Serializable {
 		}
 
 		Object get(Field field) {
-			return store.get(base.longValue(),field);
+			return store.get(base,field);
 		}
 
 		synchronized Object set(Field field, Object value) {
 			Object obj=get(field);
-			store.set(base.longValue(),field,value);
+			store.set(base,field,value);
 			return obj;
 		}
 
@@ -72,7 +107,7 @@ public class PersistentObject implements Cloneable, Serializable {
 			else {
 				t=getLock(TIMEOUT);
 				if(t==null) setLock(transaction);
-				else throw new PersistentException(PersistentObject.this+" locked by "+t);
+				else throw new PersistentException(object()+" locked by "+t);
 			}
 		}
 
@@ -91,18 +126,18 @@ public class PersistentObject implements Cloneable, Serializable {
 			} catch (InterruptedException e) {
 				throw new RuntimeException(e);
 			}
-			return store.getLock(base.longValue());
+			return store.getLock(base);
 		}
 
 		void setLock(Transaction transaction) {
-			store.setLock(base.longValue(),transaction);
+			store.setLock(base,transaction);
 		}
 
 		synchronized void close() throws RemoteException {
 			UnicastRemoteObject.unexportObject(this,true);
 		}
 
-		public final Long base() {
+		public final long base() {
 			return base;
 		}
 
@@ -115,33 +150,49 @@ public class PersistentObject implements Cloneable, Serializable {
 		}
 
 		public int persistentHashCode() {
-			return base.hashCode();
+			return hashCode();
+		}
+
+		public final int hashCode() {
+			return new Long(base).hashCode();
 		}
 
 		public boolean persistentEquals(PersistentObject obj) {
-			return base.equals(obj.base);
+			return equals(obj.accessor);
+		}
+
+		public final boolean equals(Object obj) {
+			return this == obj || (obj instanceof Accessor && equals((Accessor)obj));
+		}
+
+		boolean equals(Accessor obj) {
+			return base==obj.object().base;
 		}
 
 		public String persistentToString() {
-			return clazz.name()+"@"+Long.toHexString(base.longValue());
+			return toString();
+		}
+
+		public final String toString() {
+			return clazz.name()+"@"+Long.toHexString(base);
 		}
 
 		public PersistentObject persistentClone() {
-			return (PersistentObject)clone();
+			return ((Accessor)clone()).object();
 		}
 
 		public synchronized final Object clone() {
-			PersistentObject obj=store.create(clazz);
+			Accessor obj=(Accessor)store.create(clazz).accessor;
 			Iterator t=clazz.fieldIterator();
 			while(t.hasNext()) {
 				Field field=(Field)t.next();
-				((Accessor)obj.accessor).set(field,get(field));
+				obj.set(field,get(field));
 			}
 			return obj;
 		}
 
 		protected final void finalize() {
-			store.release(PersistentObject.this);
+			store.release(object());
 		}
 	}
 
@@ -244,7 +295,7 @@ public class PersistentObject implements Cloneable, Serializable {
 		accessor=null;
 	}
 
-	Long base() {
+	long base() {
 		try {
 			return accessor.base();
 		} catch (RemoteException e) {
@@ -271,7 +322,7 @@ public class PersistentObject implements Cloneable, Serializable {
 	}
 
 	public boolean equals(Object obj) {
-		return obj instanceof PersistentObject?equals((PersistentObject)obj):false;
+		return this == obj || (obj instanceof PersistentObject && equals((PersistentObject)obj));
 	}
 
 	boolean equals(PersistentObject obj) {

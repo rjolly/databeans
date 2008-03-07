@@ -73,7 +73,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 
 	void createSystem() {
 		system=(PersistentSystem)systemConnection.create(PersistentSystem.class);
-		incRefCount(boot=system.base.longValue());
+		incRefCount(boot=system.base);
 		heap.setBoot(boot);
 	}
 
@@ -99,7 +99,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 
 	void updateClasses() {
 		for(Iterator it=classes.values().iterator();it.hasNext();) {
-			if(refCount(((PersistentClass)it.next()).base.longValue())==1) it.remove();
+			if(refCount(((PersistentClass)it.next()).base)==1) it.remove();
 		}
 	}
 
@@ -130,18 +130,18 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	PersistentObject instantiate(long base) {
 		hold(base);
 		synchronized(cache) {
-			PersistentObject o=get(new Long(base));
+			PersistentObject o=get(PersistentObject.newInstance(base).accessor);
 			return o==null?cache(selfClass(base)?PersistentClass.newInstance(base,this):PersistentObject.newInstance(base,getClass(base),this)):o;
 		}
 	}
 
 	PersistentObject cache(PersistentObject obj) {
-		cache.put(obj.base,new WeakReference(obj));
+		cache.put(obj.accessor,new WeakReference(obj));
 		return obj;
 	}
 
-	PersistentObject get(Long base) {
-		Reference w=(Reference)cache.get(base);
+	PersistentObject get(Accessor accessor) {
+		Reference w=(Reference)cache.get(accessor);
 		return w==null?null:(PersistentObject)w.get();
 	}
 
@@ -150,10 +150,10 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		if(readOnly) return;
 		PersistentObject o;
 		synchronized(cache) {
-			o=get(obj.base);
-			if(o==obj) cache.remove(obj.base);
+			o=get(obj.accessor);
+			if(o==obj) cache.remove(obj.accessor);
 		}
-		if(o==null || o==obj) release(obj.base.longValue());
+		if(o==null || o==obj) release(obj.base);
 	}
 
 	MethodCall attach(MethodCall call) {
@@ -174,7 +174,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	PersistentObject attach(PersistentObject obj) {
 		if(!equals(obj.store())) throw new PersistentException("not the same store");
 		synchronized(cache) {
-			return get(obj.base());
+			return get(PersistentObject.newInstance(obj.base()).accessor);
 		}
 	}
 
@@ -287,7 +287,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 			((RemoteConnectionImpl)it.next()).close();
 		}
 		for(Iterator it=cache.keySet().iterator();it.hasNext();it.remove()) {
-			close((Long)it.next());
+			close(((PersistentObject.Accessor)it.next()).object());
 		}
 		((RemoteConnectionImpl)systemConnection.connection).close();
 		systemConnection.close();
@@ -295,15 +295,9 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		closed=true;
 	}
 
-	void close(Long base) throws RemoteException {
-		PersistentObject o;
-		synchronized(cache) {
-			o=get(base);
-		}
-		if(o!=null) {
-			((PersistentObject.Accessor)o.accessor).close();
-			o.close();
-		}
+	void close(PersistentObject obj) throws RemoteException {
+		((PersistentObject.Accessor)obj.accessor).close();
+		obj.close();
 	}
 
 	public synchronized void gc() {
@@ -349,7 +343,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		if(heap.mark(base,true)) return;
 		PersistentClass c=getClass(base);
 		if(c!=null) {
-			mark(c.base.longValue());
+			mark(c.base);
 			Iterator t=c.fieldIterator();
 			while(t.hasNext()) {
 				Field field=(Field)t.next();
@@ -382,7 +376,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		PersistentClass c=getClass(patch,base);
 		if(c!=null) {
 //			Field.CLASS.set(patch,base,new Long(0));
-			decRefCount(c.base.longValue());
+			decRefCount(c.base);
 			Iterator t=c.fieldIterator();
 			while(t.hasNext()) {
 				Field field=(Field)t.next();
@@ -470,7 +464,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 
 	void setReference(long base, Field field, Object value) {
 		long src=((Long)field.get(heap,base)).longValue();
-		long dst=value==null?0:value instanceof PersistentObject?((PersistentObject)value).base.longValue():writeObject(value);
+		long dst=value==null?0:value instanceof PersistentObject?((PersistentObject)value).base:writeObject(value);
 		if(dst!=0) incRefCount(dst);
 		field.set(heap,base,new Long(dst));
 		if(src!=0) decRefCount(src);
@@ -496,7 +490,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	}
 
 	void setClass(long base, PersistentClass clazz) {
-		long ptr=clazz.base==null?base:clazz.base.longValue();
+		long ptr=clazz.base==0?base:clazz.base;
 		incRefCount(ptr);
 		Field.CLASS.set(heap,base,new Long(ptr));
 	}
@@ -507,7 +501,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	}
 
 	synchronized void setLock(long base, Transaction transaction) {
-		Field.LOCK.set(heap,base,new Long(transaction==null?0:transaction.base.longValue()));
+		Field.LOCK.set(heap,base,new Long(transaction==null?0:transaction.base));
 	}
 
 	Object readObject(long base) {

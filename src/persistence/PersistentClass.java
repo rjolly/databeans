@@ -51,7 +51,7 @@ public class PersistentClass extends PersistentObject {
 		public String persistentToString() {
 			StringBuffer s=new StringBuffer();
 			String fields[]=getFields().split(";");
-			s.append(Long.toHexString(base.longValue()));
+			s.append(Long.toHexString(base));
 			s.append("[");
 			for(int i=0;i<fields.length;i++) s.append((i==0?"":", ")+fields[i]);
 			s.append("]");

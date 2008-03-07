@@ -27,7 +27,7 @@ public class Transaction extends PersistentObject {
 		public Accessor() throws RemoteException {}
 
 		public String persistentToString() {
-			return Long.toHexString(base.longValue())+"("+getClient()+")";
+			return Long.toHexString(base)+"("+getClient()+")";
 		}
 	}
 
@@ -61,8 +61,8 @@ public class Transaction extends PersistentObject {
 		if(isRollbackOnly()) throw new PersistentException("rollback only");
 		Array pair;
 		Map map=getPairs();
-//		Long base=new Long(obj.base.longValue());
-		Number base=MemoryModel.model.toNumber(obj.base.longValue());
+//		Long base=new Long(obj.base);
+		Number base=MemoryModel.model.toNumber(obj.base);
 		if(map.containsKey(base)) pair=(Array)map.get(base);
 		else {
 			pair=(Array)create(new Object[] {obj,obj.clone()});
