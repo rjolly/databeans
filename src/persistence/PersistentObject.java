@@ -39,10 +39,6 @@ public class PersistentObject implements Cloneable, Serializable {
 	protected class Accessor extends UnicastRemoteObject implements persistence.Accessor {
 		public Accessor() throws RemoteException {}
 
-		PersistentObject object() {
-			return PersistentObject.this;
-		}
-
 		Object call(String method, Class types[], Object args[]) {
 			try {
 				return getClass().getMethod(method,types).invoke(this,args);
@@ -76,7 +72,7 @@ public class PersistentObject implements Cloneable, Serializable {
 			else {
 				t=getLock(TIMEOUT);
 				if(t==null) setLock(transaction);
-				else throw new PersistentException(object()+" locked by "+t);
+				else throw new PersistentException(PersistentObject.this+" locked by "+t);
 			}
 		}
 
@@ -131,17 +127,21 @@ public class PersistentObject implements Cloneable, Serializable {
 		}
 
 		public PersistentObject persistentClone() {
-			return ((Accessor)clone()).object();
+			return (PersistentObject)clone();
 		}
 
 		public synchronized final Object clone() {
-			Accessor obj=(Accessor)store.create(clazz).accessor;
+			PersistentObject obj=store.create(clazz);
 			Iterator t=clazz.fieldIterator();
 			while(t.hasNext()) {
 				Field field=(Field)t.next();
-				obj.set(field,get(field));
+				((Accessor)obj.accessor).set(field,get(field));
 			}
 			return obj;
+		}
+
+		protected final void finalize() {
+			store.release(PersistentObject.this);
 		}
 	}
 
@@ -287,9 +287,5 @@ public class PersistentObject implements Cloneable, Serializable {
 	public Object clone() {
 		return execute(
 			new MethodCall("persistentClone",new Class[] {},new Object[] {}));
-	}
-
-	protected final void finalize() {
-		store.release(this);
 	}
 }

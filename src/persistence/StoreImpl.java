@@ -465,7 +465,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 
 	Object getReference(long base, Field field) {
 		long ptr=((Long)field.get(heap,base)).longValue();
-		return ptr==0?null:getClass(ptr)==null?readObject(ptr):instantiate(ptr);
+		return ptr==0?null:flat(ptr)?readObject(ptr):instantiate(ptr);
 	}
 
 	void setReference(long base, Field field, Object value) {
@@ -488,6 +488,11 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	boolean selfClass(long base) {
 		long ptr=((Long)Field.CLASS.get(heap,base)).longValue();
 		return ptr==base;
+	}
+
+	boolean flat(long base) {
+		long ptr=((Long)Field.CLASS.get(heap,base)).longValue();
+		return ptr==0;
 	}
 
 	void setClass(long base, PersistentClass clazz) {
