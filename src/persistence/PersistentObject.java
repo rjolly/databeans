@@ -107,7 +107,7 @@ public class PersistentObject implements Cloneable, Serializable {
 			else {
 				t=getLock(TIMEOUT);
 				if(t==null) setLock(transaction);
-				else throw new PersistentException(object()+" locked by "+t);
+				else throw new PersistentException(this+" locked by "+t);
 			}
 		}
 
@@ -165,8 +165,8 @@ public class PersistentObject implements Cloneable, Serializable {
 			return this == obj || (obj instanceof Accessor && equals((Accessor)obj));
 		}
 
-		boolean equals(Accessor obj) {
-			return base==obj.object().base;
+		boolean equals(Accessor accessor) {
+			return base==accessor.object().base;
 		}
 
 		public String persistentToString() {
