@@ -192,7 +192,7 @@ public class PersistentObject implements Cloneable, Serializable {
 		}
 
 		protected final void finalize() {
-			store.release(object());
+			store.release(PersistentObject.this);
 		}
 	}
 
