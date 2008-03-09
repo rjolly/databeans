@@ -207,6 +207,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	}
 
 	void deleteUser(String username) {
+		if(username.equals("admin")) throw new PersistentException("can't delete admin user");
 		AccessController.checkPermission(new AdminPermission("deleteUser"));
 		Map users=system.getUsers();
 		synchronized(users) {
