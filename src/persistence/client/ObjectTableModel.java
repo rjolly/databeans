@@ -15,12 +15,21 @@ public class ObjectTableModel extends AbstractTableModel {
 
 	public ObjectTableModel(Object object) {
 		this.object=object;
+		init();
+	}
+
+	void init() {
 		if(object instanceof PersistentObject) {
 			PersistentObject obj=(PersistentObject)object;
 			PersistentClass clazz=obj.persistentClass();
 			String str=clazz.getFields();
 			fields=str.length()==0?new String[0]:str.split(";");
 		} else fields=new String[0];
+	}
+
+	void reload() {
+		init();
+		fireTableDataChanged();
 	}
 
 	public int getColumnCount() {
@@ -77,7 +86,10 @@ class ArrayTableModel extends ObjectTableModel {
 
 	public ArrayTableModel(Array array) {
 		super(array);
-		this.array=(Array)object;
+	}
+
+	void init() {
+		array=(Array)object;
 	}
 
 	public int getRowCount() {
@@ -116,7 +128,10 @@ class ListTableModel extends ObjectTableModel {
 
 	public ListTableModel(List list) {
 		super(list);
-		this.list=(List)object;
+	}
+
+	void init() {
+		list=(List)object;
 	}
 
 	public int getRowCount() {
@@ -156,7 +171,10 @@ class MapTableModel extends ObjectTableModel {
 
 	public MapTableModel(Map map) {
 		super(map);
-		this.map=(Map)object;
+	}
+
+	void init() {
+		map=(Map)object;
 		keys=map.keySet().toArray();
 	}
 
