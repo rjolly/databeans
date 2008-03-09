@@ -179,6 +179,11 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		}
 	}
 
+	void abortTransaction(Transaction transaction) {
+		AccessController.checkPermission(new AdminPermission("abortTransction"));
+		transaction.abort();
+	}
+
 	void changePassword(String username, String oldPassword, String newPassword) {
 		if(oldPassword==null) AccessController.checkPermission(new AdminPermission("changePassword"));
 		Map users=system.getUsers();
@@ -273,9 +278,9 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	}
 
 	Transaction getTransaction(String client) {
-		Transaction trans=(Transaction)systemConnection.create(Transaction.class,new Class[] {String.class},new Object[] {client});
-		system.getTransactions().add(trans);
-		return trans;
+		Transaction t=(Transaction)systemConnection.create(Transaction.class,new Class[] {String.class},new Object[] {client});
+		system.getTransactions().add(t);
+		return t;
 	}
 
 	synchronized void release(Transaction transaction, Subject subject) {

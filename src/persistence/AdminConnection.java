@@ -11,6 +11,14 @@ public class AdminConnection extends Connection {
 		connection=(RemoteAdminConnection)super.connection;
 	}
 
+	public void abortTransaction(Transaction transaction) {
+		try {
+			connection.abortTransaction(transaction);
+		} catch (RemoteException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	public void changePassword(String username, String password) {
 		changePassword(username,null,password);
 	}
