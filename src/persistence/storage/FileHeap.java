@@ -7,6 +7,8 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 public class FileHeap extends RandomAccessFile implements Heap {
+	static final float lowWater=0.75f;
+	static final float highWater=0.9f;
 	static final int Long_SIZE=MemoryModel.model.pointerSize;
 	static final int Integer_SIZE=4;
 	static final long OVERHEAD=normalized(0);
@@ -17,6 +19,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 	long maxSpace;
 	long minSpace=4*Long_SIZE;
 	long allocatedSpace=minSpace;
+	boolean trigger=true;
 	Collector collector;
 
 	public FileHeap(String name, Collector collector) throws FileNotFoundException {
@@ -59,12 +62,15 @@ public class FileHeap extends RandomAccessFile implements Heap {
 	public long alloc(int size) {
 		long s;
 		Chunk c;
+		if(trigger && allocatedSpace>highWater*maxSpace) {
+			trigger=false;
+			collector.gc();
+		} else if(allocatedSpace<lowWater*maxSpace) {
+			trigger=true;
+		}
 		if((c=get(last,s=normalized(size)))==null) {
 			extend();
-			if((c=get(last,s))==null) {
-				collector.gc();
-				if((c=get(last,s))==null) throw new StorageException("heap space exhausted");
-			}
+			if((c=get(last,s))==null) throw new StorageException("heap space exhausted");
 		}
 		c=c.alloc(s);
 		allocatedSpace+=c.size;
