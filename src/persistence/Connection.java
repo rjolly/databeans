@@ -176,14 +176,17 @@ public class Connection implements Serializable {
 		cache();
 		synchronized(cache) {
 			PersistentObject o=get(obj.accessor);
-			return o==null?cache(obj):o;
+			if(o==null) {
+				obj.connection=this;
+				cache(o=obj);
+			}
+			return o;
 		}
 	}
 
-	PersistentObject cache(PersistentObject obj) {
-		obj.connection=this;
+	void cache(PersistentObject obj) {
+		cache.remove(obj.accessor);
 		cache.put(obj.accessor,new WeakReference(obj));
-		return obj;
 	}
 
 	PersistentObject get(Accessor accessor) {

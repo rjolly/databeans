@@ -7,11 +7,13 @@ import java.io.IOException;
 public class MemoryModel {
 	public static final MemoryModel model=new MemoryModel(64);
 	public final int pointerSize;
-	public final long pointerMinValue;
+	public final int lastByteShift;
+	public final long lastByteMask;
 
 	private MemoryModel(int n) {
 		pointerSize=n>>3;
-		pointerMinValue=pointerSize==4?Integer.MIN_VALUE:Long.MIN_VALUE;
+		lastByteShift=n-8;
+		lastByteMask=0xffl<<lastByteShift;
 	}
 
 	public long readPointer(Heap heap, long ptr) {

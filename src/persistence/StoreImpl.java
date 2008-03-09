@@ -83,12 +83,20 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	}
 
 	synchronized void instantiate() {
+		release();
 		system=(PersistentSystem)instantiate(boot);
 		classes=system.getClasses();
 		if(readOnly) return;
 		rollback();
-		gc(false);
 		updateClasses();
+	}
+
+	void release() {
+		Iterator t=heap.iterator();
+		while(t.hasNext()) {
+			long ptr=((Long)t.next()).longValue();
+			if(heap.status(ptr)) clearRefCount(ptr,true);
+		}
 	}
 
 	void rollback() {
@@ -121,23 +129,28 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		long base=heap.alloc(b.length);
 		heap.writeBytes(base,b);
 		setClass(base,clazz);
-		hold(base);
 		synchronized(cache) {
-			return cache(PersistentObject.newInstance(base,clazz,this));
+			PersistentObject o;
+			incRefCount(base,true);
+			cache(o=PersistentObject.newInstance(base,clazz,this));
+			return o;
 		}
 	}
 
 	PersistentObject instantiate(long base) {
-		hold(base);
 		synchronized(cache) {
 			PersistentObject o=get(PersistentObject.newInstance(base).accessor);
-			return o==null?cache(selfClass(base)?PersistentClass.newInstance(base,this):PersistentObject.newInstance(base,getClass(base),this)):o;
+			if(o==null) {
+				incRefCount(base,true);
+				cache(o=selfClass(base)?PersistentClass.newInstance(base,this):PersistentObject.newInstance(base,getClass(base),this));
+			}
+			return o;
 		}
 	}
 
-	PersistentObject cache(PersistentObject obj) {
+	void cache(PersistentObject obj) {
+		cache.remove(obj.accessor);
 		cache.put(obj.accessor,new WeakReference(obj));
-		return obj;
 	}
 
 	PersistentObject get(Accessor accessor) {
@@ -148,12 +161,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	synchronized void release(PersistentObject obj) {
 		if(closed) return;
 		if(readOnly) return;
-		PersistentObject o;
-		synchronized(cache) {
-			o=get(obj.accessor);
-			if(o==obj) cache.remove(obj.accessor);
-		}
-		if(o==null || o==obj) release(obj.base);
+		decRefCount(obj.base,true);
 	}
 
 	MethodCall attach(MethodCall call) {
@@ -304,22 +312,18 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		if(closed) return;
 		if(readOnly) return;
 		System.gc();
-		gc(true);
-	}
-
-	void gc(boolean keep) {
-		mark(keep);
+		mark();
 		mark(boot);
 		sweep();
 	}
 
-	void mark(boolean keep) {
+	void mark() {
 		Iterator t=heap.iterator();
 		while(t.hasNext()) {
 			long ptr=((Long)t.next()).longValue();
 			if(heap.status(ptr)) {
 				markClass(ptr);
-				if(keep && inuse(ptr)) mark(ptr);
+				if(refCount(ptr,true)>0) mark(ptr);
 			}
 		}
 	}
@@ -403,49 +407,57 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		}
 	}
 
-	boolean inuse(long base) {
-		long r=((Long)Field.REF_COUNT.get(heap,base)).longValue();
-		long s=r&MemoryModel.model.pointerMinValue;
-		return s==MemoryModel.model.pointerMinValue;
+	long refCount(long base) {
+		return refCount(base,false);
 	}
 
-	void hold(long base) {
+	long refCount(long base, boolean memory) {
+		int n=MemoryModel.model.lastByteShift;
 		long r=((Long)Field.REF_COUNT.get(heap,base)).longValue();
-		long s=r&MemoryModel.model.pointerMinValue;
-		r=r^s;
-		s=MemoryModel.model.pointerMinValue;
-		Field.REF_COUNT.set(heap,base,new Long(r|s));
-	}
-
-	void release(long base) {
-		long r=((Long)Field.REF_COUNT.get(heap,base)).longValue();
-		long s=r&MemoryModel.model.pointerMinValue;
-		r=r^s;
-		s=0;
-		Field.REF_COUNT.set(heap,base,new Long(r|s));
-		if(r==0) free(base);
+		long s=r&MemoryModel.model.lastByteMask;
+		return memory?s>>>n:r^s;
 	}
 
 	void incRefCount(long base) {
+		incRefCount(base,false);
+	}
+
+	void incRefCount(long base, boolean memory) {
+		int n=MemoryModel.model.lastByteShift;
 		long r=((Long)Field.REF_COUNT.get(heap,base)).longValue();
-		long s=r&MemoryModel.model.pointerMinValue;
-		r=(r^s)+1;
-		Field.REF_COUNT.set(heap,base,new Long(r|s));
+		long s=r&MemoryModel.model.lastByteMask;
+		r=r^s;
+		if(memory) s=((s>>>n)+1)<<n;
+		else r++;
+		r=r|s;
+		Field.REF_COUNT.set(heap,base,new Long(r));
 	}
 
 	void decRefCount(long base) {
 		if(!heap.status(base)) return;
-		long r=((Long)Field.REF_COUNT.get(heap,base)).longValue();
-		long s=r&MemoryModel.model.pointerMinValue;
-		r=(r^s)-1;
-		Field.REF_COUNT.set(heap,base,new Long(r|s));
-		if(r==0 && !inuse(base)) free(base);
+		decRefCount(base,false);
 	}
 
-	long refCount(long base) {
+	void decRefCount(long base, boolean memory) {
+		int n=MemoryModel.model.lastByteShift;
 		long r=((Long)Field.REF_COUNT.get(heap,base)).longValue();
-		long s=r&MemoryModel.model.pointerMinValue;
-		return r^s;
+		long s=r&MemoryModel.model.lastByteMask;
+		r=r^s;
+		if(memory) s=((s>>>n)-1)<<n;
+		else r--;
+		r=r|s;
+		Field.REF_COUNT.set(heap,base,new Long(r));
+		if(r==0) free(base);
+	}
+
+	void clearRefCount(long base, boolean memory) {
+		int n=MemoryModel.model.lastByteShift;
+		long r=((Long)Field.REF_COUNT.get(heap,base)).longValue();
+		long s=r&MemoryModel.model.lastByteMask;
+		r=r^s;
+		if(memory) s=0;
+		r=r|s;
+		Field.REF_COUNT.set(heap,base,new Long(r));
 	}
 
 	synchronized Object get(long base, Field field) {
@@ -479,6 +491,12 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		return ptr==0?null:(PersistentClass)instantiate(ptr);
 	}
 
+	void setClass(long base, PersistentClass clazz) {
+		long ptr=clazz.base==0?base:clazz.base;
+		incRefCount(ptr);
+		Field.CLASS.set(heap,base,new Long(ptr));
+	}
+
 	boolean selfClass(long base) {
 		long ptr=((Long)Field.CLASS.get(heap,base)).longValue();
 		return ptr==base;
@@ -487,12 +505,6 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	boolean flat(long base) {
 		long ptr=((Long)Field.CLASS.get(heap,base)).longValue();
 		return ptr==0;
-	}
-
-	void setClass(long base, PersistentClass clazz) {
-		long ptr=clazz.base==0?base:clazz.base;
-		incRefCount(ptr);
-		Field.CLASS.set(heap,base,new Long(ptr));
 	}
 
 	synchronized Transaction getLock(long base) {
