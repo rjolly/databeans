@@ -88,7 +88,6 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		classes=system.getClasses();
 		if(readOnly) return;
 		rollback();
-		updateClasses();
 	}
 
 	void release() {
@@ -102,12 +101,6 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	void rollback() {
 		for(Iterator it=system.getTransactions().iterator();it.hasNext();it.remove()) {
 			((Transaction)it.next()).rollback(null);
-		}
-	}
-
-	void updateClasses() {
-		for(Iterator it=classes.values().iterator();it.hasNext();) {
-			if(refCount(((PersistentClass)it.next()).base)==1) it.remove();
 		}
 	}
 
@@ -248,6 +241,13 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	void userGc() {
 		AccessController.checkPermission(new AdminPermission("gc"));
 		gc();
+		updateClasses();
+	}
+
+	void updateClasses() {
+		for(Iterator it=classes.values().iterator();it.hasNext();) {
+			if(refCount(((PersistentClass)it.next()).base)==1) it.remove();
+		}
 	}
 
 	long allocatedSpace() {

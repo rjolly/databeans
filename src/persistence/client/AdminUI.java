@@ -229,8 +229,11 @@ public class AdminUI extends javax.swing.JFrame {
 	void refresh() {
 		AdminConnection conn=(AdminConnection)this.conn;
 		try {
-			jLabel8.setText(String.valueOf(conn.maxSpace()));
-			jLabel10.setText(String.valueOf(conn.allocatedSpace()));
+			long max=conn.maxSpace();
+			long value=conn.allocatedSpace();
+			jProgressBar1.setMaximum((int)max);
+			jProgressBar1.setValue((int)value);
+			jProgressBar1.setString(String.valueOf(value)+"/"+String.valueOf(max));
 		} catch (Exception e) {
 			error(e);
 		}
@@ -309,11 +312,8 @@ public class AdminUI extends javax.swing.JFrame {
                 jLabel11 = new javax.swing.JLabel();
                 jCheckBox6 = new javax.swing.JCheckBox();
                 jPanel3 = new javax.swing.JPanel();
-                jLabel7 = new javax.swing.JLabel();
-                jLabel8 = new javax.swing.JLabel();
-                jLabel9 = new javax.swing.JLabel();
-                jLabel10 = new javax.swing.JLabel();
                 jButton10 = new javax.swing.JButton();
+                jProgressBar1 = new javax.swing.JProgressBar();
                 jPanel4 = new javax.swing.JPanel();
                 jButton11 = new javax.swing.JButton();
                 jCheckBox2 = new javax.swing.JCheckBox();
@@ -617,14 +617,6 @@ public class AdminUI extends javax.swing.JFrame {
                         }
                 });
 
-                jLabel7.setText("Maximum space:");
-
-                jLabel8.setText("9223372036854775808");
-
-                jLabel9.setText("Allocated space:");
-
-                jLabel10.setText("9223372036854775808");
-
                 jButton10.setText("Gc");
                 jButton10.addActionListener(new java.awt.event.ActionListener() {
                         public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -632,37 +624,27 @@ public class AdminUI extends javax.swing.JFrame {
                         }
                 });
 
+                jProgressBar1.setStringPainted(true);
+
                 org.jdesktop.layout.GroupLayout jPanel3Layout = new org.jdesktop.layout.GroupLayout(jPanel3);
                 jPanel3.setLayout(jPanel3Layout);
                 jPanel3Layout.setHorizontalGroup(
                         jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                         .add(jPanel3Layout.createSequentialGroup()
-                                .add(16, 16, 16)
-                                .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
-                                        .add(jLabel7)
-                                        .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                                                .add(jButton10)
-                                                .add(jLabel9)))
-                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
-                                        .add(jLabel10, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                        .add(jLabel8, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                                .addContainerGap(283, Short.MAX_VALUE))
+                                .addContainerGap()
+                                .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                        .add(jProgressBar1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 542, Short.MAX_VALUE)
+                                        .add(jButton10))
+                                .addContainerGap())
                 );
                 jPanel3Layout.setVerticalGroup(
                         jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                         .add(jPanel3Layout.createSequentialGroup()
                                 .addContainerGap()
-                                .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                                        .add(jLabel7)
-                                        .add(jLabel8))
-                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                                        .add(jLabel9)
-                                        .add(jLabel10))
+                                .add(jProgressBar1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                                 .add(18, 18, 18)
                                 .add(jButton10)
-                                .addContainerGap(267, Short.MAX_VALUE))
+                                .addContainerGap(284, Short.MAX_VALUE))
                 );
 
                 jTabbedPane1.addTab("Memory", jPanel3);
@@ -860,16 +842,12 @@ public class AdminUI extends javax.swing.JFrame {
         private javax.swing.JDialog jDialog1;
         private javax.swing.JDialog jDialog2;
         private javax.swing.JLabel jLabel1;
-        private javax.swing.JLabel jLabel10;
         private javax.swing.JLabel jLabel11;
         private javax.swing.JLabel jLabel2;
         private javax.swing.JLabel jLabel3;
         private javax.swing.JLabel jLabel4;
         private javax.swing.JLabel jLabel5;
         private javax.swing.JLabel jLabel6;
-        private javax.swing.JLabel jLabel7;
-        private javax.swing.JLabel jLabel8;
-        private javax.swing.JLabel jLabel9;
         private javax.swing.JPanel jPanel1;
         private javax.swing.JPanel jPanel2;
         private javax.swing.JPanel jPanel3;
@@ -877,6 +855,7 @@ public class AdminUI extends javax.swing.JFrame {
         private javax.swing.JPasswordField jPasswordField1;
         private javax.swing.JPasswordField jPasswordField2;
         private javax.swing.JPasswordField jPasswordField3;
+        private javax.swing.JProgressBar jProgressBar1;
         private javax.swing.JScrollPane jScrollPane1;
         private javax.swing.JScrollPane jScrollPane2;
         private javax.swing.JScrollPane jScrollPane3;
