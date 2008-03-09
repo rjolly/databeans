@@ -250,8 +250,7 @@ public class AdminUI extends javax.swing.JFrame {
 		int row[]=jTable2.getSelectedRows();
 		try {
 			for(int i=0;i<row.length;i++) {
-				int n=row[i];
-				if(n>-1) conn.abortTransaction((Transaction)jTable2.getValueAt(n,0));
+				conn.abortTransaction((Transaction)jTable2.getValueAt(row[i],0));
 			}
 			refreshTransactions();
 		} catch (Exception e) {

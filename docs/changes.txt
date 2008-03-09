@@ -1,3 +1,12 @@
+Changes between 2.0rc16 and 2.0rc17:
+
++ heap made unsynchronized ; synchronization done at upper level (store)
++ fixed several leaks that showed up with more complex sample
++ heap space exhaust effectively triggers gc
++ transaction.abort()
++ sample : added a Company class
++ admin UI adjustments
+
 Changes between 2.0rc15 and 2.0rc16:
 
 + improved graphical admin UI, in executable jar file
