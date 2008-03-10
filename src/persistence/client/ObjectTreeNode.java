@@ -21,6 +21,10 @@ public class ObjectTreeNode implements TreeNode {
 		this.object=object;
 		this.name=name;
 		this.parent=parent;
+		init();
+	}
+
+	void init() {
 		if(object instanceof PersistentObject) {
 			PersistentObject obj=(PersistentObject)object;
 			PersistentClass clazz=obj.persistentClass();
@@ -110,7 +114,7 @@ public class ObjectTreeNode implements TreeNode {
 		if(object instanceof Array) return new ArrayTreeNode((Array)object,name,parent);
 		else if(object instanceof Map) return new MapTreeNode((Map)object,name,parent);
 		else if(object instanceof List) return new ListTreeNode((List)object,name,parent);
-		else if(object instanceof Collection) return node(new ArrayList((Collection)object),name,parent);
+		else if(object instanceof Collection) return new CollectionTreeNode((Collection)object,name,parent);
 		else return new ObjectTreeNode(object,name,parent);
 	}
 }
@@ -120,7 +124,10 @@ class ArrayTreeNode extends ObjectTreeNode {
 
 	public ArrayTreeNode(Array array, String name, TreeNode parent) {
 		super(array,name,parent);
-		this.array=(Array)object;
+	}
+
+	void init() {
+		array=(Array)object;
 	}
 
 	public Enumeration children() {
@@ -158,12 +165,15 @@ class ArrayTreeNode extends ObjectTreeNode {
 	}
 }
 
-class ListTreeNode extends ObjectTreeNode {
+class CollectionTreeNode extends ObjectTreeNode {
 	List list;
 
-	public ListTreeNode(List list, String name, TreeNode parent) {
-		super(list,name,parent);
-		this.list=(List)object;
+	public CollectionTreeNode(Collection collection, String name, TreeNode parent) {
+		super(collection,name,parent);
+	}
+
+	void init() {
+		list=new ArrayList((Collection)object);
 	}
 
 	public Enumeration children() {
@@ -201,13 +211,26 @@ class ListTreeNode extends ObjectTreeNode {
 	}
 }
 
+class ListTreeNode extends CollectionTreeNode {
+	public ListTreeNode(List list, String name, TreeNode parent) {
+		super(list,name,parent);
+	}
+
+	void init() {
+		list=(List)object;
+	}
+}
+
 class MapTreeNode extends ObjectTreeNode {
 	Map map;
 	Object keys[];
 
 	public MapTreeNode(Map map, String name, TreeNode parent) {
 		super(map,name,parent);
-		this.map=(Map)object;
+	}
+
+	void init() {
+		map=(Map)object;
 		keys=map.keySet().toArray();
 	}
 

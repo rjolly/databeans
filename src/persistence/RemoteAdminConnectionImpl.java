@@ -8,7 +8,7 @@ import javax.security.auth.Subject;
 
 class RemoteAdminConnectionImpl extends RemoteConnectionImpl implements RemoteAdminConnection {
 	RemoteAdminConnectionImpl(StoreImpl store, boolean readOnly, Subject subject) throws RemoteException {
-		super(store,Connection.TRANSACTION_NONE,readOnly,subject);
+		super(store,readOnly,subject);
 	}
 
 	public void abortTransaction(Transaction transaction) {

@@ -16,6 +16,10 @@ class RemoteConnectionImpl extends UnicastRemoteObject implements RemoteConnecti
 	boolean autoCommit;
 	Subject subject;
 
+	RemoteConnectionImpl(StoreImpl store, boolean readOnly, Subject subject) throws RemoteException {
+		this(store,Connection.TRANSACTION_NONE,readOnly,subject);
+	}
+
 	RemoteConnectionImpl(StoreImpl store, int level, boolean readOnly, Subject subject) throws RemoteException {
 		this.store=store;
 		this.level=level;

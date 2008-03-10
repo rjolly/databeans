@@ -10,26 +10,18 @@ import bsh.Interpreter;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Point;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.io.File;
 import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
-import javax.swing.event.TreeExpansionEvent;
-import javax.swing.event.TreeSelectionEvent;
-import javax.swing.event.TreeSelectionListener;
-import javax.swing.event.TreeWillExpandListener;
 import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.ExpandVetoException;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 import persistence.AdminConnection;
 import persistence.Connection;
 import persistence.Connections;
+import persistence.Password;
 import persistence.PersistentObject;
 import persistence.PersistentSystem;
 import persistence.Transaction;
@@ -41,9 +33,6 @@ import persistence.Transaction;
 public class AdminUI extends javax.swing.JFrame {
 	Connection conn;
 	DefaultTreeModel model=new DefaultTreeModel(null);
-	TransactionTableModel transactionModel;
-	ObjectTableModel userModel;
-	ObjectTableModel classModel;
 	Interpreter interpreter;
 
 	/** Creates new form AdminUI */
@@ -53,94 +42,11 @@ public class AdminUI extends javax.swing.JFrame {
 		jDialog2.pack();
 		jDialog3.pack();
 		jDialog4.pack();
-		jDialog5.pack();
-		jDialog6.pack();
 		jTree1.setModel(model);
 		jTree1.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
-		jTree1.addTreeSelectionListener(new TreeSelectionListener() {
-			public void valueChanged(TreeSelectionEvent e) {
-				ObjectTreeNode node = (ObjectTreeNode)jTree1.getLastSelectedPathComponent();
-				Object object = node==null?null:node.object;
-				int n = jSplitPane1.getDividerLocation();
-				if(object instanceof PersistentObject) {
-					jTable1.setModel(ObjectTableModel.model(object));
-					jSplitPane1.setRightComponent(jScrollPane3);
-				} else {
-					jTextArea1.setText(String.valueOf(object));
-					jSplitPane1.setRightComponent(jScrollPane2);
-				}
-				jSplitPane1.setDividerLocation(n);
-			}
-		});
-		jTree1.addTreeWillExpandListener(new TreeWillExpandListener() {
-			public void treeWillCollapse(TreeExpansionEvent event) throws ExpandVetoException {}
-
-			public void treeWillExpand(TreeExpansionEvent event) throws ExpandVetoException {
-				TreePath path=event.getPath();
-				model.reload((TreeNode)path.getLastPathComponent());
-				if(path.getPathCount()==1) jTree1.setSelectionRow(0);
-			}
-		});
-		jTable2.addMouseListener(new MouseAdapter() {
-			public void mousePressed(MouseEvent e) {
-				maybeShowPopup(e);
-			}
-
-			public void mouseReleased(MouseEvent e) {
-				maybeShowPopup(e);
-			}
-
-			private void maybeShowPopup(MouseEvent e) {
-				if (e.isPopupTrigger()) {
-					int m=jTable2.getSelectedRowCount();
-					if(m<2) {
-						int n=jTable2.rowAtPoint(e.getPoint());
-						if(n>-1) jTable2.setRowSelectionInterval(n,n);
-					}
-					transactionPopupMenu.show(e.getComponent(),
-					e.getX(), e.getY());
-				}
-			}
-		});
-		jTable3.addMouseListener(new MouseAdapter() {
-			public void mousePressed(MouseEvent e) {
-				maybeShowPopup(e);
-			}
-
-			public void mouseReleased(MouseEvent e) {
-				maybeShowPopup(e);
-			}
-
-			private void maybeShowPopup(MouseEvent e) {
-				if (e.isPopupTrigger()) {
-					int n=jTable3.rowAtPoint(e.getPoint());
-					jTable3.setRowSelectionInterval(n,n);
-					userPopupMenu.show(e.getComponent(),
-					e.getX(), e.getY());
-				}
-			}
-		});
-		jTable4.addMouseListener(new MouseAdapter() {
-			public void mousePressed(MouseEvent e) {
-				maybeShowPopup(e);
-			}
-
-			public void mouseReleased(MouseEvent e) {
-				maybeShowPopup(e);
-			}
-
-			private void maybeShowPopup(MouseEvent e) {
-				if (e.isPopupTrigger()) {
-					int n=jTable4.rowAtPoint(e.getPoint());
-					jTable4.setRowSelectionInterval(n,n);
-					classPopupMenu.show(e.getComponent(),
-					e.getX(), e.getY());
-				}
-			}
-		});
 		interpreter = new Interpreter( jConsole1 );
 		new Thread( interpreter ).start(); // start a thread to call the run() method
-		enableTabs(new boolean[] {false,false,false,false,false,false,false,true});
+		enableTabs(new boolean[] {false,false,false,false,true});
 	}
 
 	void setDialogLocation(Component dialog) {
@@ -188,32 +94,32 @@ public class AdminUI extends javax.swing.JFrame {
 		}
 	}
 
+	void refreshLevel() {
+		boolean admin=jCheckBox1.isSelected();
+		jComboBox1.setEnabled(!admin);
+		jComboBox1.setSelectedIndex(admin?0:1);
+	}
+
 	void open1() throws Exception {
 		boolean admin=jCheckBox1.isSelected();
 		String location=jTextField1.getText();
-		conn=admin?Connections.getAdminConnection(location):Connections.getConnection(location);
+		int level=jComboBox1.getSelectedIndex();
+		conn=admin?Connections.getAdminConnection(location):Connections.getConnection(location,level);
 	}
 
 	void open2() {
 		boolean admin=jCheckBox1.isSelected();
 		try {
-			PersistentSystem system=conn.system();
-			setRoot(system.root());
-			if(admin) {
-				setTransactions(system.getTransactions());
-				setUsers(system.getUsers());
-				setClasses(system.getClasses());
-			}
+			setSystem(conn.system());
 		} catch (Exception e) {
 			error(e);
 		}
+		enableTabs(new boolean[] {true,admin,admin,admin,true});
 		try {
 			interpreter.set("conn",conn);
 		} catch (bsh.EvalError e) {
 			error(e);
 		}
-		enableTabs(new boolean[] {true,admin,admin,admin,admin,admin,admin,true});
-		jDialog1.setVisible(false);
 	}
 
 	void close() {
@@ -222,107 +128,130 @@ public class AdminUI extends javax.swing.JFrame {
 		} catch (bsh.EvalError e) {
 			error(e);
 		}
+		enableTabs(new boolean[] {false,false,false,false,true});
 		try {
 			conn.close();
 		} catch (Exception e) {
 			error(e);
 		}
-		enableTabs(new boolean[] {false,false,false,false,false,false,false,true});
 	}
 
-	void setRoot(Object root) {
-		model.setRoot(ObjectTreeNode.node(root,"root"));
+	void select() {
+		ObjectTreeNode node = (ObjectTreeNode)jTree1.getLastSelectedPathComponent();
+		Object object = node==null?null:node.object;
+		int n = jSplitPane1.getDividerLocation();
+		if(object instanceof PersistentObject) {
+			jTable1.setModel(ObjectTableModel.model(object));
+			jSplitPane1.setRightComponent(jScrollPane3);
+		} else {
+			jTextArea1.setText(String.valueOf(object));
+			jSplitPane1.setRightComponent(jScrollPane2);
+		}
+		jSplitPane1.setDividerLocation(n);
+	}
+
+	void reload(TreePath path) {
+		model.reload((TreeNode)path.getLastPathComponent());
+		if(path.getPathCount()==1) jTree1.setSelectionRow(0);
+	}
+
+	void showPopup(Point point, Component component, int x, int y) {
+		int n=jTable1.rowAtPoint(point);
+		if(n<0) return;
+		jTable1.setRowSelectionInterval(n,n);
+		Object obj=jTable1.getValueAt(n, 1);
+		if(obj instanceof Transaction) jPopupMenu1.show(component,x,y);
+		else if(obj instanceof Password) jPopupMenu2.show(component,x,y);
+	}
+
+	void setSystem(PersistentSystem system) {
+		model.setRoot(ObjectTreeNode.node(system,"system"));
 		model.reload();
 		jTree1.setSelectionRow(0);
 	}
 
-	void setTransactions(List list) {
-		transactionModel=new TransactionTableModel(list);
-		jTable2.setModel(transactionModel);
+	void refreshTable() {
+		((ObjectTableModel)jTable1.getModel()).reload();
 	}
 
-	void refreshTransactions() {
-		transactionModel.reload();
+	String transaction() {
+		int n=jTable1.getSelectedRow();
+		return jTable1.getValueAt(n, 1).toString();
+	}
+
+	void willAbortTransaction() {
+		jTextField4.setText(transaction());
 	}
 
 	void abortTransaction() {
-		AdminConnection conn=(AdminConnection)this.conn;
-		int row[]=jTable2.getSelectedRows();
+		int n=jTable1.getSelectedRow();
 		try {
-			for(int i=0;i<row.length;i++) {
-				conn.abortTransaction((Transaction)jTable2.getValueAt(row[i],0));
-			}
-			refreshTransactions();
+			((AdminConnection)conn).abortTransaction((Transaction)jTable1.getValueAt(n,1));
+			refreshTable();
+			jDialog4.setVisible(false);
 		} catch (Exception e) {
 			error(e);
 		}
-	}
-
-	void setUsers(Map map) {
-		userModel=ObjectTableModel.model(map);
-		jTable3.setModel(userModel);
-	}
-
-	void refreshUsers() {
-		userModel.reload();
 	}
 
 	String user() {
-		int n=jTable3.getSelectedRow();
-		return (String)jTable3.getValueAt(n, 0);
+		int n=jTable1.getSelectedRow();
+		return (String)jTable1.getValueAt(n, 0);
 	}
 
-	void setClasses(Map map) {
-		classModel=ObjectTableModel.model(map);
-		jTable4.setModel(classModel);
+	void willAddUser() {
+		jTextField3.setEnabled(true);
+		jPasswordField1.setEnabled(true);
+		jPasswordField2.setEnabled(true);
+		jPasswordField3.setEnabled(false);
+		jCheckBox3.setEnabled(false);
+		jButton6.setText("Add user");
+		jDialog3.validate();
 	}
 
-	void refreshClasses() {
-		classModel.reload();
+	void willDeleteUser() {
+		jTextField3.setText(user());
+		jTextField3.setEnabled(false);
+		jPasswordField1.setEnabled(false);
+		jPasswordField2.setEnabled(false);
+		jPasswordField3.setEnabled(false);
+		jCheckBox3.setEnabled(false);
+		jButton6.setText("Delete user");
+		jDialog3.validate();
 	}
 
-	String fields() {
-		int n=jTable4.getSelectedRow();
-		return jTable4.getValueAt(n, 1).toString();
+	void willChangePassword() {
+		jTextField3.setText(user());
+		jTextField3.setEnabled(false);
+		jPasswordField1.setEnabled(true);
+		jPasswordField2.setEnabled(true);
+		jCheckBox3.setEnabled(true);
+		refreshOldPassword();
+		jButton6.setText("Change password");
+		jDialog3.validate();
 	}
 
-	void export() {
-		AdminConnection conn=(AdminConnection)this.conn;
-		boolean overwrite=jCheckBox4.isSelected();
-		String name=jTextField2.getText();
-		if(overwrite || !new File(name).exists()) try {
-			conn.export(name);
-			jCheckBox4.setSelected(false);
-		} catch (Exception e) {
-			error(e);
-		}
+	void refreshOldPassword() {
+		jPasswordField3.setEnabled(jCheckBox3.isSelected());
 	}
 
-	void inport() {
-		AdminConnection conn=(AdminConnection)this.conn;
-		boolean confirm=jCheckBox5.isSelected();
-		String name=jTextField2.getText();
-		if(confirm) try {
-			conn.inport(name);
-			model.reload();
-			jTree1.setSelectionRow(0);
-			jCheckBox5.setSelected(false);
-		} catch (Exception e) {
-			error(e);
-		}
+	void userAction(String action) {
+		if(action.equals("Add user")) addUser();
+		else if(action.equals("Delete user")) deleteUser();
+		else if(action.equals("Change password")) changePassword();
+		
 	}
 
 	void addUser() {
-		AdminConnection conn=(AdminConnection)this.conn;
-		String name=jTextField5.getText();
-		char pwd[]=jPasswordField6.getPassword();
-		char conf[]=jPasswordField7.getPassword();
-		jPasswordField6.setText("");
-		jPasswordField7.setText("");
+		String name=jTextField3.getText();
+		char pwd[]=jPasswordField1.getPassword();
+		char conf[]=jPasswordField2.getPassword();
+		jPasswordField1.setText("");
+		jPasswordField2.setText("");
 		try {
 			if(!Arrays.equals(pwd, conf)) throw new Exception("passwords don't match");
-			conn.addUser(name, String.valueOf(pwd));
-			refreshUsers();
+			((AdminConnection)conn).addUser(name, String.valueOf(pwd));
+			refreshTable();
 			jDialog3.setVisible(false);
 		} catch (Exception e) {
 			error(e);
@@ -330,43 +259,74 @@ public class AdminUI extends javax.swing.JFrame {
 	}
 
 	void deleteUser() {
-		AdminConnection conn=(AdminConnection)this.conn;
-		String name=jTextField6.getText();
+		String name=jTextField3.getText();
 		try {
-			conn.deleteUser(name);
-			refreshUsers();
-			jDialog5.setVisible(false);
+			((AdminConnection)conn).deleteUser(name);
+			refreshTable();
+			jDialog3.setVisible(false);
 		} catch (Exception e) {
 			error(e);
 		}
 	}
 
 	void changePassword() {
-		AdminConnection conn=(AdminConnection)this.conn;
-		String name=jTextField4.getText();
-		char pwd[]=jPasswordField3.getPassword();
-		char conf[]=jPasswordField4.getPassword();
-		char old[]=jPasswordField5.getPassword();
+		String name=jTextField3.getText();
+		char pwd[]=jPasswordField1.getPassword();
+		char conf[]=jPasswordField2.getPassword();
+		char old[]=jPasswordField3.getPassword();
+		jPasswordField1.setText("");
+		jPasswordField2.setText("");
 		jPasswordField3.setText("");
-		jPasswordField4.setText("");
-		jPasswordField5.setText("");
 		boolean enable=jCheckBox3.isSelected();
 		try {
 			if(!Arrays.equals(pwd, conf)) throw new Exception("passwords don't match");
-			if(enable) conn.changePassword(name, String.valueOf(old), String.valueOf(pwd));
-			else conn.changePassword(name, String.valueOf(pwd));
-			refreshUsers();
-			jDialog4.setVisible(false);
+			if(enable) ((AdminConnection)conn).changePassword(name, String.valueOf(old), String.valueOf(pwd));
+			else ((AdminConnection)conn).changePassword(name, String.valueOf(pwd));
+			refreshTable();
+			jDialog3.setVisible(false);
+		} catch (Exception e) {
+			error(e);
+		}
+	}
+
+	void refreshExport() {
+		boolean overwrite=jCheckBox4.isSelected();
+		String name=jTextField2.getText();
+		jButton4.setEnabled(overwrite || !new File(name).exists());
+	}
+
+	void export() {
+		String name=jTextField2.getText();
+		try {
+			((AdminConnection)conn).export(name);
+			jCheckBox4.setSelected(false);
+			refreshExport();
+		} catch (Exception e) {
+			error(e);
+		}
+	}
+
+	void refreshImport() {
+		jButton5.setEnabled(jCheckBox5.isSelected());
+	}
+
+	void inport() {
+		String name=jTextField2.getText();
+		try {
+			((AdminConnection)conn).inport(name);
+			model.reload();
+			jTree1.setSelectionRow(0);
+			jCheckBox5.setSelected(false);
+			refreshImport();
 		} catch (Exception e) {
 			error(e);
 		}
 	}
 
 	void refresh() {
-		AdminConnection conn=(AdminConnection)this.conn;
 		try {
-			long max=conn.maxSpace();
-			long value=conn.allocatedSpace();
+			long max=((AdminConnection)conn).maxSpace();
+			long value=((AdminConnection)conn).allocatedSpace();
 			jProgressBar1.setMaximum((int)max);
 			jProgressBar1.setValue((int)value);
 			jProgressBar1.setString(String.valueOf(value)+"/"+String.valueOf(max));
@@ -376,21 +336,23 @@ public class AdminUI extends javax.swing.JFrame {
 	}
 
 	void gc() {
-		AdminConnection conn=(AdminConnection)this.conn;
 		try {
-			conn.gc();
+			((AdminConnection)conn).gc();
 			refresh();
 		} catch (Exception e) {
 			error(e);
 		}
 	}
 
+	void refreshShutdown() {
+		jButton11.setEnabled(jCheckBox2.isSelected());
+	}
+
 	void shutdown() {
-		AdminConnection conn=(AdminConnection)this.conn;
-		boolean confirm=jCheckBox2.isSelected();
-		if(confirm) try {
-			conn.shutdown();
+		try {
+			((AdminConnection)conn).shutdown();
 			jCheckBox2.setSelected(false);
+			refreshShutdown();
 			close();
 		} catch (Exception e) {
 			error(e);
@@ -417,60 +379,39 @@ public class AdminUI extends javax.swing.JFrame {
                 jButton1 = new javax.swing.JButton();
                 jButton2 = new javax.swing.JButton();
                 jCheckBox1 = new javax.swing.JCheckBox();
+                jComboBox1 = new javax.swing.JComboBox();
                 jDialog2 = new javax.swing.JDialog();
                 jLabel2 = new javax.swing.JLabel();
                 jButton3 = new javax.swing.JButton();
-                transactionPopupMenu = new javax.swing.JPopupMenu();
-                abortTransactionMenuItem = new javax.swing.JMenuItem();
                 jDialog3 = new javax.swing.JDialog();
-                jPanel6 = new javax.swing.JPanel();
-                jLabel11 = new javax.swing.JLabel();
-                jTextField5 = new javax.swing.JTextField();
-                jLabel12 = new javax.swing.JLabel();
-                jLabel13 = new javax.swing.JLabel();
-                jButton12 = new javax.swing.JButton();
-                jPasswordField6 = new javax.swing.JPasswordField();
-                jPasswordField7 = new javax.swing.JPasswordField();
-                jButton13 = new javax.swing.JButton();
-                userPopupMenu = new javax.swing.JPopupMenu();
-                addUserMenuItem = new javax.swing.JMenuItem();
-                deleteUserMenuItem = new javax.swing.JMenuItem();
-                changePasswordMenuItem = new javax.swing.JMenuItem();
-                jDialog4 = new javax.swing.JDialog();
-                jPanel5 = new javax.swing.JPanel();
+                jLabel4 = new javax.swing.JLabel();
+                jTextField3 = new javax.swing.JTextField();
+                jLabel5 = new javax.swing.JLabel();
+                jPasswordField1 = new javax.swing.JPasswordField();
+                jLabel6 = new javax.swing.JLabel();
+                jPasswordField2 = new javax.swing.JPasswordField();
                 jLabel7 = new javax.swing.JLabel();
-                jTextField4 = new javax.swing.JTextField();
-                jLabel8 = new javax.swing.JLabel();
-                jLabel9 = new javax.swing.JLabel();
-                jButton8 = new javax.swing.JButton();
                 jPasswordField3 = new javax.swing.JPasswordField();
-                jPasswordField4 = new javax.swing.JPasswordField();
-                jButton9 = new javax.swing.JButton();
-                jLabel10 = new javax.swing.JLabel();
                 jCheckBox3 = new javax.swing.JCheckBox();
-                jPasswordField5 = new javax.swing.JPasswordField();
-                jDialog5 = new javax.swing.JDialog();
-                jLabel14 = new javax.swing.JLabel();
-                jTextField6 = new javax.swing.JTextField();
-                jButton14 = new javax.swing.JButton();
-                jButton15 = new javax.swing.JButton();
-                classPopupMenu = new javax.swing.JPopupMenu();
-                displayClassMenuItem = new javax.swing.JMenuItem();
-                jDialog6 = new javax.swing.JDialog();
-                jScrollPane7 = new javax.swing.JScrollPane();
-                jTextArea2 = new javax.swing.JTextArea();
+                jButton6 = new javax.swing.JButton();
+                jButton7 = new javax.swing.JButton();
+                jPopupMenu1 = new javax.swing.JPopupMenu();
+                jMenuItem1 = new javax.swing.JMenuItem();
+                jPopupMenu2 = new javax.swing.JPopupMenu();
+                jMenuItem2 = new javax.swing.JMenuItem();
+                jMenuItem3 = new javax.swing.JMenuItem();
+                jMenuItem4 = new javax.swing.JMenuItem();
+                jDialog4 = new javax.swing.JDialog();
+                jLabel8 = new javax.swing.JLabel();
+                jTextField4 = new javax.swing.JTextField();
+                jButton8 = new javax.swing.JButton();
+                jButton9 = new javax.swing.JButton();
                 jTabbedPane1 = new javax.swing.JTabbedPane();
                 jSplitPane1 = new javax.swing.JSplitPane();
                 jScrollPane1 = new javax.swing.JScrollPane();
                 jTree1 = new javax.swing.JTree();
                 jScrollPane2 = new javax.swing.JScrollPane();
                 jTextArea1 = new javax.swing.JTextArea();
-                jScrollPane4 = new javax.swing.JScrollPane();
-                jTable2 = new javax.swing.JTable();
-                jScrollPane6 = new javax.swing.JScrollPane();
-                jTable4 = new javax.swing.JTable();
-                jScrollPane5 = new javax.swing.JScrollPane();
-                jTable3 = new javax.swing.JTable();
                 jPanel1 = new javax.swing.JPanel();
                 jLabel3 = new javax.swing.JLabel();
                 jTextField2 = new javax.swing.JTextField();
@@ -504,6 +445,14 @@ public class AdminUI extends javax.swing.JFrame {
                                 "Title 1", "Title 2"
                         }
                 ));
+                jTable1.addMouseListener(new java.awt.event.MouseAdapter() {
+                        public void mousePressed(java.awt.event.MouseEvent evt) {
+                                jTable1MousePressed(evt);
+                        }
+                        public void mouseReleased(java.awt.event.MouseEvent evt) {
+                                jTable1MouseReleased(evt);
+                        }
+                });
                 jScrollPane3.setViewportView(jTable1);
 
                 jDialog1.setTitle("Open connection");
@@ -529,6 +478,14 @@ public class AdminUI extends javax.swing.JFrame {
 
                 jCheckBox1.setSelected(true);
                 jCheckBox1.setText("Admin");
+                jCheckBox1.addActionListener(new java.awt.event.ActionListener() {
+                        public void actionPerformed(java.awt.event.ActionEvent evt) {
+                                jCheckBox1ActionPerformed(evt);
+                        }
+                });
+
+                jComboBox1.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "TRANSACTION_NONE", "TRANSACTION_READ_UNCOMMITTED", "TRANSACTION_READ_COMMITTED", "TRANSACTION_REPEATABLE_READ", "TRANSACTION_SERIALIZABLE" }));
+                jComboBox1.setEnabled(false);
 
                 org.jdesktop.layout.GroupLayout jDialog1Layout = new org.jdesktop.layout.GroupLayout(jDialog1.getContentPane());
                 jDialog1.getContentPane().setLayout(jDialog1Layout);
@@ -536,16 +493,16 @@ public class AdminUI extends javax.swing.JFrame {
                         jDialog1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                         .add(jDialog1Layout.createSequentialGroup()
                                 .addContainerGap()
+                                .add(jLabel1)
+                                .add(3, 3, 3)
                                 .add(jDialog1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                                         .add(jDialog1Layout.createSequentialGroup()
-                                                .add(jLabel1)
-                                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                                .add(jTextField1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 302, Short.MAX_VALUE))
-                                        .add(org.jdesktop.layout.GroupLayout.TRAILING, jDialog1Layout.createSequentialGroup()
                                                 .add(jButton1)
-                                                .add(18, 18, 18)
+                                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                                 .add(jButton2))
-                                        .add(jCheckBox1))
+                                        .add(jTextField1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 311, Short.MAX_VALUE)
+                                        .add(jCheckBox1)
+                                        .add(jComboBox1, 0, 311, Short.MAX_VALUE))
                                 .addContainerGap())
                 );
                 jDialog1Layout.setVerticalGroup(
@@ -556,12 +513,14 @@ public class AdminUI extends javax.swing.JFrame {
                                         .add(jLabel1)
                                         .add(jTextField1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(jComboBox1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
                                 .add(jCheckBox1)
-                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .add(18, 18, 18)
                                 .add(jDialog1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                                        .add(jButton2)
-                                        .add(jButton1))
-                                .addContainerGap())
+                                        .add(jButton1)
+                                        .add(jButton2))
+                                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 );
 
                 jDialog2.setModal(true);
@@ -596,139 +555,125 @@ public class AdminUI extends javax.swing.JFrame {
                                 .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 );
 
-                abortTransactionMenuItem.setText("Abort");
-                abortTransactionMenuItem.addActionListener(new java.awt.event.ActionListener() {
+                jLabel4.setText("Username:");
+
+                jLabel5.setText("Password:");
+
+                jLabel6.setText("Confirm password:");
+
+                jLabel7.setText("Old password:");
+
+                jCheckBox3.setText("Enable old password");
+                jCheckBox3.addActionListener(new java.awt.event.ActionListener() {
                         public void actionPerformed(java.awt.event.ActionEvent evt) {
-                                abortTransactionMenuItemActionPerformed(evt);
-                        }
-                });
-                transactionPopupMenu.add(abortTransactionMenuItem);
-
-                jLabel11.setText("Username:");
-
-                jLabel12.setText("Password:");
-
-                jLabel13.setText("Confirm password:");
-
-                jButton12.setText("Add");
-                jButton12.addActionListener(new java.awt.event.ActionListener() {
-                        public void actionPerformed(java.awt.event.ActionEvent evt) {
-                                jButton12ActionPerformed(evt);
+                                jCheckBox3ActionPerformed(evt);
                         }
                 });
 
-                jButton13.setText("Cancel");
-                jButton13.addActionListener(new java.awt.event.ActionListener() {
+                jButton6.setText("Change password");
+                jButton6.addActionListener(new java.awt.event.ActionListener() {
                         public void actionPerformed(java.awt.event.ActionEvent evt) {
-                                jButton13ActionPerformed(evt);
+                                jButton6ActionPerformed(evt);
                         }
                 });
 
-                org.jdesktop.layout.GroupLayout jPanel6Layout = new org.jdesktop.layout.GroupLayout(jPanel6);
-                jPanel6.setLayout(jPanel6Layout);
-                jPanel6Layout.setHorizontalGroup(
-                        jPanel6Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                        .add(jPanel6Layout.createSequentialGroup()
-                                .addContainerGap()
-                                .add(jPanel6Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                                        .add(jPanel6Layout.createSequentialGroup()
-                                                .add(jPanel6Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
-                                                        .add(jLabel13)
-                                                        .add(jLabel12)
-                                                        .add(jLabel11))
-                                                .add(12, 12, 12)
-                                                .add(jPanel6Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                                                        .add(jPasswordField6, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 213, Short.MAX_VALUE)
-                                                        .add(jPasswordField7, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 213, Short.MAX_VALUE)
-                                                        .add(jTextField5, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 213, Short.MAX_VALUE)))
-                                        .add(jPanel6Layout.createSequentialGroup()
-                                                .add(jButton12)
-                                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                                .add(jButton13)))
-                                .addContainerGap())
-                );
-                jPanel6Layout.setVerticalGroup(
-                        jPanel6Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                        .add(jPanel6Layout.createSequentialGroup()
-                                .addContainerGap()
-                                .add(jPanel6Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                                        .add(jLabel11)
-                                        .add(jTextField5, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                .add(jPanel6Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                                        .add(jLabel12)
-                                        .add(jPasswordField6, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                                .add(8, 8, 8)
-                                .add(jPanel6Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                                        .add(jLabel13)
-                                        .add(jPasswordField7, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                                .add(18, 18, 18)
-                                .add(jPanel6Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                                        .add(jButton12)
-                                        .add(jButton13))
-                                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                );
+                jButton7.setText("Cancel");
+                jButton7.addActionListener(new java.awt.event.ActionListener() {
+                        public void actionPerformed(java.awt.event.ActionEvent evt) {
+                                jButton7ActionPerformed(evt);
+                        }
+                });
 
                 org.jdesktop.layout.GroupLayout jDialog3Layout = new org.jdesktop.layout.GroupLayout(jDialog3.getContentPane());
                 jDialog3.getContentPane().setLayout(jDialog3Layout);
                 jDialog3Layout.setHorizontalGroup(
                         jDialog3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                        .add(0, 367, Short.MAX_VALUE)
-                        .add(0, 367, Short.MAX_VALUE)
-                        .add(0, 367, Short.MAX_VALUE)
-                        .add(0, 367, Short.MAX_VALUE)
-                        .add(jDialog3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                                .add(jDialog3Layout.createSequentialGroup()
-                                        .add(0, 0, Short.MAX_VALUE)
-                                        .add(jPanel6, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                                        .add(0, 0, Short.MAX_VALUE)))
+                        .add(jDialog3Layout.createSequentialGroup()
+                                .addContainerGap()
+                                .add(jDialog3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
+                                        .add(jLabel6)
+                                        .add(jLabel4)
+                                        .add(jLabel5)
+                                        .add(jLabel7))
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(jDialog3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                        .add(jDialog3Layout.createSequentialGroup()
+                                                .add(jButton6)
+                                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                                .add(jButton7))
+                                        .add(jDialog3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING, false)
+                                                .add(org.jdesktop.layout.GroupLayout.LEADING, jPasswordField3)
+                                                .add(org.jdesktop.layout.GroupLayout.LEADING, jPasswordField2)
+                                                .add(org.jdesktop.layout.GroupLayout.LEADING, jPasswordField1)
+                                                .add(org.jdesktop.layout.GroupLayout.LEADING, jTextField3, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 226, Short.MAX_VALUE)
+                                                .add(org.jdesktop.layout.GroupLayout.LEADING, jCheckBox3)))
+                                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 );
                 jDialog3Layout.setVerticalGroup(
                         jDialog3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                        .add(0, 166, Short.MAX_VALUE)
-                        .add(0, 166, Short.MAX_VALUE)
-                        .add(0, 166, Short.MAX_VALUE)
-                        .add(0, 166, Short.MAX_VALUE)
-                        .add(jDialog3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                                .add(jDialog3Layout.createSequentialGroup()
-                                        .add(0, 0, Short.MAX_VALUE)
-                                        .add(jPanel6, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                                        .add(0, 0, Short.MAX_VALUE)))
+                        .add(jDialog3Layout.createSequentialGroup()
+                                .addContainerGap()
+                                .add(jDialog3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                                        .add(jLabel4)
+                                        .add(jTextField3, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(jDialog3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                                        .add(jLabel5)
+                                        .add(jPasswordField1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(jDialog3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                                        .add(jLabel6)
+                                        .add(jPasswordField2, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(jDialog3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                                        .add(jLabel7)
+                                        .add(jPasswordField3, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(jCheckBox3)
+                                .add(18, 18, 18)
+                                .add(jDialog3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                                        .add(jButton6)
+                                        .add(jButton7))
+                                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 );
 
-                addUserMenuItem.setText("Add");
-                addUserMenuItem.addActionListener(new java.awt.event.ActionListener() {
+                jMenuItem1.setText("Abort");
+                jMenuItem1.addActionListener(new java.awt.event.ActionListener() {
                         public void actionPerformed(java.awt.event.ActionEvent evt) {
-                                addUserMenuItemActionPerformed(evt);
+                                jMenuItem1ActionPerformed(evt);
                         }
                 });
-                userPopupMenu.add(addUserMenuItem);
+                jPopupMenu1.add(jMenuItem1);
 
-                deleteUserMenuItem.setText("Delete");
-                deleteUserMenuItem.addActionListener(new java.awt.event.ActionListener() {
+                jMenuItem2.setText("Add");
+                jMenuItem2.addActionListener(new java.awt.event.ActionListener() {
                         public void actionPerformed(java.awt.event.ActionEvent evt) {
-                                deleteUserMenuItemActionPerformed(evt);
+                                jMenuItem2ActionPerformed(evt);
                         }
                 });
-                userPopupMenu.add(deleteUserMenuItem);
+                jPopupMenu2.add(jMenuItem2);
 
-                changePasswordMenuItem.setText("Change password");
-                changePasswordMenuItem.addActionListener(new java.awt.event.ActionListener() {
+                jMenuItem3.setText("Delete");
+                jMenuItem3.addActionListener(new java.awt.event.ActionListener() {
                         public void actionPerformed(java.awt.event.ActionEvent evt) {
-                                changePasswordMenuItemActionPerformed(evt);
+                                jMenuItem3ActionPerformed(evt);
                         }
                 });
-                userPopupMenu.add(changePasswordMenuItem);
+                jPopupMenu2.add(jMenuItem3);
 
-                jLabel7.setText("Username:");
+                jMenuItem4.setText("Change password");
+                jMenuItem4.addActionListener(new java.awt.event.ActionListener() {
+                        public void actionPerformed(java.awt.event.ActionEvent evt) {
+                                jMenuItem4ActionPerformed(evt);
+                        }
+                });
+                jPopupMenu2.add(jMenuItem4);
 
-                jTextField4.setEditable(false);
+                jLabel8.setText("Transaction:");
 
-                jLabel8.setText("Password:");
+                jTextField4.setEnabled(false);
 
-                jLabel9.setText("Confirm password:");
-
-                jButton8.setText("Change password");
+                jButton8.setText("Ok");
                 jButton8.addActionListener(new java.awt.event.ActionListener() {
                         public void actionPerformed(java.awt.event.ActionEvent evt) {
                                 jButton8ActionPerformed(evt);
@@ -742,165 +687,50 @@ public class AdminUI extends javax.swing.JFrame {
                         }
                 });
 
-                jLabel10.setText("Old password:");
-
-                jCheckBox3.setText("Enable");
-
-                org.jdesktop.layout.GroupLayout jPanel5Layout = new org.jdesktop.layout.GroupLayout(jPanel5);
-                jPanel5.setLayout(jPanel5Layout);
-                jPanel5Layout.setHorizontalGroup(
-                        jPanel5Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                        .add(jPanel5Layout.createSequentialGroup()
+                org.jdesktop.layout.GroupLayout jDialog4Layout = new org.jdesktop.layout.GroupLayout(jDialog4.getContentPane());
+                jDialog4.getContentPane().setLayout(jDialog4Layout);
+                jDialog4Layout.setHorizontalGroup(
+                        jDialog4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                        .add(jDialog4Layout.createSequentialGroup()
                                 .addContainerGap()
-                                .add(jPanel5Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                                        .add(jPanel5Layout.createSequentialGroup()
-                                                .add(jPanel5Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
-                                                        .add(jLabel9)
-                                                        .add(jLabel8)
-                                                        .add(jLabel7)
-                                                        .add(jLabel10))
-                                                .add(12, 12, 12)
-                                                .add(jPanel5Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
-                                                        .add(jTextField4)
-                                                        .add(jPasswordField3)
-                                                        .add(jPasswordField4)
-                                                        .add(jPasswordField5, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 175, Short.MAX_VALUE))
-                                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                                .add(jCheckBox3))
-                                        .add(jPanel5Layout.createSequentialGroup()
+                                .add(jLabel8)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(jDialog4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                        .add(jDialog4Layout.createSequentialGroup()
                                                 .add(jButton8)
                                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                                .add(jButton9)))
-                                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                                .add(jButton9))
+                                        .add(jTextField4, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 286, Short.MAX_VALUE))
+                                .addContainerGap())
                 );
-                jPanel5Layout.setVerticalGroup(
-                        jPanel5Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                        .add(jPanel5Layout.createSequentialGroup()
+                jDialog4Layout.setVerticalGroup(
+                        jDialog4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                        .add(jDialog4Layout.createSequentialGroup()
                                 .addContainerGap()
-                                .add(jPanel5Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                                        .add(jLabel7)
-                                        .add(jTextField4, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                .add(jPanel5Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                                .add(jDialog4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                                         .add(jLabel8)
-                                        .add(jPasswordField3, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                                .add(8, 8, 8)
-                                .add(jPanel5Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                                        .add(jLabel9)
-                                        .add(jPasswordField4, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                .add(jPanel5Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                                        .add(jLabel10)
-                                        .add(jCheckBox3)
-                                        .add(jPasswordField5, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                                        .add(jTextField4, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                                 .add(18, 18, 18)
-                                .add(jPanel5Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                                .add(jDialog4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                                         .add(jButton8)
                                         .add(jButton9))
                                 .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 );
 
-                org.jdesktop.layout.GroupLayout jDialog4Layout = new org.jdesktop.layout.GroupLayout(jDialog4.getContentPane());
-                jDialog4.getContentPane().setLayout(jDialog4Layout);
-                jDialog4Layout.setHorizontalGroup(
-                        jDialog4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                        .add(0, 402, Short.MAX_VALUE)
-                        .add(0, 402, Short.MAX_VALUE)
-                        .add(0, 402, Short.MAX_VALUE)
-                        .add(jDialog4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                                .add(jDialog4Layout.createSequentialGroup()
-                                        .add(0, 0, Short.MAX_VALUE)
-                                        .add(jPanel5, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                                        .add(0, 0, Short.MAX_VALUE)))
-                );
-                jDialog4Layout.setVerticalGroup(
-                        jDialog4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                        .add(0, 199, Short.MAX_VALUE)
-                        .add(0, 199, Short.MAX_VALUE)
-                        .add(0, 199, Short.MAX_VALUE)
-                        .add(jDialog4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                                .add(jDialog4Layout.createSequentialGroup()
-                                        .add(0, 0, Short.MAX_VALUE)
-                                        .add(jPanel5, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                                        .add(0, 0, Short.MAX_VALUE)))
-                );
-
-                jLabel14.setText("Username:");
-
-                jTextField6.setEditable(false);
-
-                jButton14.setText("Delete");
-                jButton14.addActionListener(new java.awt.event.ActionListener() {
-                        public void actionPerformed(java.awt.event.ActionEvent evt) {
-                                jButton14ActionPerformed(evt);
-                        }
-                });
-
-                jButton15.setText("Cancel");
-                jButton15.addActionListener(new java.awt.event.ActionListener() {
-                        public void actionPerformed(java.awt.event.ActionEvent evt) {
-                                jButton15ActionPerformed(evt);
-                        }
-                });
-
-                org.jdesktop.layout.GroupLayout jDialog5Layout = new org.jdesktop.layout.GroupLayout(jDialog5.getContentPane());
-                jDialog5.getContentPane().setLayout(jDialog5Layout);
-                jDialog5Layout.setHorizontalGroup(
-                        jDialog5Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                        .add(jDialog5Layout.createSequentialGroup()
-                                .addContainerGap()
-                                .add(jDialog5Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                                        .add(jDialog5Layout.createSequentialGroup()
-                                                .add(jLabel14)
-                                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                                .add(jTextField6, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 260, Short.MAX_VALUE))
-                                        .add(jDialog5Layout.createSequentialGroup()
-                                                .add(jButton14)
-                                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                                .add(jButton15)))
-                                .addContainerGap())
-                );
-                jDialog5Layout.setVerticalGroup(
-                        jDialog5Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                        .add(jDialog5Layout.createSequentialGroup()
-                                .addContainerGap()
-                                .add(jDialog5Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                                        .add(jLabel14)
-                                        .add(jTextField6, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                                .add(18, 18, 18)
-                                .add(jDialog5Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                                        .add(jButton14)
-                                        .add(jButton15))
-                                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                );
-
-                displayClassMenuItem.setText("Display");
-                displayClassMenuItem.addActionListener(new java.awt.event.ActionListener() {
-                        public void actionPerformed(java.awt.event.ActionEvent evt) {
-                                displayClassMenuItemActionPerformed(evt);
-                        }
-                });
-                classPopupMenu.add(displayClassMenuItem);
-
-                jTextArea2.setColumns(20);
-                jTextArea2.setEditable(false);
-                jTextArea2.setLineWrap(true);
-                jTextArea2.setRows(5);
-                jScrollPane7.setViewportView(jTextArea2);
-
-                org.jdesktop.layout.GroupLayout jDialog6Layout = new org.jdesktop.layout.GroupLayout(jDialog6.getContentPane());
-                jDialog6.getContentPane().setLayout(jDialog6Layout);
-                jDialog6Layout.setHorizontalGroup(
-                        jDialog6Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                        .add(jScrollPane7, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 363, Short.MAX_VALUE)
-                );
-                jDialog6Layout.setVerticalGroup(
-                        jDialog6Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                        .add(jScrollPane7, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 214, Short.MAX_VALUE)
-                );
-
                 setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
+                jTree1.addTreeWillExpandListener(new javax.swing.event.TreeWillExpandListener() {
+                        public void treeWillCollapse(javax.swing.event.TreeExpansionEvent evt)throws javax.swing.tree.ExpandVetoException {
+                        }
+                        public void treeWillExpand(javax.swing.event.TreeExpansionEvent evt)throws javax.swing.tree.ExpandVetoException {
+                                jTree1TreeWillExpand(evt);
+                        }
+                });
+                jTree1.addTreeSelectionListener(new javax.swing.event.TreeSelectionListener() {
+                        public void valueChanged(javax.swing.event.TreeSelectionEvent evt) {
+                                jTree1ValueChanged(evt);
+                        }
+                });
                 jScrollPane1.setViewportView(jTree1);
 
                 jSplitPane1.setLeftComponent(jScrollPane1);
@@ -913,68 +743,13 @@ public class AdminUI extends javax.swing.JFrame {
 
                 jSplitPane1.setRightComponent(jScrollPane2);
 
-                jTabbedPane1.addTab("Root", jSplitPane1);
+                jTabbedPane1.addTab("System", jSplitPane1);
 
-                jTable2.setModel(new javax.swing.table.DefaultTableModel(
-                        new Object [][] {
-                                {null, null},
-                                {null, null},
-                                {null, null},
-                                {null, null}
-                        },
-                        new String [] {
-                                "Title 1", "Title 2"
-                        }
-                ));
-                jTable2.addComponentListener(new java.awt.event.ComponentAdapter() {
+                jPanel1.addComponentListener(new java.awt.event.ComponentAdapter() {
                         public void componentShown(java.awt.event.ComponentEvent evt) {
-                                jTable2ComponentShown(evt);
+                                jPanel1ComponentShown(evt);
                         }
                 });
-                jScrollPane4.setViewportView(jTable2);
-                jTable2.getColumnModel().getSelectionModel().setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
-
-                jTabbedPane1.addTab("Transactions", jScrollPane4);
-
-                jTable4.setModel(new javax.swing.table.DefaultTableModel(
-                        new Object [][] {
-                                {null, null},
-                                {null, null},
-                                {null, null},
-                                {null, null}
-                        },
-                        new String [] {
-                                "Title 1", "Title 2"
-                        }
-                ));
-                jTable4.addComponentListener(new java.awt.event.ComponentAdapter() {
-                        public void componentShown(java.awt.event.ComponentEvent evt) {
-                                jTable4ComponentShown(evt);
-                        }
-                });
-                jScrollPane6.setViewportView(jTable4);
-
-                jTabbedPane1.addTab("Classes", jScrollPane6);
-
-                jTable3.setModel(new javax.swing.table.DefaultTableModel(
-                        new Object [][] {
-                                {null, null},
-                                {null, null},
-                                {null, null},
-                                {null, null}
-                        },
-                        new String [] {
-                                "Title 1", "Title 2"
-                        }
-                ));
-                jTable3.addComponentListener(new java.awt.event.ComponentAdapter() {
-                        public void componentShown(java.awt.event.ComponentEvent evt) {
-                                jTable3ComponentShown(evt);
-                        }
-                });
-                jScrollPane5.setViewportView(jTable3);
-
-                jTabbedPane1.addTab("Users", jScrollPane5);
 
                 jLabel3.setText("Filename:");
 
@@ -988,6 +763,7 @@ public class AdminUI extends javax.swing.JFrame {
                 });
 
                 jButton5.setText("Import");
+                jButton5.setEnabled(false);
                 jButton5.addActionListener(new java.awt.event.ActionListener() {
                         public void actionPerformed(java.awt.event.ActionEvent evt) {
                                 jButton5ActionPerformed(evt);
@@ -995,8 +771,18 @@ public class AdminUI extends javax.swing.JFrame {
                 });
 
                 jCheckBox4.setText("Overwrite");
+                jCheckBox4.addActionListener(new java.awt.event.ActionListener() {
+                        public void actionPerformed(java.awt.event.ActionEvent evt) {
+                                jCheckBox4ActionPerformed(evt);
+                        }
+                });
 
                 jCheckBox5.setText("Confirm");
+                jCheckBox5.addActionListener(new java.awt.event.ActionListener() {
+                        public void actionPerformed(java.awt.event.ActionEvent evt) {
+                                jCheckBox5ActionPerformed(evt);
+                        }
+                });
 
                 org.jdesktop.layout.GroupLayout jPanel1Layout = new org.jdesktop.layout.GroupLayout(jPanel1);
                 jPanel1.setLayout(jPanel1Layout);
@@ -1075,6 +861,7 @@ public class AdminUI extends javax.swing.JFrame {
                 jTabbedPane1.addTab("Memory", jPanel3);
 
                 jButton11.setText("Shutdown");
+                jButton11.setEnabled(false);
                 jButton11.addActionListener(new java.awt.event.ActionListener() {
                         public void actionPerformed(java.awt.event.ActionEvent evt) {
                                 jButton11ActionPerformed(evt);
@@ -1082,6 +869,11 @@ public class AdminUI extends javax.swing.JFrame {
                 });
 
                 jCheckBox2.setText("Confirm");
+                jCheckBox2.addActionListener(new java.awt.event.ActionListener() {
+                        public void actionPerformed(java.awt.event.ActionEvent evt) {
+                                jCheckBox2ActionPerformed(evt);
+                        }
+                });
 
                 org.jdesktop.layout.GroupLayout jPanel4Layout = new org.jdesktop.layout.GroupLayout(jPanel4);
                 jPanel4.setLayout(jPanel4Layout);
@@ -1177,6 +969,7 @@ public class AdminUI extends javax.swing.JFrame {
 	}//GEN-LAST:event_openMenuItemActionPerformed
 
 	private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+		jDialog1.setVisible(false);
 		open();
 	}//GEN-LAST:event_jButton1ActionPerformed
 
@@ -1217,68 +1010,85 @@ public class AdminUI extends javax.swing.JFrame {
 		refresh();
 	}//GEN-LAST:event_jPanel3ComponentShown
 
-	private void jTable2ComponentShown(java.awt.event.ComponentEvent evt) {//GEN-FIRST:event_jTable2ComponentShown
-		refreshTransactions();
-	}//GEN-LAST:event_jTable2ComponentShown
+	private void jTree1ValueChanged(javax.swing.event.TreeSelectionEvent evt) {//GEN-FIRST:event_jTree1ValueChanged
+		select();
+	}//GEN-LAST:event_jTree1ValueChanged
 
-	private void abortTransactionMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_abortTransactionMenuItemActionPerformed
-		abortTransaction();
-}//GEN-LAST:event_abortTransactionMenuItemActionPerformed
+	private void jTree1TreeWillExpand(javax.swing.event.TreeExpansionEvent evt)throws javax.swing.tree.ExpandVetoException {//GEN-FIRST:event_jTree1TreeWillExpand
+		reload(evt.getPath());
+	}//GEN-LAST:event_jTree1TreeWillExpand
 
-	private void addUserMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addUserMenuItemActionPerformed
-		setDialogLocation(jDialog3);
-		jDialog3.setVisible(true);
-	}//GEN-LAST:event_addUserMenuItemActionPerformed
+	private void jTable1MousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable1MousePressed
+		if (evt.isPopupTrigger()) showPopup(evt.getPoint(),evt.getComponent(),evt.getX(),evt.getY());
+	}//GEN-LAST:event_jTable1MousePressed
 
-	private void jButton8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton8ActionPerformed
-		changePassword();
-	}//GEN-LAST:event_jButton8ActionPerformed
+	private void jTable1MouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable1MouseReleased
+		if (evt.isPopupTrigger()) showPopup(evt.getPoint(),evt.getComponent(),evt.getX(),evt.getY());
+	}//GEN-LAST:event_jTable1MouseReleased
 
-	private void jButton12ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton12ActionPerformed
-		addUser();
-	}//GEN-LAST:event_jButton12ActionPerformed
+	private void jCheckBox3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox3ActionPerformed
+		refreshOldPassword();
+	}//GEN-LAST:event_jCheckBox3ActionPerformed
 
-	private void jButton14ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton14ActionPerformed
-		deleteUser();
-	}//GEN-LAST:event_jButton14ActionPerformed
+	private void jButton6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton6ActionPerformed
+		userAction(evt.getActionCommand());
+	}//GEN-LAST:event_jButton6ActionPerformed
 
-	private void jButton13ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton13ActionPerformed
-		jDialog3.setVisible(false);
-	}//GEN-LAST:event_jButton13ActionPerformed
-
-	private void changePasswordMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_changePasswordMenuItemActionPerformed
+	private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
+		willAbortTransaction();
 		setDialogLocation(jDialog4);
 		jDialog4.setVisible(true);
-		jTextField4.setText(user());
-	}//GEN-LAST:event_changePasswordMenuItemActionPerformed
+	}//GEN-LAST:event_jMenuItem1ActionPerformed
+
+	private void jMenuItem2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem2ActionPerformed
+		willAddUser();
+		setDialogLocation(jDialog3);
+		jDialog3.setVisible(true);
+	}//GEN-LAST:event_jMenuItem2ActionPerformed
+
+	private void jMenuItem3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem3ActionPerformed
+		willDeleteUser();
+		setDialogLocation(jDialog3);
+		jDialog3.setVisible(true);
+	}//GEN-LAST:event_jMenuItem3ActionPerformed
+
+	private void jMenuItem4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem4ActionPerformed
+		willChangePassword();
+		setDialogLocation(jDialog3);
+		jDialog3.setVisible(true);
+	}//GEN-LAST:event_jMenuItem4ActionPerformed
+
+	private void jButton7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton7ActionPerformed
+		jDialog3.setVisible(false);
+	}//GEN-LAST:event_jButton7ActionPerformed
+
+	private void jButton8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton8ActionPerformed
+		abortTransaction();
+	}//GEN-LAST:event_jButton8ActionPerformed
 
 	private void jButton9ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton9ActionPerformed
 		jDialog4.setVisible(false);
 	}//GEN-LAST:event_jButton9ActionPerformed
 
-	private void deleteUserMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteUserMenuItemActionPerformed
-		setDialogLocation(jDialog5);
-		jDialog5.setVisible(true);
-		jTextField6.setText(user());
-	}//GEN-LAST:event_deleteUserMenuItemActionPerformed
+	private void jCheckBox1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox1ActionPerformed
+		refreshLevel();
+	}//GEN-LAST:event_jCheckBox1ActionPerformed
 
-	private void jButton15ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton15ActionPerformed
-		jDialog5.setVisible(false);
-	}//GEN-LAST:event_jButton15ActionPerformed
+	private void jCheckBox4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox4ActionPerformed
+		refreshExport();
+	}//GEN-LAST:event_jCheckBox4ActionPerformed
 
-	private void jTable3ComponentShown(java.awt.event.ComponentEvent evt) {//GEN-FIRST:event_jTable3ComponentShown
-		refreshUsers();
-	}//GEN-LAST:event_jTable3ComponentShown
+	private void jCheckBox5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox5ActionPerformed
+		refreshImport();
+	}//GEN-LAST:event_jCheckBox5ActionPerformed
 
-	private void jTable4ComponentShown(java.awt.event.ComponentEvent evt) {//GEN-FIRST:event_jTable4ComponentShown
-		refreshClasses();
-	}//GEN-LAST:event_jTable4ComponentShown
+	private void jPanel1ComponentShown(java.awt.event.ComponentEvent evt) {//GEN-FIRST:event_jPanel1ComponentShown
+		refreshExport();
+	}//GEN-LAST:event_jPanel1ComponentShown
 
-	private void displayClassMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_displayClassMenuItemActionPerformed
-		setDialogLocation(jDialog6);
-		jDialog6.setVisible(true);
-		jTextArea2.setText(fields());
-	}//GEN-LAST:event_displayClassMenuItemActionPerformed
+	private void jCheckBox2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox2ActionPerformed
+		refreshShutdown();
+	}//GEN-LAST:event_jCheckBox2ActionPerformed
 
 	/**
 	 * @param args the command line arguments
@@ -1292,28 +1102,20 @@ public class AdminUI extends javax.swing.JFrame {
 	}
 
         // Variables declaration - do not modify//GEN-BEGIN:variables
-        private javax.swing.JMenuItem abortTransactionMenuItem;
         private javax.swing.JMenuItem aboutMenuItem;
-        private javax.swing.JMenuItem addUserMenuItem;
-        private javax.swing.JMenuItem changePasswordMenuItem;
-        private javax.swing.JPopupMenu classPopupMenu;
         private javax.swing.JMenuItem closeMenuItem;
-        private javax.swing.JMenuItem deleteUserMenuItem;
-        private javax.swing.JMenuItem displayClassMenuItem;
         private javax.swing.JMenuItem exitMenuItem;
         private javax.swing.JMenu fileMenu;
         private javax.swing.JMenu helpMenu;
         private javax.swing.JButton jButton1;
         private javax.swing.JButton jButton10;
         private javax.swing.JButton jButton11;
-        private javax.swing.JButton jButton12;
-        private javax.swing.JButton jButton13;
-        private javax.swing.JButton jButton14;
-        private javax.swing.JButton jButton15;
         private javax.swing.JButton jButton2;
         private javax.swing.JButton jButton3;
         private javax.swing.JButton jButton4;
         private javax.swing.JButton jButton5;
+        private javax.swing.JButton jButton6;
+        private javax.swing.JButton jButton7;
         private javax.swing.JButton jButton8;
         private javax.swing.JButton jButton9;
         private javax.swing.JCheckBox jCheckBox1;
@@ -1321,59 +1123,46 @@ public class AdminUI extends javax.swing.JFrame {
         private javax.swing.JCheckBox jCheckBox3;
         private javax.swing.JCheckBox jCheckBox4;
         private javax.swing.JCheckBox jCheckBox5;
+        private javax.swing.JComboBox jComboBox1;
         private bsh.util.JConsole jConsole1;
         private javax.swing.JDialog jDialog1;
         private javax.swing.JDialog jDialog2;
         private javax.swing.JDialog jDialog3;
         private javax.swing.JDialog jDialog4;
-        private javax.swing.JDialog jDialog5;
-        private javax.swing.JDialog jDialog6;
         private javax.swing.JLabel jLabel1;
-        private javax.swing.JLabel jLabel10;
-        private javax.swing.JLabel jLabel11;
-        private javax.swing.JLabel jLabel12;
-        private javax.swing.JLabel jLabel13;
-        private javax.swing.JLabel jLabel14;
         private javax.swing.JLabel jLabel2;
         private javax.swing.JLabel jLabel3;
+        private javax.swing.JLabel jLabel4;
+        private javax.swing.JLabel jLabel5;
+        private javax.swing.JLabel jLabel6;
         private javax.swing.JLabel jLabel7;
         private javax.swing.JLabel jLabel8;
-        private javax.swing.JLabel jLabel9;
+        private javax.swing.JMenuItem jMenuItem1;
+        private javax.swing.JMenuItem jMenuItem2;
+        private javax.swing.JMenuItem jMenuItem3;
+        private javax.swing.JMenuItem jMenuItem4;
         private javax.swing.JPanel jPanel1;
         private javax.swing.JPanel jPanel3;
         private javax.swing.JPanel jPanel4;
-        private javax.swing.JPanel jPanel5;
-        private javax.swing.JPanel jPanel6;
+        private javax.swing.JPasswordField jPasswordField1;
+        private javax.swing.JPasswordField jPasswordField2;
         private javax.swing.JPasswordField jPasswordField3;
-        private javax.swing.JPasswordField jPasswordField4;
-        private javax.swing.JPasswordField jPasswordField5;
-        private javax.swing.JPasswordField jPasswordField6;
-        private javax.swing.JPasswordField jPasswordField7;
+        private javax.swing.JPopupMenu jPopupMenu1;
+        private javax.swing.JPopupMenu jPopupMenu2;
         private javax.swing.JProgressBar jProgressBar1;
         private javax.swing.JScrollPane jScrollPane1;
         private javax.swing.JScrollPane jScrollPane2;
         private javax.swing.JScrollPane jScrollPane3;
-        private javax.swing.JScrollPane jScrollPane4;
-        private javax.swing.JScrollPane jScrollPane5;
-        private javax.swing.JScrollPane jScrollPane6;
-        private javax.swing.JScrollPane jScrollPane7;
         private javax.swing.JSplitPane jSplitPane1;
         private javax.swing.JTabbedPane jTabbedPane1;
         private javax.swing.JTable jTable1;
-        private javax.swing.JTable jTable2;
-        private javax.swing.JTable jTable3;
-        private javax.swing.JTable jTable4;
         private javax.swing.JTextArea jTextArea1;
-        private javax.swing.JTextArea jTextArea2;
         private javax.swing.JTextField jTextField1;
         private javax.swing.JTextField jTextField2;
+        private javax.swing.JTextField jTextField3;
         private javax.swing.JTextField jTextField4;
-        private javax.swing.JTextField jTextField5;
-        private javax.swing.JTextField jTextField6;
         private javax.swing.JTree jTree1;
         private javax.swing.JMenuBar menuBar;
         private javax.swing.JMenuItem openMenuItem;
-        private javax.swing.JPopupMenu transactionPopupMenu;
-        private javax.swing.JPopupMenu userPopupMenu;
         // End of variables declaration//GEN-END:variables
 }

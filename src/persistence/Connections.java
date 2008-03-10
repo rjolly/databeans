@@ -24,10 +24,14 @@ public class Connections {
 	private Connections() {}
 
 	public static Connection getConnection(String name) throws Exception {
+		return getConnection(name,Connection.TRANSACTION_READ_UNCOMMITTED);
+	}
+
+	public static Connection getConnection(String name, int level) throws Exception {
 		LocalCallbackHandler local=new LocalCallbackHandler(handler());
 		Connection conn;
 		try {
-			conn=((Store)Naming.lookup(name)).getConnection(local);
+			conn=((Store)Naming.lookup(name)).getConnection(local,level);
 			local.unexport();
 		} catch (Exception e) {
 			local.unexport();

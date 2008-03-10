@@ -19,7 +19,7 @@ class SystemConnection extends Connection {
 
 class RemoteSystemConnection extends RemoteConnectionImpl {
 	RemoteSystemConnection(StoreImpl store) throws RemoteException {
-		super(store,Connection.TRANSACTION_NONE,false,null);
+		super(store,false,null);
 	}
 
 	void open() {}

@@ -7,8 +7,8 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 public class FileHeap extends RandomAccessFile implements Heap {
-	static final float lowWater=0.75f;
-	static final float highWater=0.9f;
+	static final float lowWater=0.9f;
+	static final float highWater=0.95f;
 	static final int Long_SIZE=MemoryModel.model.pointerSize;
 	static final int Integer_SIZE=4;
 	static final long OVERHEAD=normalized(0);

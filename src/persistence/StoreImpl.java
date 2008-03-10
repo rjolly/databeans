@@ -247,7 +247,9 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 	void userGc() {
 		AccessController.checkPermission(new AdminPermission("gc"));
 		gc();
-		updateClasses();
+		synchronized(classes) {
+			updateClasses();
+		}
 	}
 
 	void updateClasses() {
@@ -269,9 +271,9 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		return pw==null?false:pw.match(password);
 	}
 
-	public Connection getConnection(CallbackHandler handler) throws RemoteException {
+	public Connection getConnection(CallbackHandler handler, int level) throws RemoteException {
 		if(readOnly) throw new PersistentException("store in recovery mode");
-		return new Connection(this,Connection.TRANSACTION_READ_UNCOMMITTED,Login.login(handler).getSubject());
+		return new Connection(this,level,Login.login(handler).getSubject());
 	}
 
 	public AdminConnection getAdminConnection(CallbackHandler handler) throws RemoteException {

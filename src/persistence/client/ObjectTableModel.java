@@ -76,7 +76,7 @@ public class ObjectTableModel extends AbstractTableModel {
 		if(object instanceof Array) return new ArrayTableModel((Array)object);
 		else if(object instanceof Map) return new MapTableModel((Map)object);
 		else if(object instanceof List) return new ListTableModel((List)object);
-		else if(object instanceof Collection) return model(new ArrayList((Collection)object));
+		else if(object instanceof Collection) return new CollectionTableModel((Collection)object);
 		else return new ObjectTableModel(object);
 	}
 }
@@ -123,9 +123,49 @@ class ArrayTableModel extends ObjectTableModel {
 	}
 }
 
-class ListTableModel extends ObjectTableModel {
+class CollectionTableModel extends ObjectTableModel {
 	List list;
 
+	public CollectionTableModel(Collection collection) {
+		super(collection);
+	}
+
+	void init() {
+		list=new ArrayList((Collection)object);
+	}
+
+	public int getColumnCount() {
+		return 1;
+	}
+
+	public int getRowCount() {
+		return list.size();
+	}
+
+	public String getColumnName(int column) {
+		switch(column) {
+			case 0:
+				return "element";
+			default:
+				return null;
+		}
+	}
+
+	public Object getValueAt(int rowIndex, int columnIndex) {
+		switch(columnIndex) {
+			case 0:
+				return get(rowIndex);
+			default:
+				return null;
+		}
+	}
+
+	Object get(int n) {
+		return list.get(n);
+	}
+}
+
+class ListTableModel extends CollectionTableModel {
 	public ListTableModel(List list) {
 		super(list);
 	}
@@ -134,8 +174,8 @@ class ListTableModel extends ObjectTableModel {
 		list=(List)object;
 	}
 
-	public int getRowCount() {
-		return list.size();
+	public int getColumnCount() {
+		return 2;
 	}
 
 	public String getColumnName(int column) {
@@ -158,10 +198,6 @@ class ListTableModel extends ObjectTableModel {
 			default:
 				return null;
 		}
-	}
-
-	Object get(int n) {
-		return list.get(n);
 	}
 }
 
