@@ -366,6 +366,15 @@ public class AdminUI extends javax.swing.JFrame {
 		}
 	}
 
+	void closeTimer() {
+		boolean refresh=jCheckBox6.isSelected();
+		if(refresh) {
+			timer.cancel();
+			jTextField5.setEnabled(true);
+			jCheckBox6.setSelected(false);
+		}
+	}
+
 	void gc() {
 		try {
 			((AdminConnection)conn).gc();
@@ -381,6 +390,7 @@ public class AdminUI extends javax.swing.JFrame {
 
 	void shutdown() {
 		try {
+			closeTimer();
 			((AdminConnection)conn).shutdown();
 			jCheckBox2.setSelected(false);
 			refreshShutdown();

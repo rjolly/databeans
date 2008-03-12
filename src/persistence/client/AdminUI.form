@@ -295,7 +295,6 @@
         </Component>
         <Component class="javax.swing.JButton" name="jButton6">
           <Properties>
-            <Property name="actionCommand" type="java.lang.String" value=""/>
             <Property name="label" type="java.lang.String" value="Ok"/>
           </Properties>
           <Events>
