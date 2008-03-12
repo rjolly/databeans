@@ -46,27 +46,33 @@ public class Transaction extends PersistentObject {
 		case Connection.TRANSACTION_READ_UNCOMMITTED:
 			return obj;
 		case Connection.TRANSACTION_READ_COMMITTED:
-			return read?obj:copy(obj);
+			return copy(obj,read);
 		case Connection.TRANSACTION_REPEATABLE_READ:
-			return copy(obj);
+			return copy(obj,false);
 		case Connection.TRANSACTION_SERIALIZABLE:
 			if(!readOnly) obj.lock(this);
-			return copy(obj);
+			return copy(obj,false);
 		default:
 			throw new PersistentException("bad transaction isolation level");
 		}
 	}
 
-	synchronized PersistentObject copy(PersistentObject obj) {
-		if(isRollbackOnly()) throw new PersistentException("rollback only");
+	synchronized PersistentObject copy(PersistentObject obj, boolean read) {
+		if(isRollbackOnly()) {
+			obj.unlock();
+			throw new PersistentException("rollback only");
+		}
 		Array pair;
 		Map map=getPairs();
 //		Long base=new Long(obj.base);
 		Number base=MemoryModel.model.toNumber(obj.base);
 		if(map.containsKey(base)) pair=(Array)map.get(base);
 		else {
-			pair=(Array)create(new Object[] {obj,obj.clone()});
-			map.put(base,pair);
+			if(read) return obj;
+			else {
+				pair=(Array)create(new Object[] {obj,obj.clone()});
+				map.put(base,pair);
+			}
 		}
 		return (PersistentObject)pair.get(1);
 	}
