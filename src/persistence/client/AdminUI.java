@@ -12,6 +12,8 @@ import java.awt.Dimension;
 import java.awt.Point;
 import java.io.File;
 import java.util.Arrays;
+import java.util.Timer;
+import java.util.TimerTask;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.tree.DefaultTreeModel;
@@ -34,6 +36,9 @@ public class AdminUI extends javax.swing.JFrame {
 	Connection conn;
 	DefaultTreeModel model=new DefaultTreeModel(null);
 	Interpreter interpreter;
+	Transaction transaction;
+	String user;
+	Timer timer;
 
 	/** Creates new form AdminUI */
 	public AdminUI() {
@@ -156,6 +161,7 @@ public class AdminUI extends javax.swing.JFrame {
 	}
 
 	void showPopup(Point point, Component component, int x, int y) {
+		if(!(conn instanceof AdminConnection)) return;
 		int n=jTable1.rowAtPoint(point);
 		if(n<0) return;
 		jTable1.setRowSelectionInterval(n,n);
@@ -174,19 +180,19 @@ public class AdminUI extends javax.swing.JFrame {
 		((ObjectTableModel)jTable1.getModel()).reload();
 	}
 
-	String transaction() {
+	void setTransaction() {
 		int n=jTable1.getSelectedRow();
-		return jTable1.getValueAt(n, 1).toString();
+		transaction=(Transaction)jTable1.getValueAt(n, 1);
 	}
 
 	void willAbortTransaction() {
-		jTextField4.setText(transaction());
+		setTransaction();
+		jTextField4.setText(transaction.toString());
 	}
 
 	void abortTransaction() {
-		int n=jTable1.getSelectedRow();
 		try {
-			((AdminConnection)conn).abortTransaction((Transaction)jTable1.getValueAt(n,1));
+			((AdminConnection)conn).abortTransaction(transaction);
 			refreshTable();
 			jDialog4.setVisible(false);
 		} catch (Exception e) {
@@ -194,9 +200,9 @@ public class AdminUI extends javax.swing.JFrame {
 		}
 	}
 
-	String user() {
+	void setUser() {
 		int n=jTable1.getSelectedRow();
-		return (String)jTable1.getValueAt(n, 0);
+		user=(String)jTable1.getValueAt(n, 0);
 	}
 
 	void willAddUser() {
@@ -205,29 +211,31 @@ public class AdminUI extends javax.swing.JFrame {
 		jPasswordField2.setEnabled(true);
 		jPasswordField3.setEnabled(false);
 		jCheckBox3.setEnabled(false);
-		jButton6.setText("Add user");
+		jButton6.setActionCommand("Add user");
 		jDialog3.validate();
 	}
 
 	void willDeleteUser() {
-		jTextField3.setText(user());
+		setUser();
+		jTextField3.setText(user);
 		jTextField3.setEnabled(false);
 		jPasswordField1.setEnabled(false);
 		jPasswordField2.setEnabled(false);
 		jPasswordField3.setEnabled(false);
 		jCheckBox3.setEnabled(false);
-		jButton6.setText("Delete user");
+		jButton6.setActionCommand("Delete user");
 		jDialog3.validate();
 	}
 
 	void willChangePassword() {
-		jTextField3.setText(user());
+		setUser();
+		jTextField3.setText(user);
 		jTextField3.setEnabled(false);
 		jPasswordField1.setEnabled(true);
 		jPasswordField2.setEnabled(true);
 		jCheckBox3.setEnabled(true);
 		refreshOldPassword();
-		jButton6.setText("Change password");
+		jButton6.setActionCommand("Change password");
 		jDialog3.validate();
 	}
 
@@ -307,7 +315,8 @@ public class AdminUI extends javax.swing.JFrame {
 	}
 
 	void refreshImport() {
-		jButton5.setEnabled(jCheckBox5.isSelected());
+		boolean overwrite=jCheckBox5.isSelected();
+		jButton5.setEnabled(overwrite || conn.root()==null);
 	}
 
 	void inport() {
@@ -332,6 +341,28 @@ public class AdminUI extends javax.swing.JFrame {
 			jProgressBar1.setString(String.valueOf(value)+"/"+String.valueOf(max));
 		} catch (Exception e) {
 			error(e);
+		}
+	}
+
+	void refreshTimer() {
+		boolean refresh=jCheckBox6.isSelected();
+		if(refresh) {
+			try {
+				int period=Integer.valueOf(jTextField5.getText()).intValue();
+				jTextField5.setEnabled(false);
+				timer=new Timer(true);
+				timer.schedule(new TimerTask() {
+					public void run() {
+						refresh();
+					}
+				}, 0, period*1000);
+			} catch (Exception e) {
+				error(e);
+				jCheckBox6.setSelected(false);
+			}
+		} else {
+			timer.cancel();
+			jTextField5.setEnabled(true);
 		}
 	}
 
@@ -422,6 +453,9 @@ public class AdminUI extends javax.swing.JFrame {
                 jPanel3 = new javax.swing.JPanel();
                 jButton10 = new javax.swing.JButton();
                 jProgressBar1 = new javax.swing.JProgressBar();
+                jTextField5 = new javax.swing.JTextField();
+                jCheckBox6 = new javax.swing.JCheckBox();
+                jLabel10 = new javax.swing.JLabel();
                 jPanel4 = new javax.swing.JPanel();
                 jButton11 = new javax.swing.JButton();
                 jCheckBox2 = new javax.swing.JCheckBox();
@@ -570,7 +604,8 @@ public class AdminUI extends javax.swing.JFrame {
                         }
                 });
 
-                jButton6.setText("Change password");
+                jButton6.setActionCommand("");
+                jButton6.setLabel("Ok");
                 jButton6.addActionListener(new java.awt.event.ActionListener() {
                         public void actionPerformed(java.awt.event.ActionEvent evt) {
                                 jButton6ActionPerformed(evt);
@@ -763,7 +798,6 @@ public class AdminUI extends javax.swing.JFrame {
                 });
 
                 jButton5.setText("Import");
-                jButton5.setEnabled(false);
                 jButton5.addActionListener(new java.awt.event.ActionListener() {
                         public void actionPerformed(java.awt.event.ActionEvent evt) {
                                 jButton5ActionPerformed(evt);
@@ -777,7 +811,7 @@ public class AdminUI extends javax.swing.JFrame {
                         }
                 });
 
-                jCheckBox5.setText("Confirm");
+                jCheckBox5.setText("Overwrite");
                 jCheckBox5.addActionListener(new java.awt.event.ActionListener() {
                         public void actionPerformed(java.awt.event.ActionEvent evt) {
                                 jCheckBox5ActionPerformed(evt);
@@ -837,6 +871,17 @@ public class AdminUI extends javax.swing.JFrame {
 
                 jProgressBar1.setStringPainted(true);
 
+                jTextField5.setText("10");
+
+                jCheckBox6.setText("Refresh every:");
+                jCheckBox6.addActionListener(new java.awt.event.ActionListener() {
+                        public void actionPerformed(java.awt.event.ActionEvent evt) {
+                                jCheckBox6ActionPerformed(evt);
+                        }
+                });
+
+                jLabel10.setText("seconds");
+
                 org.jdesktop.layout.GroupLayout jPanel3Layout = new org.jdesktop.layout.GroupLayout(jPanel3);
                 jPanel3.setLayout(jPanel3Layout);
                 jPanel3Layout.setHorizontalGroup(
@@ -844,7 +889,13 @@ public class AdminUI extends javax.swing.JFrame {
                         .add(jPanel3Layout.createSequentialGroup()
                                 .addContainerGap()
                                 .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                                        .add(jProgressBar1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 598, Short.MAX_VALUE)
+                                        .add(jPanel3Layout.createSequentialGroup()
+                                                .add(jCheckBox6)
+                                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                                .add(jTextField5, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 42, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                                .add(jLabel10))
+                                        .add(org.jdesktop.layout.GroupLayout.TRAILING, jProgressBar1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 598, Short.MAX_VALUE)
                                         .add(jButton10))
                                 .addContainerGap())
                 );
@@ -852,10 +903,15 @@ public class AdminUI extends javax.swing.JFrame {
                         jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                         .add(jPanel3Layout.createSequentialGroup()
                                 .addContainerGap()
+                                .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                                        .add(jCheckBox6)
+                                        .add(jLabel10)
+                                        .add(jTextField5, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
                                 .add(jProgressBar1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                                 .add(18, 18, 18)
                                 .add(jButton10)
-                                .addContainerGap(284, Short.MAX_VALUE))
+                                .addContainerGap(245, Short.MAX_VALUE))
                 );
 
                 jTabbedPane1.addTab("Memory", jPanel3);
@@ -1084,11 +1140,16 @@ public class AdminUI extends javax.swing.JFrame {
 
 	private void jPanel1ComponentShown(java.awt.event.ComponentEvent evt) {//GEN-FIRST:event_jPanel1ComponentShown
 		refreshExport();
+		refreshImport();
 	}//GEN-LAST:event_jPanel1ComponentShown
 
 	private void jCheckBox2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox2ActionPerformed
 		refreshShutdown();
 	}//GEN-LAST:event_jCheckBox2ActionPerformed
+
+	private void jCheckBox6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox6ActionPerformed
+		refreshTimer();
+	}//GEN-LAST:event_jCheckBox6ActionPerformed
 
 	/**
 	 * @param args the command line arguments
@@ -1123,6 +1184,7 @@ public class AdminUI extends javax.swing.JFrame {
         private javax.swing.JCheckBox jCheckBox3;
         private javax.swing.JCheckBox jCheckBox4;
         private javax.swing.JCheckBox jCheckBox5;
+        private javax.swing.JCheckBox jCheckBox6;
         private javax.swing.JComboBox jComboBox1;
         private bsh.util.JConsole jConsole1;
         private javax.swing.JDialog jDialog1;
@@ -1130,6 +1192,7 @@ public class AdminUI extends javax.swing.JFrame {
         private javax.swing.JDialog jDialog3;
         private javax.swing.JDialog jDialog4;
         private javax.swing.JLabel jLabel1;
+        private javax.swing.JLabel jLabel10;
         private javax.swing.JLabel jLabel2;
         private javax.swing.JLabel jLabel3;
         private javax.swing.JLabel jLabel4;
@@ -1161,6 +1224,7 @@ public class AdminUI extends javax.swing.JFrame {
         private javax.swing.JTextField jTextField2;
         private javax.swing.JTextField jTextField3;
         private javax.swing.JTextField jTextField4;
+        private javax.swing.JTextField jTextField5;
         private javax.swing.JTree jTree1;
         private javax.swing.JMenuBar menuBar;
         private javax.swing.JMenuItem openMenuItem;

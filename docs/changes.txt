@@ -5,6 +5,10 @@ Changes between 2.0rc16 and 2.0rc17:
 + heap space exhaust effectively triggers gc
 + admin can abort transactions
 + admin UI adjustments
+  + manage users with right click
+  + abort transaction with right click
+  + transaction isolation level selection
+  + memory usage progress bar
 
 Changes between 2.0rc15 and 2.0rc16:
 
