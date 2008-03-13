@@ -94,4 +94,9 @@ public class AdminConnection extends Connection {
 			throw new RuntimeException(e);
 		}
 	}
+
+	public void close() {
+		connection=null;
+		super.close();
+	}
 }

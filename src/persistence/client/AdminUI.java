@@ -390,7 +390,6 @@ public class AdminUI extends javax.swing.JFrame {
 
 	void shutdown() {
 		try {
-			closeTimer();
 			((AdminConnection)conn).shutdown();
 			jCheckBox2.setSelected(false);
 			refreshShutdown();
@@ -1036,6 +1035,7 @@ public class AdminUI extends javax.swing.JFrame {
 
 	private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
 		jDialog1.setVisible(false);
+		closeTimer();
 		open();
 	}//GEN-LAST:event_jButton1ActionPerformed
 
@@ -1053,6 +1053,7 @@ public class AdminUI extends javax.swing.JFrame {
 	}//GEN-LAST:event_jButton3ActionPerformed
 
 	private void closeMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_closeMenuItemActionPerformed
+		closeTimer();
 		close();
 	}//GEN-LAST:event_closeMenuItemActionPerformed
 
@@ -1069,6 +1070,7 @@ public class AdminUI extends javax.swing.JFrame {
 	}//GEN-LAST:event_jButton10ActionPerformed
 
 	private void jButton11ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton11ActionPerformed
+		closeTimer();
 		shutdown();
 	}//GEN-LAST:event_jButton11ActionPerformed
 
