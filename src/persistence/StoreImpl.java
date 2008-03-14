@@ -254,8 +254,12 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 
 	void updateClasses() {
 		for(Iterator it=classes.values().iterator();it.hasNext();) {
-			if(refCount(((PersistentClass)it.next()).base)==1) it.remove();
+			if(refCount((PersistentClass)it.next())==1) it.remove();
 		}
+	}
+
+	synchronized long refCount(PersistentClass clazz) {
+		return refCount(clazz.base);
 	}
 
 	long allocatedSpace() {

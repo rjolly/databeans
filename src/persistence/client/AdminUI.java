@@ -413,6 +413,7 @@ public class AdminUI extends javax.swing.JFrame {
 
 	void error(Exception e) {
 		JOptionPane.showMessageDialog(this, e.toString(), "Error", JOptionPane.ERROR_MESSAGE);
+		e.printStackTrace();
 	}
 
 	/** This method is called from within the constructor to
