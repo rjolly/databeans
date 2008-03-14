@@ -353,7 +353,11 @@ public class AdminUI extends javax.swing.JFrame {
 				timer=new Timer(true);
 				timer.schedule(new TimerTask() {
 					public void run() {
-						refresh();
+						try {
+							refresh0();
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
 					}
 				}, 0, period*1000);
 			} catch (Exception e) {
@@ -364,6 +368,14 @@ public class AdminUI extends javax.swing.JFrame {
 			timer.cancel();
 			jTextField5.setEnabled(true);
 		}
+	}
+
+	void refresh0() throws Exception {
+		SwingUtilities.invokeAndWait(new Runnable() {
+			public void run() {
+				refresh();
+			}
+		});
 	}
 
 	void closeTimer() {
