@@ -658,7 +658,7 @@ public class HashMap extends AbstractMap implements Map, Cloneable
 			return HashMap.this.removeEntryForKey(o) != null;
 		}
 //		public void clear() {
-//			PersistentHashMap.this.clear();
+//			HashMap.this.clear();
 //		}
 	}
 
@@ -678,7 +678,7 @@ public class HashMap extends AbstractMap implements Map, Cloneable
 			return containsValue(o);
 		}
 //		public void clear() {
-//			PersistentHashMap.this.clear();
+//			HashMap.this.clear();
 //		}
 	}
 
@@ -709,7 +709,7 @@ public class HashMap extends AbstractMap implements Map, Cloneable
 			return HashMap.this.size();
 		}
 //		public void clear() {
-//			PersistentHashMap.this.clear();
+//			HashMap.this.clear();
 //		}
 	}
 }

@@ -246,6 +246,8 @@ public class ArrayList extends AbstractList
 //		return true;
 //	}
 
+	// Bulk Operations
+
 //	public void clear() {
 //		incModCount();
 //

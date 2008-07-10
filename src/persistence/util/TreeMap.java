@@ -460,7 +460,7 @@ public class TreeMap extends AbstractMap
 				}
 
 //				public void clear() {
-//					PersistentTreeMap.this.clear();
+//					TreeMap.this.clear();
 //				}
 			};
 		}
@@ -496,7 +496,7 @@ public class TreeMap extends AbstractMap
 				}
 
 //				public void clear() {
-//					PersistentTreeMap.this.clear();
+//					TreeMap.this.clear();
 //				}
 			};
 		}
@@ -537,7 +537,7 @@ public class TreeMap extends AbstractMap
 				}
 
 //				public void clear() {
-//					PersistentTreeMap.this.clear();
+//					TreeMap.this.clear();
 //				}
 			};
 		}
