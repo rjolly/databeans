@@ -23,7 +23,7 @@ public final class HashSetClass extends AbstractCollectionClass {
 
 	// Dummy value to associate with an Object in the backing Map
 	PersistentObject PRESENT() {
-		return (PersistentObject)execute(
+		return (PersistentObject)executeAtomic(
 			new MethodCall("PRESENT",new Class[] {},new Object[] {}));
 	}
 

@@ -17,9 +17,8 @@ import java.util.Set;
 import java.util.SortedMap;
 import persistence.PersistentObject;
 
-public class TreeMap extends AbstractMap
-					 implements SortedMap, Cloneable
-{
+public class TreeMap extends AbstractMap implements SortedMap, Cloneable {
+
 	protected PersistentObject.Accessor createAccessor() throws RemoteException {
 		return new Accessor();
 	}
@@ -321,7 +320,7 @@ public class TreeMap extends AbstractMap
 	}
 
 	public void init(Comparator c) {
-		execute(
+		executeAtomic(
 			new MethodCall("init",new Class[] {Comparator.class},new Object[] {c}));
 	}
 
@@ -330,14 +329,14 @@ public class TreeMap extends AbstractMap
 	}
 
 	public void init(SortedMap m) {
-		execute(
+		executeAtomic(
 			new MethodCall("init",new Class[] {SortedMap.class},new Object[] {m}));
 	}
 
 	// Query Operations
 
 	public int size() {
-		return ((Integer)execute(
+		return ((Integer)executeAtomic(
 			new MethodCall("size",new Class[] {},new Object[] {}))).intValue();
 	}
 
@@ -346,7 +345,7 @@ public class TreeMap extends AbstractMap
 	}
 
 	public boolean containsValue(Object value) {
-		return ((Boolean)execute(
+		return ((Boolean)executeAtomic(
 			new MethodCall("containsValue",new Class[] {Object.class},new Object[] {value}))).booleanValue();
 	}
 
@@ -377,7 +376,7 @@ public class TreeMap extends AbstractMap
 	transient Comparator comparator;
 
 	public Comparator comparator() {
-		return comparator==null?comparator=(Comparator)execute(
+		return comparator==null?comparator=(Comparator)executeAtomic(
 			new MethodCall("comparator",new Class[] {},new Object[] {})):comparator;
 	}
 
@@ -394,10 +393,10 @@ public class TreeMap extends AbstractMap
 //		if (size==0 && mapSize!=0 && map instanceof SortedMap) {
 //			Comparator c = ((SortedMap)map).comparator();
 //			if (c == comparator || (c != null && c.equals(comparator))) {
-//			  ++modCount;
+//				setModCount(getModCount()+1);
 //			  try {
-//				  buildFromSorted(mapSize, map.entrySet().iterator(),
-//								  null, null);
+//				buildFromSorted(mapSize, map.entrySet().iterator(),
+//					null, null);
 //			  } catch (java.io.IOException cannotHappen) {
 //			  } catch (ClassNotFoundException cannotHappen) {
 //			  }
@@ -408,23 +407,22 @@ public class TreeMap extends AbstractMap
 //	}
 
 	Entry getEntry(Object key) {
-		return (Entry)execute(
+		return (Entry)executeAtomic(
 			new MethodCall("getEntry",new Class[] {Object.class},new Object[] {key}));
 	}
 
 	Entry getCeilEntry(Object key) {
-		return (Entry)execute(
+		return (Entry)executeAtomic(
 			new MethodCall("getCeilEntry",new Class[] {Object.class},new Object[] {key}));
 	}
 
 	Entry getPrecedingEntry(Object key) {
-		return (Entry)execute(
+		return (Entry)executeAtomic(
 			new MethodCall("getPrecedingEntry",new Class[] {Object.class},new Object[] {key}));
 	}
 
 	static Object key(Entry e) {
-		if (e==null)
-			throw new NoSuchElementException();
+		if (e==null) throw new NoSuchElementException();
 		return e.getKey();
 	}
 
@@ -440,7 +438,7 @@ public class TreeMap extends AbstractMap
 
 	public Set keySet() {
 		if (keySet == null) {
-			keySet = new AbstractSet() {
+			keySet = new java.util.AbstractSet() {
 				public Iterator iterator() {
 					return new KeyIterator();
 				}
@@ -469,7 +467,7 @@ public class TreeMap extends AbstractMap
 
 	public Collection values() {
 		if (values == null) {
-			values = new AbstractCollection() {
+			values = new java.util.AbstractCollection() {
 				public Iterator iterator() {
 					return new ValueIterator();
 				}
@@ -505,7 +503,7 @@ public class TreeMap extends AbstractMap
 
 	public Set entrySet() {
 		if (entrySet == null) {
-			entrySet = new AbstractSet() {
+			entrySet = new java.util.AbstractSet() {
 				public Iterator iterator() {
 					return new EntryIterator();
 				}
@@ -545,19 +543,179 @@ public class TreeMap extends AbstractMap
 	}
 
 	public SortedMap subMap(Object fromKey, Object toKey) {
-		return (SortedMap)create(SubMap.class,new Class[] {TreeMap.class,Object.class,Object.class},new Object[] {this,fromKey,toKey});
+		return new SubMap(fromKey, toKey);
 	}
 
 	public SortedMap headMap(Object toKey) {
-		return (SortedMap)create(SubMap.class,new Class[] {TreeMap.class,Object.class,boolean.class},new Object[] {this,toKey,new Boolean(true)});
+		return new SubMap(toKey, true);
 	}
 
 	public SortedMap tailMap(Object fromKey) {
-		return (SortedMap)create(SubMap.class,new Class[] {TreeMap.class,Object.class,boolean.class},new Object[] {this,fromKey,new Boolean(false)});
+		return new SubMap(fromKey, false);
+	}
+
+	private class SubMap extends java.util.AbstractMap implements SortedMap {
+
+		private boolean fromStart = false, toEnd = false;
+		private Object  fromKey, toKey;
+
+		SubMap(Object fromKey, Object toKey) {
+			if (compare(fromKey, toKey) > 0)
+				throw new IllegalArgumentException("fromKey > toKey");
+			this.fromKey = fromKey;
+			this.toKey = toKey;
+		}
+
+		SubMap(Object key, boolean headMap) {
+			compare(key, key); // Type-check key
+
+			if (headMap) {
+				fromStart = true;
+				toKey = key;
+			} else {
+				toEnd = true;
+				fromKey = key;
+			}
+		}
+
+		SubMap(boolean fromStart, Object fromKey, boolean toEnd, Object toKey){
+			this.fromStart = fromStart;
+			this.fromKey= fromKey;
+			this.toEnd = toEnd;
+			this.toKey = toKey;
+		}
+
+		public boolean isEmpty() {
+			return entrySet.isEmpty();
+		}
+
+		public boolean containsKey(Object key) {
+			return inRange(key) && TreeMap.this.containsKey(key);
+		}
+
+		public Object get(Object key) {
+			if (!inRange(key))
+				return null;
+			return TreeMap.this.get(key);
+		}
+
+		public Object put(Object key, Object value) {
+			if (!inRange(key))
+				throw new IllegalArgumentException("key out of range");
+			return TreeMap.this.put(key, value);
+		}
+
+		public Comparator comparator() {
+			return TreeMap.this.comparator();
+		}
+
+		public Object firstKey() {
+			Object first = key(fromStart ? firstEntry():getCeilEntry(fromKey));
+			if (!toEnd && compare(first, toKey) >= 0)
+				throw(new NoSuchElementException());
+			return first;
+		}
+
+		public Object lastKey() {
+			Object last = key(toEnd ? lastEntry() : getPrecedingEntry(toKey));
+			if (!fromStart && compare(last, fromKey) < 0)
+				throw(new NoSuchElementException());
+			return last;
+		}
+
+		private transient Set entrySet = new EntrySetView();
+
+		public Set entrySet() {
+			return entrySet;
+		}
+
+		private class EntrySetView extends java.util.AbstractSet {
+			private transient int size = -1, sizeModCount;
+
+			public int size() {
+				if (size == -1 || sizeModCount != TreeMap.this.modCount()) {
+					size = 0;  sizeModCount = TreeMap.this.modCount();
+					Iterator i = iterator();
+					while (i.hasNext()) {
+						size++;
+						i.next();
+					}
+				}
+				return size;
+			}
+
+			public boolean isEmpty() {
+				return !iterator().hasNext();
+			}
+
+			public boolean contains(Object o) {
+				if (!(o instanceof Map.Entry))
+					return false;
+				Map.Entry entry = (Map.Entry)o;
+				Object key = entry.getKey();
+				if (!inRange(key))
+					return false;
+				TreeMap.Entry node = getEntry(key);
+				return node != null &&
+					valEquals(node.getValue(), entry.getValue());
+			}
+
+			public boolean remove(Object o) {
+				if (!(o instanceof Map.Entry))
+					return false;
+				Map.Entry entry = (Map.Entry)o;
+				Object key = entry.getKey();
+				if (!inRange(key))
+					return false;
+				TreeMap.Entry node = getEntry(key);
+				if (node!=null && valEquals(node.getValue(),entry.getValue())){
+					deleteEntry(node);
+					return true;
+				}
+				return false;
+			}
+
+			public Iterator iterator() {
+				return new SubMapEntryIterator(
+					(fromStart ? firstEntry() : getCeilEntry(fromKey)),
+					(toEnd	 ? null : getCeilEntry(toKey)));
+			}
+		}
+
+		public SortedMap subMap(Object fromKey, Object toKey) {
+			if (!inRange2(fromKey))
+				throw new IllegalArgumentException("fromKey out of range");
+			if (!inRange2(toKey))
+				throw new IllegalArgumentException("toKey out of range");
+			return new SubMap(fromKey, toKey);
+		}
+
+		public SortedMap headMap(Object toKey) {
+			if (!inRange2(toKey))
+				throw new IllegalArgumentException("toKey out of range");
+			return new SubMap(fromStart, fromKey, false, toKey);
+		}
+
+		public SortedMap tailMap(Object fromKey) {
+			if (!inRange2(fromKey))
+				throw new IllegalArgumentException("fromKey out of range");
+			return new SubMap(false, fromKey, toEnd, toKey);
+		}
+
+		private boolean inRange(Object key) {
+			return (fromStart || compare(key, fromKey) >= 0) &&
+				   (toEnd	 || compare(key, toKey)   <  0);
+		}
+
+		// This form allows the high endpoint (as well as all legit keys)
+		private boolean inRange2(Object key) {
+			return (fromStart || compare(key, fromKey) >= 0) &&
+				   (toEnd	 || compare(key, toKey)   <= 0);
+		}
 	}
 
 	int modCount() {
-		return ((Integer)execute(
+		return ((Integer)executeAtomic(
 			new MethodCall("modCount",new Class[] {},new Object[] {}))).intValue();
 	}
 
@@ -607,7 +765,7 @@ public class TreeMap extends AbstractMap
 	}
 
 	boolean hasChildren(Entry entry) {
-		return ((Boolean)execute(
+		return ((Boolean)executeAtomic(
 			new MethodCall("hasChildren",new Class[] {Entry.class},new Object[] {entry}))).booleanValue();
 	}
 
@@ -629,7 +787,7 @@ public class TreeMap extends AbstractMap
 		SubMapEntryIterator(Entry first, Entry firstExcluded) {
 			super(first);
 			firstExcludedKey = (firstExcluded == null ?
-								firstExcluded : firstExcluded.getKey());
+				firstExcluded : firstExcluded.getKey());
 		}
 
 		public boolean hasNext() {
@@ -645,7 +803,7 @@ public class TreeMap extends AbstractMap
 
 	int compare(Object k1, Object k2) {
 		return (comparator()==null ? ((Comparable)k1).compareTo(k2)
-								 : comparator().compare(k1, k2));
+			: comparator().compare(k1, k2));
 	}
 
 	static boolean valEquals(Object o1, Object o2) {
@@ -752,39 +910,39 @@ public class TreeMap extends AbstractMap
 		}
 
 		public void init(Object key, Object value, Entry parent) { 
-			execute(
+			executeAtomic(
 				new MethodCall("init",new Class[] {Object.class,Object.class,Entry.class},new Object[] {key,value,parent}));
 		}
 
 		public Object getKey() {
-			return execute(
+			return executeAtomic(
 				new MethodCall("getKey",new Class[] {},new Object[] {}));
 		}
 
 		public Object getValue() {
-			return execute(
+			return executeAtomic(
 				new MethodCall("getValue",new Class[] {},new Object[] {}));
 		}
 	
 		public Object setValue(Object value) {
-			return execute(
+			return executeAtomic(
 				new MethodCall("setValue",new Class[] {Object.class},new Object[] {value}),
 				new MethodCall("setValue",new Class[] {Object.class},new Object[] {null}),0);
 		}
 	}
 
 	Entry firstEntry() {
-		return (Entry)execute(
+		return (Entry)executeAtomic(
 			new MethodCall("firstEntry",new Class[] {},new Object[] {}));
 	}
 
 	Entry lastEntry() {
-		return (Entry)execute(
+		return (Entry)executeAtomic(
 			new MethodCall("lastEntry",new Class[] {},new Object[] {}));
 	}
 
 	private Entry successor(Entry t) {
-		return (Entry)execute(
+		return (Entry)executeAtomic(
 			new MethodCall("successor",new Class[] {Entry.class},new Object[] {t}));
 	}
 
@@ -961,19 +1119,19 @@ public class TreeMap extends AbstractMap
 //	}
 
 	private void buildFromSorted(int size, Iterator it,
-								  java.io.ObjectInputStream str,
-								  Object defaultVal)
-		throws  java.io.IOException, ClassNotFoundException {
+		java.io.ObjectInputStream str,
+		Object defaultVal)
+		throws java.io.IOException, ClassNotFoundException {
 		setSize(size);
 		setRoot(buildFromSorted(0, 0, size-1, computeRedLevel(size),
 			it, str, defaultVal));
 	}
 
 	private Entry buildFromSorted(int level, int lo, int hi,
-					     int redLevel,
-					     Iterator it, 
-					     java.io.ObjectInputStream str,
-					     Object defaultVal) 
+		int redLevel,
+		Iterator it, 
+		java.io.ObjectInputStream str,
+		Object defaultVal) 
 		throws  java.io.IOException, ClassNotFoundException {
 
 		if (hi < lo) return null;
@@ -983,7 +1141,7 @@ public class TreeMap extends AbstractMap
 		Entry left  = null;
 		if (lo < mid) 
 			left = buildFromSorted(level+1, lo, mid - 1, redLevel,
-								   it, str, defaultVal);
+				it, str, defaultVal);
 		
 		// extract key and/or value from iterator or stream
 		Object key;

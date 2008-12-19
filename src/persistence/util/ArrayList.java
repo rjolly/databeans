@@ -181,7 +181,7 @@ public class ArrayList extends AbstractList
 	}
 
 	public void init(int initialCapacity) {
-		execute(
+		executeAtomic(
 			new MethodCall("init",new Class[] {int.class},new Object[] {new Integer(initialCapacity)}));
 	}
 
@@ -190,22 +190,22 @@ public class ArrayList extends AbstractList
 	}
 
 	public void init(Collection c) {
-		execute(
+		executeAtomic(
 			new MethodCall("init",new Class[] {Collection.class},new Object[] {c}));
 	}
 
 	public void trimToSize() {
-		execute(
+		executeAtomic(
 			new MethodCall("trimToSize",new Class[] {},new Object[] {}));
 	}
 
 	public void ensureCapacity(int minCapacity) {
-		execute(
+		executeAtomic(
 			new MethodCall("ensureCapacity",new Class[] {int.class},new Object[] {new Integer(minCapacity)}));
 	}
 
 	public int size() {
-		return ((Integer)execute(
+		return ((Integer)executeAtomic(
 			new MethodCall("size",new Class[] {},new Object[] {}))).intValue();
 	}
 
@@ -218,22 +218,22 @@ public class ArrayList extends AbstractList
 	}
 
 	public int indexOf(Object elem) {
-		return ((Integer)execute(
+		return ((Integer)executeAtomic(
 			new MethodCall("indexOf",new Class[] {Object.class},new Object[] {elem}))).intValue();
 	}
 
 	public int lastIndexOf(Object elem) {
-		return ((Integer)execute(
+		return ((Integer)executeAtomic(
 			new MethodCall("lastIndexOf",new Class[] {Object.class},new Object[] {elem}))).intValue();
 	}
 
 	public Object[] toArray() {
-		return (Object[])execute(
+		return (Object[])executeAtomic(
 			new MethodCall("toArray",new Class[] {},new Object[] {}));
 	}
 
 	public Object[] toArray(Object a[]) {
-		return (Object[])execute(
+		return (Object[])executeAtomic(
 			new MethodCall("toArray",new Class[] {Object[].class},new Object[] {a}));
 	}
 
@@ -249,7 +249,7 @@ public class ArrayList extends AbstractList
 	// Bulk Operations
 
 //	public void clear() {
-//		incModCount();
+//		setModCount(getModCount()+1);
 //
 //		// Let gc do its work
 //		for (int i = 0; i < getSize(); i++)
@@ -287,7 +287,7 @@ public class ArrayList extends AbstractList
 //	}
 
 //	protected void removeRange(int fromIndex, int toIndex) {
-//		incModCount();
+//		setModCount(getModCount()+1);
 //		int numMoved = getSize() - toIndex;
 //		Arrays.copy(getElementData(), toIndex, getElementData(), fromIndex,
 //						 numMoved);

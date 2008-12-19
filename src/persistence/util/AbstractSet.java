@@ -52,7 +52,7 @@ public abstract class AbstractSet extends AbstractCollection implements Set {
 		}
 	}
 
-	public boolean removeAll(Collection c) {
+	public boolean _removeAll(Collection c) {
 		boolean modified = false;
 
 		if (size() > c.size()) {

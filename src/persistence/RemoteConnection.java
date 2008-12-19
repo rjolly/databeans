@@ -22,7 +22,8 @@ interface RemoteConnection extends Remote {
 	void setAutoCommit(boolean autoCommit) throws RemoteException;
 
 	Object execute(MethodCall call) throws RemoteException;
-	Object execute(MethodCall call, MethodCall undo, int index) throws RemoteException;
+	Object executeAtomic(MethodCall call) throws RemoteException;
+	Object executeAtomic(MethodCall call, MethodCall undo, int index) throws RemoteException;
 
 	void commit() throws RemoteException;
 	void rollback() throws RemoteException;

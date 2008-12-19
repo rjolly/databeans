@@ -2,6 +2,7 @@ package persistence.server;
 
 import java.rmi.Naming;
 import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.Map;
 import javax.security.auth.Subject;
 import javax.security.auth.callback.Callback;
@@ -60,15 +61,13 @@ public class DatabeansLoginModule implements LoginModule {
 			throw new LoginException("Error: no CallbackHandler available " +
 						"to garner authentication information from the user");
 
+		Callback[] callbacks = new Callback[2];
 		try {
-			Callback[] callbacks = new Callback[2];
 			callbacks[0] = new LocalNameCallback("user name: ");
 			callbacks[1] = new LocalPasswordCallback("password: ", false);
 
 			callbackHandler.handle(callbacks);
 
-			((LocalNameCallback)callbacks[0]).unexport();
-			((LocalPasswordCallback)callbacks[1]).unexport();
 			username = ((NameCallback)callbacks[0]).getName();
 			char[] tmpPassword = ((PasswordCallback)callbacks[1]).getPassword();
 			if (tmpPassword == null) {
@@ -86,6 +85,13 @@ public class DatabeansLoginModule implements LoginModule {
 			throw new LoginException("Error: " + uce.getCallback().toString() +
 				" not available to garner authentication information " +
 				"from the user");
+		} finally {
+			try {
+				UnicastRemoteObject.unexportObject(((LocalNameCallback)callbacks[0]).callback,true);
+				UnicastRemoteObject.unexportObject(((LocalPasswordCallback)callbacks[1]).callback,true);
+			} catch (RemoteException e) {
+				throw new RuntimeException(e);
+			}
 		}
 
 		// print debugging information

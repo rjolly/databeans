@@ -161,6 +161,10 @@ public class Connection implements Serializable {
 		return cache==null?cache=new WeakHashMap():cache;
 	}
 
+	MethodCall attach(MethodCall call) {
+		return attach(call.target()).new MethodCall(call.method,call.types,attach(call.args));
+	}
+
 	Object attach(Object obj) {
 		if(obj instanceof PersistentObject) return attach((PersistentObject)obj);
 		if(obj instanceof Object[]) return attach((Object[])obj);
@@ -194,6 +198,14 @@ public class Connection implements Serializable {
 		return w==null?null:(PersistentObject)w.get();
 	}
 
+	PersistentClass getClass(Accessor accessor) {
+		try {
+			return (PersistentClass)attach(accessor.clazz());
+		} catch (RemoteException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	Object execute(MethodCall call) {
 		try {
 			return attach(connection.execute(call));
@@ -202,9 +214,17 @@ public class Connection implements Serializable {
 		}
 	}
 
-	Object execute(MethodCall call, MethodCall undo, int index) {
+	Object executeAtomic(MethodCall call) {
 		try {
-			return attach(connection.execute(call,undo,index));
+			return attach(connection.executeAtomic(call));
+		} catch (RemoteException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	Object executeAtomic(MethodCall call, MethodCall undo, int index) {
+		try {
+			return attach(connection.executeAtomic(call,undo,index));
 		} catch (RemoteException e) {
 			throw new RuntimeException(e);
 		}

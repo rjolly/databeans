@@ -46,6 +46,7 @@ class RemoteConnectionImpl extends UnicastRemoteObject implements RemoteConnecti
 	}
 
 	synchronized PersistentObject create(PersistentClass clazz, Class types[], Object args[], boolean attached) {
+		if(readOnly) throw new PersistentException("read only");
 		try {
 			PersistentObject obj=store.create(clazz);
 			obj.getClass().getMethod("init",types).invoke(obj,args);
@@ -104,10 +105,14 @@ class RemoteConnectionImpl extends UnicastRemoteObject implements RemoteConnecti
 	}
 
 	public Object execute(MethodCall call) {
+		return new LocalConnection(this).attach(call).execute();
+	}
+
+	public Object executeAtomic(MethodCall call) {
 		return execute(store.attach(call),null,0,true);
 	}
 
-	public Object execute(MethodCall call, MethodCall undo, int index) {
+	public Object executeAtomic(MethodCall call, MethodCall undo, int index) {
 		return execute(store.attach(call),store.attach(undo),index,false);
 	}
 
@@ -124,10 +129,6 @@ class RemoteConnectionImpl extends UnicastRemoteObject implements RemoteConnecti
 
 	public synchronized void rollback() {
 		if(transaction!=null) transaction.rollback(subject);
-	}
-
-	synchronized void close() throws RemoteException {
-		UnicastRemoteObject.unexportObject(this,true);
 	}
 
 	protected final void finalize() {

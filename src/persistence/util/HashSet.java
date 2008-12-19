@@ -13,8 +13,7 @@ import java.util.Set;
 import persistence.PersistentClass;
 import persistence.PersistentObject;
 
-public class HashSet extends AbstractSet
-					 implements Set, Cloneable
+public class HashSet extends AbstractSet implements Set, Cloneable
 {
 	protected PersistentObject.Accessor createAccessor() throws RemoteException {
 		return new Accessor();
@@ -43,7 +42,7 @@ public class HashSet extends AbstractSet
 	}
 
 	HashMap map() {
-		return (HashMap)execute(
+		return (HashMap)executeAtomic(
 			new MethodCall("map",new Class[] {},new Object[] {}));
 	}
 
@@ -56,7 +55,7 @@ public class HashSet extends AbstractSet
 	}
 
 	void init(HashMap map) {
-		execute(
+		executeAtomic(
 			new MethodCall("init",new Class[] {HashMap.class},new Object[] {map}));
 	}
 

@@ -49,12 +49,12 @@ public final class PersistentArray extends PersistentObject implements Array {
 	}
 
 	public int length() {
-		return ((Integer)execute(
+		return ((Integer)executeAtomic(
 			new MethodCall("length",new Class[] {},new Object[] {}))).intValue();
 	}
 
 	public char typeCode() {
-		return ((Character)execute(
+		return ((Character)executeAtomic(
 			new MethodCall("typeCode",new Class[] {},new Object[] {}))).charValue();
 	}
 
@@ -115,12 +115,12 @@ public final class PersistentArray extends PersistentObject implements Array {
 	}
 
 	public Object get(int index) {
-		return execute(
+		return executeAtomic(
 			new MethodCall("get",new Class[] {int.class},new Object[] {new Integer(index)}));
 	}
 
 	public void set(int index, Object value) {
-		execute(
+		executeAtomic(
 			new MethodCall("set",new Class[] {int.class,Object.class},new Object[] {new Integer(index),value}),
 			new MethodCall("set",new Class[] {int.class,Object.class},new Object[] {new Integer(index),null}),1);
 	}

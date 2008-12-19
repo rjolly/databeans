@@ -27,7 +27,7 @@ public final class AbstractMapClass extends PersistentClass {
 	}
 
 	PersistentObject NULL() {
-		return (PersistentObject)execute(
+		return (PersistentObject)executeAtomic(
 			new MethodCall("NULL",new Class[] {},new Object[] {}));
 	}
 

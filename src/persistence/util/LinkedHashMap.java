@@ -28,6 +28,20 @@ public class LinkedHashMap extends HashMap {
 			setAccessOrder(accessOrder);
 		}
 
+		public synchronized boolean containsValue(Object value) {
+			// Overridden to take advantage of faster iterator
+			if (value==null) {
+				for (Entry e = getHeader().getAfter(); e != getHeader(); e = e.getAfter())
+					if (e.getValue()==null)
+						return true;
+			} else {
+				for (Entry e = getHeader().getAfter(); e != getHeader(); e = e.getAfter())
+					if (value.equals(e.getValue()))
+						return true;
+			}
+			return false;
+		}
+
 		public synchronized Object get(Object key) {
 			Entry e = (Entry)getEntry(key);
 			if (e == null)
@@ -77,7 +91,7 @@ public class LinkedHashMap extends HashMap {
 	}
 
 	public void init(int initialCapacity, float loadFactor, boolean accessOrder) {
-		execute(
+		executeAtomic(
 			new MethodCall("init",new Class[] {int.class,float.class,boolean.class},new Object[] {new Integer(initialCapacity),new Float(loadFactor),new Boolean(accessOrder)}));
 	}
 
@@ -96,22 +110,8 @@ public class LinkedHashMap extends HashMap {
 		}
 	}
 
-	public boolean containsValue(Object value) {
-		// Overridden to take advantage of faster iterator
-		if (value==null) {
-			for (Entry e = getHeader().getAfter(); e != getHeader(); e = e.getAfter())
-				if (e.getValue()==null)
-					return true;
-		} else {
-			for (Entry e = getHeader().getAfter(); e != getHeader(); e = e.getAfter())
-				if (value.equals(e.getValue()))
-					return true;
-		}
-		return false;
-	}
-
 	public Object get(Object key) {
-		return execute(
+		return executeAtomic(
 			new MethodCall("get",new Class[] {Object.class},new Object[] {key}));
 	}
 
@@ -122,7 +122,7 @@ public class LinkedHashMap extends HashMap {
 	}
 
 	Object put(HashMap.Entry entry, Object value) {
-		return execute(
+		return executeAtomic(
 			new MethodCall("put",new Class[] {HashMap.Entry.class,Object.class},new Object[] {entry,value}),
 			new MethodCall("put",new Class[] {HashMap.Entry.class,Object.class},new Object[] {entry,null}),1);
 	}

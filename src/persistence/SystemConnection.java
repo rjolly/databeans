@@ -29,10 +29,14 @@ class RemoteSystemConnection extends RemoteConnectionImpl {
 	}
 
 	public Object execute(MethodCall call) {
+		return call.execute();
+	}
+
+	public Object executeAtomic(MethodCall call) {
 		return execute(call,null,0,true);
 	}
 
-	public Object execute(MethodCall call, MethodCall undo, int index) {
+	public Object executeAtomic(MethodCall call, MethodCall undo, int index) {
 		return execute(call,undo,index,false);
 	}
 

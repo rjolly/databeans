@@ -156,7 +156,7 @@ public abstract class AbstractMap extends PersistentObject implements Map {
 		return size() == 0;
 	}
 
-	public boolean containsValue(Object value) {
+	public boolean _containsValue(Object value) {
 		Iterator i = entrySet().iterator();
 		if (value==null) {
 			while (i.hasNext()) {
@@ -174,7 +174,12 @@ public abstract class AbstractMap extends PersistentObject implements Map {
 		return false;
 	}
 
-	public boolean containsKey(Object key) {
+	public boolean containsValue(Object value) {
+		return ((Boolean)execute(
+			new MethodCall("_containsValue",new Class[] {Object.class},new Object[] {value}))).booleanValue();
+	}
+
+	public boolean _containsKey(Object key) {
 		Iterator i = entrySet().iterator();
 		if (key==null) {
 			while (i.hasNext()) {
@@ -192,22 +197,27 @@ public abstract class AbstractMap extends PersistentObject implements Map {
 		return false;
 	}
 
+	public boolean containsKey(Object key) {
+		return ((Boolean)execute(
+			new MethodCall("_containsKey",new Class[] {Object.class},new Object[] {key}))).booleanValue();
+	}
+
 	public Object get(Object key) {
-		return execute(
+		return executeAtomic(
 			new MethodCall("get",new Class[] {Object.class},new Object[] {key}));
 	}
 
 	// Modification Operations
 
 	public Object put(Object key, Object value) {
-		Object obj=execute(
+		Object obj=executeAtomic(
 			new MethodCall("put",new Class[] {Object.class,Object.class},new Object[] {key,value}),
 			new MethodCall("put",new Class[] {Object.class,Object.class},new Object[] {key,null}),1);
 		return obj==((AbstractMapClass)persistentClass()).NULL()?null:obj;
 	}
 
 	public Object remove(Object key) {
-		Object obj=execute(
+		Object obj=executeAtomic(
 			new MethodCall("put",new Class[] {Object.class,Object.class},new Object[] {key,((AbstractMapClass)persistentClass()).NULL()}),
 			new MethodCall("put",new Class[] {Object.class,Object.class},new Object[] {key,null}),1);
 		return obj==((AbstractMapClass)persistentClass()).NULL()?null:obj;
@@ -215,12 +225,17 @@ public abstract class AbstractMap extends PersistentObject implements Map {
 
 	// Bulk Operations
 
-	public void putAll(Map t) {
+	public void _putAll(Map t) {
 		Iterator i = t.entrySet().iterator();
 		while (i.hasNext()) {
 			Entry e = (Entry) i.next();
 			put(e.getKey(), e.getValue());
 		}
+	}
+
+	public void putAll(Map t) {
+		execute(
+			new MethodCall("_putAll",new Class[] {Map.class},new Object[] {t}));
 	}
 
 	public void clear() {
@@ -229,12 +244,12 @@ public abstract class AbstractMap extends PersistentObject implements Map {
 
 	// Views
 
-	transient volatile Set	      keySet = null;
+	transient volatile Set keySet = null;
 	transient volatile Collection values = null;
 
 	public Set keySet() {
 		if (keySet == null) {
-			keySet = new AbstractSet() {
+			keySet = new java.util.AbstractSet() {
 				public Iterator iterator() {
 					return new Iterator() {
 						private Iterator i = entrySet().iterator();
@@ -267,7 +282,7 @@ public abstract class AbstractMap extends PersistentObject implements Map {
 
 	public Collection values() {
 		if (values == null) {
-			values = new AbstractCollection() {
+			values = new java.util.AbstractCollection() {
 				public Iterator iterator() {
 					return new Iterator() {
 						private Iterator i = entrySet().iterator();

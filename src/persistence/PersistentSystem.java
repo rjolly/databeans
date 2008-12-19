@@ -59,7 +59,7 @@ public class PersistentSystem extends PersistentObject {
 	}
 
 	public Object root() {
-		return execute(
+		return executeAtomic(
 			new MethodCall("root",new Class[] {},new Object[] {}));
 	}
 }

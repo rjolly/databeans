@@ -49,8 +49,12 @@ public class PersistentObject implements Cloneable, Serializable {
 				return PersistentObject.this.base;
 			}
 
-			public Store store() throws RemoteException {
-				return PersistentObject.this.store;
+			public PersistentClass clazz() {
+				return clazz;
+			}
+
+			public Store store() {
+				return store;
 			}
 
 			public int hashCode() {
@@ -61,6 +65,16 @@ public class PersistentObject implements Cloneable, Serializable {
 				return obj instanceof Accessor && PersistentObject.this.base==((Accessor)obj).object().base;
 			}
 		};
+	}
+
+	static PersistentObject newInstance(PersistentObject object) {
+		PersistentObject obj=PersistentClass.newInstance(object.getClass());
+		obj.init(object);
+		return obj;
+	}
+
+	void init(PersistentObject object) {
+		accessor=object.accessor;
 	}
 
 	protected Accessor createAccessor() throws RemoteException {
@@ -133,20 +147,16 @@ public class PersistentObject implements Cloneable, Serializable {
 			store.setLock(base,transaction);
 		}
 
-		synchronized void close() throws RemoteException {
-			UnicastRemoteObject.unexportObject(this,true);
-		}
-
 		public final long base() {
 			return base;
 		}
 
-		public final Store store() {
-			return store;
+		public PersistentClass clazz() {
+			return clazz;
 		}
 
-		public final PersistentClass persistentClass() {
-			return clazz;
+		public final Store store() {
+			return store;
 		}
 
 		public int persistentHashCode() {
@@ -225,12 +235,12 @@ public class PersistentObject implements Cloneable, Serializable {
 	}
 
 	protected final Object get(String name) {
-		return execute(
+		return executeAtomic(
 			new MethodCall("get",new Class[] {String.class},new Object[] {name}));
 	}
 
 	protected final Object set(String name, Object value) {
-		return execute(
+		return executeAtomic(
 			new MethodCall("set",new Class[] {String.class,Object.class},new Object[] {name,value}),
 			new MethodCall("set",new Class[] {String.class,Object.class},new Object[] {name,null}),1);
 	}
@@ -239,8 +249,12 @@ public class PersistentObject implements Cloneable, Serializable {
 		return connection.execute(call);
 	}
 
-	protected final Object execute(MethodCall call, MethodCall undo, int index) {
-		return connection.execute(call,undo,index);
+	protected final Object executeAtomic(MethodCall call) {
+		return connection.executeAtomic(call);
+	}
+
+	protected final Object executeAtomic(MethodCall call, MethodCall undo, int index) {
+		return connection.executeAtomic(call,undo,index);
 	}
 
 	protected final class MethodCall implements Serializable {
@@ -258,6 +272,10 @@ public class PersistentObject implements Cloneable, Serializable {
 			return PersistentObject.this;
 		}
 
+		Object execute() {
+			return call(method,types,args);
+		}
+
 		Object execute(Subject subject) {
 			return execute(PersistentObject.this,subject);
 		}
@@ -271,16 +289,20 @@ public class PersistentObject implements Cloneable, Serializable {
 		}
 	}
 
+	Object call(String method, Class types[], Object args[]) {
+		try {
+			return getClass().getMethod(method,types).invoke(this,args);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	Object call(String method, Class types[], Object args[], boolean check) {
 		if(check) {
-			if((method.equals("get") || method.equals("set")) && types.length>0 && types[0]==String.class && !unchecked((String)args[0])) AccessController.checkPermission(new PropertyPermission(clazz.name()+"."+args[0]));
+			if((method.equals("get") || method.equals("set")) && types.length>0 && types[0]==String.class) AccessController.checkPermission(new PropertyPermission(clazz.name()+"."+args[0]));
 			else AccessController.checkPermission(new MethodPermission(clazz.name()+"."+method));
 		}
 		return ((Accessor)accessor).call(method,types,args);
-	}
-
-	protected boolean unchecked(String property) {
-		return false;
 	}
 
 	void lock(Transaction transaction) {
@@ -312,12 +334,11 @@ public class PersistentObject implements Cloneable, Serializable {
 	}
 
 	public final PersistentClass persistentClass() {
-		return (PersistentClass)execute(
-			new MethodCall("persistentClass",new Class[] {},new Object[] {}));
+		return clazz==null?clazz=connection.getClass(accessor):clazz;
 	}
 
 	public int hashCode() {
-		return ((Integer)execute(
+		return ((Integer)executeAtomic(
 			new MethodCall("persistentHashCode",new Class[] {},new Object[] {}))).intValue();
 	}
 
@@ -326,17 +347,17 @@ public class PersistentObject implements Cloneable, Serializable {
 	}
 
 	boolean equals(PersistentObject obj) {
-		return ((Boolean)execute(
+		return ((Boolean)executeAtomic(
 			new MethodCall("persistentEquals",new Class[] {PersistentObject.class},new Object[] {obj}))).booleanValue();
 	}
 
 	public String toString() {
-		return (String)execute(
+		return (String)executeAtomic(
 			new MethodCall("persistentToString",new Class[] {},new Object[] {}));
 	}
 
 	public Object clone() {
-		return execute(
+		return executeAtomic(
 			new MethodCall("persistentClone",new Class[] {},new Object[] {}));
 	}
 }

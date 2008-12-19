@@ -224,7 +224,7 @@ public class HashMap extends AbstractMap implements Map, Cloneable
 	}
 
 	public void init(int initialCapacity, float loadFactor) {
-		execute(
+		executeAtomic(
 			new MethodCall("init",new Class[] {int.class,float.class},new Object[] {new Integer(initialCapacity),new Float(loadFactor)}));
 	}
 
@@ -233,12 +233,12 @@ public class HashMap extends AbstractMap implements Map, Cloneable
 	}
 
 	public void init() {
-		execute(
+		executeAtomic(
 			new MethodCall("init",new Class[] {},new Object[] {}));
 	}
 
 	public void init(Map m) {
-		execute(
+		executeAtomic(
 			new MethodCall("init",new Class[] {Map.class},new Object[] {m}));
 	}
 
@@ -273,7 +273,7 @@ public class HashMap extends AbstractMap implements Map, Cloneable
 	}
  
 	public int size() {
-		return ((Integer)execute(
+		return ((Integer)executeAtomic(
 			new MethodCall("size",new Class[] {},new Object[] {}))).intValue();
 	}
   
@@ -287,12 +287,12 @@ public class HashMap extends AbstractMap implements Map, Cloneable
 	}
 
 	public boolean containsKey(Object key) {
-		return ((Boolean)execute(
+		return ((Boolean)executeAtomic(
 			new MethodCall("containsKey",new Class[] {Object.class},new Object[] {key}))).booleanValue();
 	}
 
 	Entry getEntry(Object key) {
-		return (Entry)execute(
+		return (Entry)executeAtomic(
 			new MethodCall("getEntry",new Class[] {Object.class},new Object[] {key}));
 	}
 
@@ -391,13 +391,13 @@ public class HashMap extends AbstractMap implements Map, Cloneable
 	}
 
 	Map.Entry putMapping(Object key, Object value) {
-		return (Map.Entry)execute(
+		return (Map.Entry)executeAtomic(
 			new MethodCall("putMapping",new Class[] {Object.class,Object.class},new Object[] {key,value}),
 			new MethodCall("removeMapping",new Class[] {Map.Entry.class},new Object[] {null}),0);
 	}
 
 	Map.Entry removeMapping(Map.Entry entry) {
-		return (Map.Entry)execute(
+		return (Map.Entry)executeAtomic(
 			new MethodCall("removeMapping",new Class[] {Map.Entry.class},new Object[] {entry}),
 			new MethodCall("putMapping",new Class[] {Map.Entry.class},new Object[] {null}),0);
 	}
@@ -411,7 +411,7 @@ public class HashMap extends AbstractMap implements Map, Cloneable
 //	}
 
 	public boolean containsValue(Object value) {
-		return ((Boolean)execute(
+		return ((Boolean)executeAtomic(
 			new MethodCall("containsValue",new Class[] {Object.class},new Object[] {value}))).booleanValue();
 	}
 
@@ -519,22 +519,22 @@ public class HashMap extends AbstractMap implements Map, Cloneable
 		}
 
 		public void init(int h, Object k, Object v, Entry n) { 
-			execute(
+			executeAtomic(
 				new MethodCall("init",new Class[] {int.class,Object.class,Object.class,Entry.class},new Object[] {new Integer(h), k, v, n}));
 		}
 
 		public Object getKey() {
-			return execute(
+			return executeAtomic(
 				new MethodCall("getKey",new Class[] {},new Object[] {}));
 		}
 
 		public Object getValue() {
-			return execute(
+			return executeAtomic(
 				new MethodCall("getValue",new Class[] {},new Object[] {}));
 		}
 	
 		public Object setValue(Object newValue) {
-			return execute(
+			return executeAtomic(
 				new MethodCall("setValue",new Class[] {Object.class},new Object[] {newValue}),
 				new MethodCall("setValue",new Class[] {Object.class},new Object[] {null}),0);
 		}
@@ -559,12 +559,12 @@ public class HashMap extends AbstractMap implements Map, Cloneable
 	}
 
 	Entry nextEntry(Entry entry) {
-		return (Entry)execute(
+		return (Entry)executeAtomic(
 			new MethodCall("nextEntry",new Class[] {Entry.class},new Object[] {entry}));
 	}
 
 	int modCount() {
-		return ((Integer)execute(
+		return ((Integer)executeAtomic(
 			new MethodCall("modCount",new Class[] {},new Object[] {}))).intValue();
 	}
 
@@ -644,7 +644,7 @@ public class HashMap extends AbstractMap implements Map, Cloneable
 		return (ks != null ? ks : (keySet = new KeySet()));
 	}
 
-	private class KeySet extends AbstractSet {
+	private class KeySet extends java.util.AbstractSet {
 		public Iterator iterator() {
 			return newKeyIterator();
 		}
@@ -667,7 +667,7 @@ public class HashMap extends AbstractMap implements Map, Cloneable
 		return (vs != null ? vs : (values = new Values()));
 	}
 
-	private class Values extends AbstractCollection {
+	private class Values extends java.util.AbstractCollection {
 		public Iterator iterator() {
 			return newValueIterator();
 		}
@@ -687,7 +687,7 @@ public class HashMap extends AbstractMap implements Map, Cloneable
 		return (es != null ? es : (entrySet = new EntrySet()));
 	}
 
-	private class EntrySet extends AbstractSet {
+	private class EntrySet extends java.util.AbstractSet {
 		public Iterator iterator() {
 			return newEntryIterator();
 		}

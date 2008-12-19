@@ -27,7 +27,7 @@ public final class HashMapClass extends PersistentClass {
 	}
 
 	PersistentObject NULL_KEY() {
-		return (PersistentObject)execute(
+		return (PersistentObject)executeAtomic(
 			new MethodCall("NULL_KEY",new Class[] {},new Object[] {}));
 	}
 

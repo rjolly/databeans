@@ -74,31 +74,31 @@ public abstract class AbstractList extends AbstractCollection implements List {
 	}
 
 	public Object get(int index) {
-		return execute(
+		return executeAtomic(
 			new MethodCall("get",new Class[] {int.class},new Object[] {new Integer(index)}));
 	}
 
 	public Object set(int index, Object element) {
-		return execute(
+		return executeAtomic(
 			new MethodCall("set",new Class[] {int.class,Object.class},new Object[] {new Integer(index),element}),
 			new MethodCall("set",new Class[] {int.class,Object.class},new Object[] {new Integer(index),null}),1);
 	}
 
 	public void add(int index, Object element) {
-		execute(
+		executeAtomic(
 			new MethodCall("add",new Class[] {int.class,Object.class},new Object[] {new Integer(index),element}),
 			new MethodCall("remove",new Class[] {int.class},new Object[] {null}),0);
 	}
 
 	public Object remove(int index) {
-		return execute(
+		return executeAtomic(
 			new MethodCall("remove",new Class[] {int.class},new Object[] {new Integer(index)}),
 			new MethodCall("add",new Class[] {int.class,Object.class},new Object[] {new Integer(index),null}),1);
 	}
 
 	// Search Operations
 
-	public int indexOf(Object o) {
+	public int _indexOf(Object o) {
 		ListIterator e = listIterator();
 		if (o==null) {
 			while (e.hasNext())
@@ -112,7 +112,12 @@ public abstract class AbstractList extends AbstractCollection implements List {
 		return -1;
 	}
 
-	public int lastIndexOf(Object o) {
+	public int indexOf(Object o) {
+		return ((Integer)execute(
+			new MethodCall("_indexOf",new Class[] {Object.class},new Object[] {o}))).intValue();
+	}
+
+	public int _lastIndexOf(Object o) {
 		ListIterator e = listIterator(size());
 		if (o==null) {
 			while (e.hasPrevious())
@@ -126,13 +131,18 @@ public abstract class AbstractList extends AbstractCollection implements List {
 		return -1;
 	}
 
+	public int lastIndexOf(Object o) {
+		return ((Integer)execute(
+			new MethodCall("_lastIndexOf",new Class[] {Object.class},new Object[] {o}))).intValue();
+	}
+
 	// Bulk Operations
 
-	public void clear() {
+	public void _clear() {
 		removeRange(0, size());
 	}
 
-	public boolean addAll(int index, Collection c) {
+	public boolean _addAll(int index, Collection c) {
 		boolean modified = false;
 		Iterator e = c.iterator();
 		while (e.hasNext()) {
@@ -140,6 +150,11 @@ public abstract class AbstractList extends AbstractCollection implements List {
 			modified = true;
 		}
 		return modified;
+	}
+
+	public boolean addAll(int index, Collection c) {
+		return ((Boolean)execute(
+			new MethodCall("_addAll",new Class[] {int.class,Collection.class},new Object[] {new Integer(index),c}))).booleanValue();
 	}
 
 	// Iterators
@@ -160,7 +175,7 @@ public abstract class AbstractList extends AbstractCollection implements List {
 	}
 
 	int modCount() {
-		return ((Integer)execute(
+		return ((Integer)executeAtomic(
 			new MethodCall("modCount",new Class[] {},new Object[] {}))).intValue();
 	}
 
@@ -264,7 +279,9 @@ public abstract class AbstractList extends AbstractCollection implements List {
 	}
 
 	public List subList(int fromIndex, int toIndex) {
-		return (List)create(this instanceof RandomAccess?RandomAccessSubList.class:SubList.class,new Class[] {AbstractList.class,int.class,int.class},new Object[] {this,new Integer(fromIndex),new Integer(toIndex)});
+		return (this instanceof RandomAccess ?
+		new RandomAccessSubList(this, fromIndex, toIndex) :
+		new SubList(this, fromIndex, toIndex));
 	}
 
 	protected void removeRange(int fromIndex, int toIndex) {
@@ -281,5 +298,187 @@ public abstract class AbstractList extends AbstractCollection implements List {
 
 	public void setModCount(int n) {
 		set("modCount",new Integer(n));
+	}
+}
+
+class SubList extends java.util.AbstractList {
+	protected AbstractList l;
+	protected int offset;
+	private int size;
+	private int expectedModCount;
+
+	SubList(AbstractList list, int fromIndex, int toIndex) {
+		if (fromIndex < 0)
+			throw new IndexOutOfBoundsException("fromIndex = " + fromIndex);
+		if (toIndex > list.size())
+			throw new IndexOutOfBoundsException("toIndex = " + toIndex);
+		if (fromIndex > toIndex)
+			throw new IllegalArgumentException("fromIndex(" + fromIndex +
+			") > toIndex(" + toIndex + ")");
+		l = list;
+		offset = fromIndex;
+		size = toIndex - fromIndex;
+		expectedModCount = l.modCount();
+	}
+
+	SubList(AbstractList list, int offset, int fromIndex, int toIndex, int size) {
+		if (fromIndex < 0)
+			throw new IndexOutOfBoundsException("fromIndex = " + fromIndex);
+		if (toIndex > size)
+			throw new IndexOutOfBoundsException("toIndex = " + toIndex);
+		if (fromIndex > toIndex)
+			throw new IllegalArgumentException("fromIndex(" + fromIndex +
+			") > toIndex(" + toIndex + ")");
+		l = list;
+		offset = offset+fromIndex;
+		size = toIndex - fromIndex;
+		expectedModCount = l.modCount();
+	}
+
+	public Object set(int index, Object element) {
+		rangeCheck(index);
+		checkForComodification();
+		return l.set(index+offset, element);
+	}
+
+	public Object get(int index) {
+		rangeCheck(index);
+		checkForComodification();
+		return l.get(index+offset);
+	}
+
+	public int size() {
+		checkForComodification();
+		return size;
+	}
+
+	public void add(int index, Object element) {
+		if (index<0 || index>size)
+			throw new IndexOutOfBoundsException();
+		checkForComodification();
+		l.add(index+offset, element);
+		expectedModCount = l.modCount();
+		size++;
+	}
+
+	public Object remove(int index) {
+		rangeCheck(index);
+		checkForComodification();
+		Object result = l.remove(index+offset);
+		expectedModCount = l.modCount();
+		size--;
+		return result;
+	}
+
+	protected void removeRange(int fromIndex, int toIndex) {
+		checkForComodification();
+		l.removeRange(fromIndex+offset, toIndex+offset);
+		expectedModCount = l.modCount();
+		size -= (toIndex-fromIndex);
+	}
+
+	public boolean addAll(Collection c) {
+		return addAll(size, c);
+	}
+
+	public boolean addAll(int index, Collection c) {
+		if (index<0 || index>size)
+			throw new IndexOutOfBoundsException(
+				"Index: "+index+", Size: "+size);
+		int cSize = c.size();
+		if (cSize==0)
+			return false;
+
+		checkForComodification();
+		l.addAll(offset+index, c);
+		expectedModCount = l.modCount();
+		size += cSize;
+		return true;
+	}
+
+	public Iterator iterator() {
+		return listIterator();
+	}
+
+	public ListIterator listIterator(final int index) {
+		checkForComodification();
+		if (index<0 || index>size)
+			throw new IndexOutOfBoundsException(
+				"Index: "+index+", Size: "+size);
+
+		return new ListIterator() {
+			private ListIterator i = l.listIterator(index+offset);
+
+			public boolean hasNext() {
+				return nextIndex() < size;
+			}
+
+			public Object next() {
+				if (hasNext())
+					return i.next();
+				else
+					throw new NoSuchElementException();
+			}
+
+			public boolean hasPrevious() {
+				return previousIndex() >= 0;
+			}
+
+			public Object previous() {
+				if (hasPrevious())
+					return i.previous();
+				else
+					throw new NoSuchElementException();
+			}
+
+			public int nextIndex() {
+				return i.nextIndex() - offset;
+			}
+
+			public int previousIndex() {
+				return i.previousIndex() - offset;
+			}
+
+			public void remove() {
+				i.remove();
+				expectedModCount = l.modCount();
+				size--;
+			}
+
+			public void set(Object o) {
+				i.set(o);
+			}
+
+			public void add(Object o) {
+				i.add(o);
+				expectedModCount = l.modCount();
+				size++;
+			}
+		};
+	}
+
+	public List subList(int fromIndex, int toIndex) {
+		return new SubList(l, offset, fromIndex, toIndex, size);
+	}
+
+	private void rangeCheck(int index) {
+		if (index<0 || index>=size)
+			throw new IndexOutOfBoundsException("Index: "+index+
+			",Size: "+size);
+	}
+
+	private void checkForComodification() {
+		if (l.modCount() != expectedModCount)
+			throw new ConcurrentModificationException();
+	}
+}
+
+class RandomAccessSubList extends SubList implements RandomAccess {
+	RandomAccessSubList(AbstractList list, int fromIndex, int toIndex) {
+		super(list, fromIndex, toIndex);
+	}
+
+	public List subList(int fromIndex, int toIndex) {
+		return new RandomAccessSubList(l, offset+fromIndex, offset+toIndex);
 	}
 }

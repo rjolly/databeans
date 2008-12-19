@@ -98,22 +98,22 @@ public class PropertyChangeSupport extends PersistentObject {
 	}
 
 	public void addPropertyChangeListener(PropertyChangeListener listener) {
-		execute(
+		executeAtomic(
 			new MethodCall("addPropertyChangeListener",new Class[] {PropertyChangeListener.class},new Object[] {listener}));
 	}
 
 	public void removePropertyChangeListener(PropertyChangeListener listener) {
-		execute(
+		executeAtomic(
 			new MethodCall("removePropertyChangeListener",new Class[] {PropertyChangeListener.class},new Object[] {listener}));
 	}
 
 	public void addPropertyChangeListener(String propertyName, PropertyChangeListener listener) {
-		execute(
+		executeAtomic(
 			new MethodCall("addPropertyChangeListener",new Class[] {String.class,PropertyChangeListener.class},new Object[] {propertyName,listener}));
 	}
 
 	public void removePropertyChangeListener(String propertyName, PropertyChangeListener listener) {
-		execute(
+		executeAtomic(
 			new MethodCall("removePropertyChangeListener",new Class[] {String.class,PropertyChangeListener.class},new Object[] {propertyName,listener}));
 	}
 

@@ -304,20 +304,14 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 			((Transaction)it.next()).abort();
 		}
 		for(Iterator it=connections.keySet().iterator();it.hasNext();it.remove()) {
-			((RemoteConnectionImpl)it.next()).close();
+			UnicastRemoteObject.unexportObject((RemoteConnection)it.next(),true);
 		}
 		for(Iterator it=cache.keySet().iterator();it.hasNext();it.remove()) {
-			close(((PersistentObject.Accessor)it.next()).object());
+			UnicastRemoteObject.unexportObject((Accessor)it.next(),true);
 		}
-		((RemoteConnectionImpl)systemConnection.connection).close();
-		systemConnection.close();
+		UnicastRemoteObject.unexportObject(systemConnection.connection,true);
 		if(!readOnly) heap.mount(false);
 		closed=true;
-	}
-
-	void close(PersistentObject obj) throws RemoteException {
-		((PersistentObject.Accessor)obj.accessor).close();
-		obj.close();
 	}
 
 	public synchronized void gc() {

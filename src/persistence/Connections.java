@@ -32,10 +32,8 @@ public class Connections {
 		Connection conn;
 		try {
 			conn=((Store)Naming.lookup(name)).getConnection(local,level);
-			local.unexport();
-		} catch (Exception e) {
-			local.unexport();
-			throw e;
+		} finally {
+			UnicastRemoteObject.unexportObject(local.handler,true);
 		}
 		return conn;
 	}
@@ -45,10 +43,8 @@ public class Connections {
 		AdminConnection conn;
 		try {
 			conn=((Store)Naming.lookup(name)).getAdminConnection(local);
-			local.unexport();
-		} catch (Exception e) {
-			local.unexport();
-			throw e;
+		} finally {
+			UnicastRemoteObject.unexportObject(local.handler,true);
 		}
 		return conn;
 	}
@@ -68,10 +64,6 @@ class LocalCallbackHandler implements CallbackHandler, Serializable {
 
 	public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
 		handler.handle((Callback[])callbacks);
-	}
-
-	boolean unexport() throws RemoteException {
-		return UnicastRemoteObject.unexportObject(handler,false);
 	}
 }
 

@@ -1,4 +1,8 @@
 <project name="databeans" default="run" basedir=".">
+
+  <property name="version" value=""/>
+  <property name="pkgname" value="databeans${version}"/>
+
 <!--
   <target name="mkheapspace">
     <exec executable="dd">
@@ -109,18 +113,17 @@
     <javadoc sourcepath="src" destdir="api" packagenames="*"/>
   </target>
 
-  <target name="bundle" depends="jar">
+  <target name="bundle" depends="jar, javadoc">
     <antcall target="clean"/>
     <antcall target="clean_sample"/>
     <delete file="heapspace" quiet="true"/>
     <delete file="sample/server/heapspace" quiet="true"/>
-    <antcall target="javadoc"/>
-    <zip destfile="../databeans.zip"
+    <zip destfile="../${pkgname}.zip"
          basedir=".."
-         includes="databeans/**"
-         excludes="databeans/nbproject/private/**,
-                   databeans/sample/client/nbproject/private/**,
-		   databeans/sample/server/nbproject/private/**"/>
+         includes="${pkgname}/**"
+         excludes="${pkgname}/nbproject/private/**,
+                   ${pkgname}/sample/client/nbproject/private/**,
+		   ${pkgname}/sample/server/nbproject/private/**"/>
   </target>
 
   <target name="ui" depends="compile">

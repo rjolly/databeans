@@ -176,7 +176,7 @@
       <SubComponents>
         <Component class="javax.swing.JLabel" name="jLabel2">
           <Properties>
-            <Property name="text" type="java.lang.String" value="&lt;html&gt;databeans : a new, fully object oriented persistence framework for java&lt;br/&gt;Copyright (C) 2007-2008 Databeans&lt;br/&gt;&lt;br/&gt;Version 2.0rc17&lt;/html&gt;"/>
+            <Property name="text" type="java.lang.String" value="&lt;html&gt;databeans : a new, fully object oriented persistence framework for java&lt;br&gt;Copyright (C) 2007-2008 Databeans&lt;br&gt;&lt;br&gt;Version 2.0&lt;/html&gt;"/>
           </Properties>
         </Component>
         <Component class="javax.swing.JButton" name="jButton3">

@@ -99,22 +99,22 @@ public class VetoableChangeSupport extends PersistentObject {
 	}
 
 	public void addVetoableChangeListener(VetoableChangeListener listener) {
-		execute(
+		executeAtomic(
 			new MethodCall("addVetoableChangeListener",new Class[] {VetoableChangeListener.class},new Object[] {listener}));
 	}
 
 	public void removeVetoableChangeListener(VetoableChangeListener listener) {
-		execute(
+		executeAtomic(
 			new MethodCall("removeVetoableChangeListener",new Class[] {VetoableChangeListener.class},new Object[] {listener}));
 	}
 
 	public void addVetoableChangeListener(String propertyName, VetoableChangeListener listener) {
-		execute(
+		executeAtomic(
 			new MethodCall("addVetoableChangeListener",new Class[] {String.class,VetoableChangeListener.class},new Object[] {propertyName,listener}));
 	}
 
 	public void removeVetoableChangeListener(String propertyName, VetoableChangeListener listener) {
-		execute(
+		executeAtomic(
 			new MethodCall("removeVetoableChangeListener",new Class[] {String.class,VetoableChangeListener.class},new Object[] {propertyName,listener}));
 	}
 

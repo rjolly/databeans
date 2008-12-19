@@ -125,9 +125,11 @@ public class AdminUI extends javax.swing.JFrame {
 		} catch (bsh.EvalError e) {
 			error(e);
 		}
+		closeMenuItem.setEnabled(true);
 	}
 
 	void close() {
+		closeMenuItem.setEnabled(false);
 		try {
 			interpreter.set("conn",null);
 		} catch (bsh.EvalError e) {
@@ -581,7 +583,7 @@ public class AdminUI extends javax.swing.JFrame {
 
                 jDialog2.setModal(true);
 
-                jLabel2.setText("<html>databeans : a new, fully object oriented persistence framework for java<br/>Copyright (C) 2007-2008 Databeans<br/><br/>Version 2.0rc17</html>");
+                jLabel2.setText("<html>databeans : a new, fully object oriented persistence framework for java<br>Copyright (C) 2007-2008 Databeans<br><br>Version 2.0</html>");
 
                 jButton3.setText("Ok");
                 jButton3.addActionListener(new java.awt.event.ActionListener() {
@@ -990,6 +992,7 @@ public class AdminUI extends javax.swing.JFrame {
                 fileMenu.add(openMenuItem);
 
                 closeMenuItem.setText("Close");
+                closeMenuItem.setEnabled(false);
                 closeMenuItem.addActionListener(new java.awt.event.ActionListener() {
                         public void actionPerformed(java.awt.event.ActionEvent evt) {
                                 closeMenuItemActionPerformed(evt);

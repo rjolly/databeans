@@ -14,10 +14,8 @@ public class Sample {
 		Connection conn;
 		try {
 			conn=Connections.getConnection("//localhost/store");
+		} finally {
 			frame.dispose();
-		} catch (Exception e) {
-			frame.dispose();
-			throw e;
 		}
 
 		// Populate
