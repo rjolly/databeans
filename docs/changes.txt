@@ -1,3 +1,12 @@
+Changes between 2.0rc17 and 2.1:
+
++ a mechanism for server side method invocation
++ Collection bulk operations done on server side, for efficiency
++ Collection view classes not persistent
++ shutdown used to fail when security is enabled due to login callbacks not properly unexported : fixed
++ AdminUI close menu item disabled when no open connection
++ connection.create() disallowed in read-only
+
 Changes between 2.0rc16 and 2.0rc17:
 
 + heap made unsynchronized ; synchronization done at upper level (store)

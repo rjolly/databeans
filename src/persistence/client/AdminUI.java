@@ -583,7 +583,8 @@ public class AdminUI extends javax.swing.JFrame {
 
                 jDialog2.setModal(true);
 
-                jLabel2.setText("<html>databeans : a new, fully object oriented persistence framework for java<br>Copyright (C) 2007-2008 Databeans<br><br>Version 2.0</html>");
+                Package pkg=getClass().getPackage();
+                jLabel2.setText("<html>databeans : a new, fully object oriented persistence framework for java<br>Copyright (C) 2007-2008 Databeans<br><br>Version "+pkg.getSpecificationVersion()+" "+pkg.getImplementationVersion()+"</html>");
 
                 jButton3.setText("Ok");
                 jButton3.addActionListener(new java.awt.event.ActionListener() {
