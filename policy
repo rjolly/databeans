@@ -11,8 +11,9 @@ grant codebase "file:databeans.jar" {
 };
 
 grant codebase "file:-" {
-	permission java.util.PropertyPermission "*", "read";
+	permission java.io.FilePermission "-", "read";
 	permission java.net.SocketPermission "localhost:1024-", "accept,connect";
+	permission java.util.PropertyPermission "*", "read";
 	permission java.awt.AWTPermission "accessClipboard";
 };
 
