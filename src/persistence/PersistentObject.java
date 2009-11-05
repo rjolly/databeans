@@ -151,7 +151,7 @@ public class PersistentObject implements Cloneable, Serializable {
 			return base;
 		}
 
-		public PersistentClass clazz() {
+		public final PersistentClass clazz() {
 			return clazz;
 		}
 
