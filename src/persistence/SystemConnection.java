@@ -4,9 +4,7 @@ import java.rmi.RemoteException;
 import persistence.PersistentObject.MethodCall;
 
 class SystemConnection extends Connection {
-	SystemConnection(StoreImpl store) throws RemoteException {
-		super(new RemoteSystemConnection(store));
-	}
+	SystemConnection() {}
 
 	PersistentObject attach(PersistentObject obj) {
 		return obj;
@@ -18,8 +16,8 @@ class SystemConnection extends Connection {
 }
 
 class RemoteSystemConnection extends RemoteConnectionImpl {
-	RemoteSystemConnection(StoreImpl store) throws RemoteException {
-		super(store,false,null);
+	RemoteSystemConnection(SystemConnection connection, StoreImpl store) throws RemoteException {
+		super(connection,store,false,null);
 	}
 
 	void open() {}

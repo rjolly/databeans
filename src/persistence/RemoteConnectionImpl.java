@@ -9,6 +9,7 @@ import persistence.PersistentObject.MethodCall;
 import persistence.server.DatabeansPrincipal;
 
 class RemoteConnectionImpl extends UnicastRemoteObject implements RemoteConnection {
+	final Connection connection;
 	final StoreImpl store;
 	Transaction transaction;
 	int level;
@@ -16,11 +17,12 @@ class RemoteConnectionImpl extends UnicastRemoteObject implements RemoteConnecti
 	boolean autoCommit;
 	Subject subject;
 
-	RemoteConnectionImpl(StoreImpl store, boolean readOnly, Subject subject) throws RemoteException {
-		this(store,Connection.TRANSACTION_NONE,readOnly,subject);
+	RemoteConnectionImpl(Connection connection, StoreImpl store, boolean readOnly, Subject subject) throws RemoteException {
+		this(connection,store,Connection.TRANSACTION_NONE,readOnly,subject);
 	}
 
-	RemoteConnectionImpl(StoreImpl store, int level, boolean readOnly, Subject subject) throws RemoteException {
+	RemoteConnectionImpl(Connection connection, StoreImpl store, int level, boolean readOnly, Subject subject) throws RemoteException {
+		this.connection=connection;
 		this.store=store;
 		this.level=level;
 		this.readOnly=readOnly;
@@ -105,7 +107,7 @@ class RemoteConnectionImpl extends UnicastRemoteObject implements RemoteConnecti
 	}
 
 	public Object execute(MethodCall call) {
-		return new LocalConnection(this).attach(call).execute();
+		return connection.attach(store.attach(call)).execute();
 	}
 
 	public Object executeAtomic(MethodCall call) {

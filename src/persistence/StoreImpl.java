@@ -49,7 +49,7 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 		} catch (FileNotFoundException e) {
 			throw new RuntimeException(e);
 		}
-		systemConnection=new SystemConnection(this);
+		systemConnection=Connection.newInstance(this);
 		if((boot=heap.boot())==0) {
 			heap.mount(true);
 			create();
@@ -277,11 +277,11 @@ public class StoreImpl extends UnicastRemoteObject implements Collector, Store {
 
 	public Connection getConnection(CallbackHandler handler, int level) throws RemoteException {
 		if(readOnly) throw new PersistentException("store in recovery mode");
-		return new Connection(this,level,Login.login(handler).getSubject());
+		return Connection.newInstance(this,level,Login.login(handler).getSubject());
 	}
 
 	public AdminConnection getAdminConnection(CallbackHandler handler) throws RemoteException {
-		return new AdminConnection(this,readOnly,Login.login(handler).getSubject());
+		return Connection.newInstance(this,readOnly,Login.login(handler).getSubject());
 	}
 
 	Transaction getTransaction(String client) {

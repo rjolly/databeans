@@ -6,10 +6,7 @@ import javax.security.auth.Subject;
 public class AdminConnection extends Connection {
 	RemoteAdminConnection connection;
 
-	AdminConnection(StoreImpl store, boolean readOnly, Subject subject) throws RemoteException {
-		super(new RemoteAdminConnectionImpl(store,readOnly,subject));
-		connection=(RemoteAdminConnection)super.connection;
-	}
+	AdminConnection() {}
 
 	public void abortTransaction(Transaction transaction) {
 		try {

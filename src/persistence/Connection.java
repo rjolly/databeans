@@ -23,12 +23,25 @@ public class Connection implements Serializable {
 	transient Subject subject;
 	transient Map cache;
 
-	Connection(RemoteConnection connection) {
-		this.connection=connection;
+	Connection() {}
+
+	static Connection newInstance(StoreImpl store, int level, Subject subject) throws RemoteException {
+		Connection conn=new Connection();
+		conn.connection=new RemoteConnectionImpl(conn,store,level,false,subject);
+		return conn;
 	}
 
-	Connection(StoreImpl store, int level, Subject subject) throws RemoteException {
-		this(new RemoteConnectionImpl(store,level,false,subject));
+	static AdminConnection newInstance(StoreImpl store, boolean readOnly, Subject subject) throws RemoteException {
+		AdminConnection conn=new AdminConnection();
+		((Connection)conn).connection=new RemoteAdminConnectionImpl(conn,store,readOnly,subject);
+		conn.connection=(RemoteAdminConnection)((Connection)conn).connection;
+		return conn;
+	}
+
+	static SystemConnection newInstance(StoreImpl store) throws RemoteException {
+		SystemConnection conn=new SystemConnection();
+		conn.connection=new RemoteSystemConnection(conn,store);
+		return conn;
 	}
 
 	public PersistentObject create(String name) {
@@ -181,8 +194,9 @@ public class Connection implements Serializable {
 		synchronized(cache) {
 			PersistentObject o=get(obj.accessor);
 			if(o==null) {
-				obj.connection=this;
-				cache(o=obj);
+				o=obj.connection==null?obj:PersistentObject.newInstance(obj);
+				o.connection=this;
+				cache(o);
 			}
 			return o;
 		}
