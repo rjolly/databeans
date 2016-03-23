@@ -25,20 +25,20 @@ public class Connection implements Serializable {
 
 	Connection() {}
 
-	static Connection newInstance(StoreImpl store, int level, Subject subject) throws RemoteException {
+	static Connection newInstance(Store store, int level, Subject subject) throws RemoteException {
 		Connection conn=new Connection();
 		conn.connection=new RemoteConnectionImpl(conn,store,level,false,subject);
 		return conn;
 	}
 
-	static AdminConnection newInstance(StoreImpl store, boolean readOnly, Subject subject) throws RemoteException {
+	static AdminConnection newInstance(Store store, boolean readOnly, Subject subject) throws RemoteException {
 		AdminConnection conn=new AdminConnection();
 		((Connection)conn).connection=new RemoteAdminConnectionImpl(conn,store,readOnly,subject);
 		conn.connection=(RemoteAdminConnection)((Connection)conn).connection;
 		return conn;
 	}
 
-	static SystemConnection newInstance(StoreImpl store) throws RemoteException {
+	static SystemConnection newInstance(Store store) throws RemoteException {
 		SystemConnection conn=new SystemConnection();
 		conn.connection=new RemoteSystemConnection(conn,store);
 		return conn;

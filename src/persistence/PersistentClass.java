@@ -59,7 +59,7 @@ public class PersistentClass extends PersistentObject {
 		}
 	}
 
-	static PersistentClass newInstance(long base, StoreImpl store) {
+	static PersistentClass newInstance(long base, Store store) {
 		PersistentClass c=(PersistentClass)newInstance(base,new ClassClass(),store);
 		c.setup();
 		c.setClass(c);
@@ -131,7 +131,7 @@ public class PersistentClass extends PersistentObject {
 		set("fields",str);
 	}
 
-	static PersistentClass create(Class clazz, StoreImpl store) {
+	static PersistentClass create(Class clazz, Store store) {
 		PersistentObject obj=newInstance(clazz);
 		obj.connection=store.systemConnection;
 		return obj.createClass();

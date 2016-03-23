@@ -7,7 +7,7 @@ import java.security.PrivilegedExceptionAction;
 import javax.security.auth.Subject;
 
 class RemoteAdminConnectionImpl extends RemoteConnectionImpl implements RemoteAdminConnection {
-	RemoteAdminConnectionImpl(AdminConnection connection, StoreImpl store, boolean readOnly, Subject subject) throws RemoteException {
+	RemoteAdminConnectionImpl(AdminConnection connection, Store store, boolean readOnly, Subject subject) throws RemoteException {
 		super(connection,store,readOnly,subject);
 	}
 

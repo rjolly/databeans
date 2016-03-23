@@ -13,18 +13,18 @@ public class PersistentObject implements Cloneable, Serializable {
 	persistence.Accessor accessor;
 	transient Connection connection;
 	transient PersistentClass clazz;
-	transient StoreImpl store;
+	transient Store store;
 	transient long base;
 
 	public void init() {}
 
-	static PersistentObject newInstance(long base, PersistentClass clazz, StoreImpl store) {
+	static PersistentObject newInstance(long base, PersistentClass clazz, Store store) {
 		PersistentObject obj=clazz.newInstance();
 		obj.init(base,clazz,store);
 		return obj;
 	}
 
-	void init(long base, PersistentClass clazz, StoreImpl store) {
+	void init(long base, PersistentClass clazz, Store store) {
 		this.base=base;
 		this.clazz=clazz;
 		this.store=store;

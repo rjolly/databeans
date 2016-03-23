@@ -2,11 +2,11 @@ package persistence.server;
 
 import java.rmi.Naming;
 import java.rmi.RemoteException;
-import persistence.StoreImpl;
+import persistence.Store;
 
 public class Server {
 	public static void main(String args[]) throws Exception {
-		final StoreImpl store=new StoreImpl("heapspace");
+		final Store store=new Store("heapspace");
 		Naming.rebind(args.length>0?args[0]:"store", store);
 		System.out.println("store bound in registry");
 		Runtime.getRuntime().addShutdownHook(new Thread() {

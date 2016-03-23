@@ -69,7 +69,7 @@ public final class ArrayClass extends PersistentClass {
 		set("typeCode",new Character(c));
 	}
 
-	static PersistentClass create(Class componentType, int length, StoreImpl store) {
+	static PersistentClass create(Class componentType, int length, Store store) {
 		PersistentArray obj=new PersistentArray();
 		obj.connection=store.systemConnection;
 		return obj.createClass(componentType,length);
