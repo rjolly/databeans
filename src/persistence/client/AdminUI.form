@@ -818,7 +818,7 @@
             </Component>
           </SubComponents>
         </Container>
-        <Component class="bsh.util.JConsole" name="jConsole1">
+        <Component class="persistence.client.JConsole" name="jConsole1">
           <Constraints>
             <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">
               <JTabbedPaneConstraints tabName="Console">

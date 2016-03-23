@@ -11,9 +11,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.ListIterator;
 import java.util.Map;
-import sun.reflect.misc.ConstructorUtil;
-import sun.reflect.misc.MethodUtil;
-import sun.reflect.misc.ReflectUtil;
 
 class ReflectionUtils {
 

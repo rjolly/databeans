@@ -15,7 +15,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.EventListener;
 import persistence.Connection;
-import sun.reflect.misc.MethodUtil;
 
 public class DefaultPersistenceDelegate extends PersistenceDelegate {
 	private String[] constructor;

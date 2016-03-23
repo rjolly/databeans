@@ -15,7 +15,6 @@ import java.lang.reflect.Method;
 import persistence.Connection;
 import persistence.PersistentArray;
 import persistence.PersistentObject;
-import sun.reflect.misc.MethodUtil;
 
 public class Statement {
 	Connection connection;

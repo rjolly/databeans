@@ -1,6 +1,5 @@
 package persistence;
 
-import com.sun.security.auth.callback.DialogCallbackHandler;
 import java.awt.Frame;
 import java.io.BufferedReader;
 import java.io.IOException;
