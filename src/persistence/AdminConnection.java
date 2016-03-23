@@ -1,7 +1,6 @@
 package persistence;
 
 import java.rmi.RemoteException;
-import javax.security.auth.Subject;
 
 public class AdminConnection extends Connection {
 	RemoteAdminConnection connection;
@@ -9,11 +8,7 @@ public class AdminConnection extends Connection {
 	AdminConnection() {}
 
 	public void abortTransaction(Transaction transaction) {
-		try {
-			connection.abortTransaction(transaction);
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
+		connection.abortTransaction(transaction);
 	}
 
 	public void changePassword(String username, String password) {
@@ -21,43 +16,23 @@ public class AdminConnection extends Connection {
 	}
 
 	public void changePassword(String username, String oldPassword, String newPassword) {
-		try {
-			connection.changePassword(username,oldPassword,newPassword);
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
+		connection.changePassword(username,oldPassword,newPassword);
 	}
 
 	public void addUser(String username, String password) {
-		try {
-			connection.addUser(username,password);
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
+		connection.addUser(username,password);
 	}
 
 	public void deleteUser(String username) {
-		try {
-			connection.deleteUser(username);
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
+		connection.deleteUser(username);
 	}
 
 	public void inport(String name) {
-		try {
-			connection.inport(name);
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
+		connection.inport(name);
 	}
 
 	public void export(String name) {
-		try {
-			connection.export(name);
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
+		connection.export(name);
 	}
 
 	public void shutdown() {
@@ -69,26 +44,14 @@ public class AdminConnection extends Connection {
 	}
 
 	public void gc() {
-		try {
-			connection.gc();
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
+		connection.gc();
 	}	
 
 	public long allocatedSpace() {
-		try {
-			return connection.allocatedSpace();
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
+		return connection.allocatedSpace();
 	}
 
 	public long maxSpace() {
-		try {
-			return connection.maxSpace();
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
+		return connection.maxSpace();
 	}
 }

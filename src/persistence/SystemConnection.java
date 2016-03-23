@@ -15,7 +15,7 @@ class SystemConnection extends Connection {
 	}
 }
 
-class RemoteSystemConnection extends RemoteConnectionImpl {
+class RemoteSystemConnection extends RemoteConnection {
 	RemoteSystemConnection(SystemConnection connection, Store store) throws RemoteException {
 		super(connection,store,false,null);
 	}

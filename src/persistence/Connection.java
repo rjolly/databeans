@@ -27,13 +27,13 @@ public class Connection implements Serializable {
 
 	static Connection newInstance(Store store, int level, Subject subject) throws RemoteException {
 		Connection conn=new Connection();
-		conn.connection=new RemoteConnectionImpl(conn,store,level,false,subject);
+		conn.connection=new RemoteConnection(conn,store,level,false,subject);
 		return conn;
 	}
 
 	static AdminConnection newInstance(Store store, boolean readOnly, Subject subject) throws RemoteException {
 		AdminConnection conn=new AdminConnection();
-		((Connection)conn).connection=new RemoteAdminConnectionImpl(conn,store,readOnly,subject);
+		((Connection)conn).connection=new RemoteAdminConnection(conn,store,readOnly,subject);
 		conn.connection=(RemoteAdminConnection)((Connection)conn).connection;
 		return conn;
 	}
@@ -67,43 +67,23 @@ public class Connection implements Serializable {
 	}
 
 	PersistentObject create(PersistentClass clazz, Class types[], Object args[]) {
-		try {
-			return attach(connection.create(clazz,types,args));
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
+		return attach(connection.create(clazz,types,args));
 	}
 
 	PersistentClass get(String name) {
-		try {
-			return (PersistentClass)attach(connection.get(name));
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
+		return (PersistentClass)attach(connection.get(name));
 	}
 
 	public PersistentClass get(Class clazz) {
-		try {
-			return (PersistentClass)attach(connection.get(clazz));
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
+		return (PersistentClass)attach(connection.get(clazz));
 	}
 
 	PersistentClass get(Class componentType, int length) {
-		try {
-			return (PersistentClass)attach(connection.get(componentType,length));
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
+		return (PersistentClass)attach(connection.get(componentType,length));
 	}
 
 	public PersistentSystem system() {
-		try {
-			return (PersistentSystem)attach(connection.system());
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
+		return (PersistentSystem)attach(connection.system());
 	}
 
 	public Object root() {
@@ -115,59 +95,31 @@ public class Connection implements Serializable {
 	}
 
 	public Subject subject() {
-		try {
-			return subject==null?subject=connection.subject():subject;
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
+		return subject==null?subject=connection.subject():subject;
 	}
 
 	public int getTransactionIsolation() {
-		try {
-			return connection.getTransactionIsolation();
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
+		return connection.getTransactionIsolation();
 	}
 
 	public void setTransactionIsolation(int level) {
-		try {
-			connection.setTransactionIsolation(level);
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
+		connection.setTransactionIsolation(level);
 	}
 
 	public boolean isReadOnly() {
-		try {
-			return connection.isReadOnly();
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
+		return connection.isReadOnly();
 	}
 
 	public void setReadOnly(boolean readOnly) {
-		try {
-			connection.setReadOnly(readOnly);
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
+		connection.setReadOnly(readOnly);
 	}
 
 	public boolean isAutoCommit() {
-		try {
-			return connection.isAutoCommit();
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
+		return connection.isAutoCommit();
 	}
 
 	public void setAutoCommit(boolean autoCommit) {
-		try {
-			connection.setAutoCommit(autoCommit);
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
+		connection.setAutoCommit(autoCommit);
 	}
 
 	Map cache() {
@@ -221,43 +173,23 @@ public class Connection implements Serializable {
 	}
 
 	Object execute(MethodCall call) {
-		try {
-			return attach(connection.execute(call));
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
+		return attach(connection.execute(call));
 	}
 
 	Object executeAtomic(MethodCall call) {
-		try {
-			return attach(connection.executeAtomic(call));
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
+		return attach(connection.executeAtomic(call));
 	}
 
 	Object executeAtomic(MethodCall call, MethodCall undo, int index) {
-		try {
-			return attach(connection.executeAtomic(call,undo,index));
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
+		return attach(connection.executeAtomic(call,undo,index));
 	}
 
 	public void commit() {
-		try {
-			connection.commit();
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
+		connection.commit();
 	}
 
 	public void rollback() {
-		try {
-			connection.rollback();
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
+		connection.rollback();
 	}
 
 	public void close() {
