@@ -2,13 +2,8 @@ package persistence;
 
 import java.rmi.RemoteException;
 import java.util.Map;
-import persistence.util.LinkedHashMap;
 
 public class PersistentSystem extends PersistentObject {
-	public void init() {
-		setClasses((Map)create(LinkedHashMap.class));
-	}
-
 	protected PersistentObject.Accessor createAccessor() throws RemoteException {
 		return new Accessor();
 	}
