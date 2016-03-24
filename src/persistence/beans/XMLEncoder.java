@@ -14,7 +14,7 @@ import java.lang.reflect.Field;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Vector;
-import persistence.Connection;
+import persistence.Store;
 import persistence.PersistentArray;
 
 public class XMLEncoder extends Encoder {
@@ -37,8 +37,8 @@ public class XMLEncoder extends Encoder {
 		public Expression exp = null;
 	}
 
-	public XMLEncoder(Connection connection, OutputStream out) {
-		super(connection);
+	public XMLEncoder(Store store, OutputStream out) {
+		super(store);
 		this.out = out;
 		valueToExpression = new IdentityHashMap();
 		targetToStatementList = new IdentityHashMap();
@@ -47,7 +47,7 @@ public class XMLEncoder extends Encoder {
 
 	public void setOwner(Object owner) {
 		this.owner = owner;
-		writeExpression(new Expression(connection, this, "getOwner", new Object[0]));
+		writeExpression(new Expression(store, this, "getOwner", new Object[0]));
 	}
 
 	public Object getOwner() {
@@ -59,7 +59,7 @@ public class XMLEncoder extends Encoder {
 			super.writeObject(o);
 		}
 		else {
-			writeStatement(new Statement(connection, this, "writeObject", new Object[]{o}));
+			writeStatement(new Statement(store, this, "writeObject", new Object[]{o}));
 		}
 	}
 

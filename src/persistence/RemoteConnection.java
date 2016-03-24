@@ -34,6 +34,14 @@ class RemoteConnection extends UnicastRemoteObject {
 		return create((PersistentClass)store.attach(clazz),types,store.attach(args),true);
 	}
 
+	public PersistentObject create(Class clazz) {
+		return create(get(clazz),new Class[] {},new Object[] {});
+	}
+
+	public PersistentArray create(Class componentType, int length) {
+		return (PersistentArray)create(get(componentType,length),new Class[] {},new Object[] {});
+	}
+
 	synchronized PersistentObject create(PersistentClass clazz, Class types[], Object args[], boolean attached) {
 		if(readOnly) throw new RuntimeException("read only");
 		try {
@@ -91,23 +99,5 @@ class RemoteConnection extends UnicastRemoteObject {
 
 	public void setAutoCommit(boolean autoCommit) {
 		this.autoCommit=autoCommit;
-	}
-
-	public Object execute(MethodCall call) {
-		return connection.attach(store.attach(call)).execute();
-	}
-
-	public Object executeAtomic(MethodCall call) {
-		return execute(store.attach(call),null,0,true);
-	}
-
-	public Object executeAtomic(MethodCall call, MethodCall undo, int index) {
-		return execute(store.attach(call),store.attach(undo),index,false);
-	}
-
-	synchronized Object execute(MethodCall call, MethodCall undo, int index, boolean read) {
-		if(!read && readOnly) throw new RuntimeException("read only");
-		Object obj=call.execute(subject);
-		return obj;
 	}
 }

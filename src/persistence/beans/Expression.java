@@ -6,7 +6,7 @@
  */
 package persistence.beans;
 
-import persistence.Connection;
+import persistence.Store;
 
 public class Expression extends Statement {
 
@@ -14,12 +14,12 @@ public class Expression extends Statement {
 	
 	private Object value = unbound;
 
-	public Expression(Connection connection, Object target, String methodName, Object[] arguments) {
-		super(connection, target, methodName, arguments);
+	public Expression(Store store, Object target, String methodName, Object[] arguments) {
+		super(store, target, methodName, arguments);
 	} 
 
-	public Expression(Connection connection, Object value, Object target, String methodName, Object[] arguments) {
-		this(connection, target, methodName, arguments);
+	public Expression(Store store, Object value, Object target, String methodName, Object[] arguments) {
+		this(store, target, methodName, arguments);
 		setValue(value);
 	} 
 

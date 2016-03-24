@@ -14,18 +14,18 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.EventListener;
-import persistence.Connection;
+import persistence.Store;
 
 public class DefaultPersistenceDelegate extends PersistenceDelegate {
 	private String[] constructor;
 	private Boolean definesEquals;
 
-	public DefaultPersistenceDelegate(Connection connection) {
-		this(connection,new String[0]);
+	public DefaultPersistenceDelegate(Store store) {
+		this(store,new String[0]);
 	}
 
-	public DefaultPersistenceDelegate(Connection connection, String[] constructorPropertyNames) {
-		super(connection);
+	public DefaultPersistenceDelegate(Store store, String[] constructorPropertyNames) {
+		super(store);
 		this.constructor = constructorPropertyNames;
 	}
 
@@ -93,7 +93,7 @@ public class DefaultPersistenceDelegate extends PersistenceDelegate {
 				out.getExceptionListener().exceptionThrown(e);
 			}
 		}
-		return new Expression(connection, oldInstance, oldInstance.getClass(), "new", constructorArgs);
+		return new Expression(store, oldInstance, oldInstance.getClass(), "new", constructorArgs);
 	}
 
 	// This is a workaround for a bug in the introspector.
@@ -137,8 +137,8 @@ public class DefaultPersistenceDelegate extends PersistenceDelegate {
 		Method setter = pd.getWriteMethod();
 
 		if (getter != null && setter != null && !isTransient(type, pd)) {
-			Expression oldGetExp = new Expression(connection, oldInstance, getter.getName(), new Object[]{});
-			Expression newGetExp = new Expression(connection, newInstance, getter.getName(), new Object[]{});
+			Expression oldGetExp = new Expression(store, oldInstance, getter.getName(), new Object[]{});
+			Expression newGetExp = new Expression(store, newInstance, getter.getName(), new Object[]{});
 			Object oldValue = oldGetExp.getValue();
 			Object newValue = newGetExp.getValue();
 			out.writeExpression(oldGetExp); 
@@ -152,7 +152,7 @@ public class DefaultPersistenceDelegate extends PersistenceDelegate {
 						   Field f = type.getField((String)a[i]); 
 						   if (f.get(null).equals(oldValue)) { 
 							   out.remove(oldValue); 
-							   out.writeExpression(new Expression(connection, oldValue, f, "get", new Object[]{null}));
+							   out.writeExpression(new Expression(store, oldValue, f, "get", new Object[]{null}));
 						   }
 						}
 						catch (Exception ex) {}
@@ -164,7 +164,7 @@ public class DefaultPersistenceDelegate extends PersistenceDelegate {
 	}
 
 	void invokeStatement(Object instance, String methodName, Object[] args, Encoder out) {
-		out.writeStatement(new Statement(connection, instance, methodName, args));
+		out.writeStatement(new Statement(store, instance, methodName, args));
 	}
 
 	// Write out the properties of this instance.

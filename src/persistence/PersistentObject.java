@@ -10,7 +10,6 @@ import javax.security.auth.Subject;
 
 public class PersistentObject implements Cloneable, Serializable {
 	persistence.Accessor accessor;
-	transient Connection connection;
 	transient PersistentClass clazz;
 	transient Store store;
 	transient long base;
@@ -29,7 +28,6 @@ public class PersistentObject implements Cloneable, Serializable {
 		this.store=store;
 		try {
 			accessor=createAccessor();
-			connection=store.systemConnection;
 		} catch (RemoteException e) {
 			throw new RuntimeException(e);
 		}
@@ -64,12 +62,6 @@ public class PersistentObject implements Cloneable, Serializable {
 				return obj instanceof Accessor && PersistentObject.this.base==((Accessor)obj).object().base;
 			}
 		};
-	}
-
-	static PersistentObject newInstance(PersistentObject object) {
-		PersistentObject obj=PersistentClass.newInstance(object.getClass());
-		obj.init(object);
-		return obj;
 	}
 
 	void init(PersistentObject object) {
@@ -177,27 +169,27 @@ public class PersistentObject implements Cloneable, Serializable {
 	}
 
 	protected final PersistentObject create(String name) {
-		return connection.create(name);
+		return store.create(name);
 	}
 
 	protected final PersistentObject create(Class clazz) {
-		return connection.create(clazz);
+		return store.create(clazz);
 	}
 
 	protected final PersistentObject create(Class clazz, Class types[], Object args[]) {
-		return connection.create(clazz,types,args);
+		return store.create(clazz,types,args);
 	}
 
 	protected final PersistentArray create(Class componentType, int length) {
-		return connection.create(componentType,length);
+		return store.create(componentType,length);
 	}
 
 	protected final PersistentArray create(Object component[]) {
-		return connection.create(component);
+		return store.create(component);
 	}
 
 	protected final PersistentClass get(Class clazz) {
-		return connection.get(clazz);
+		return store.get(clazz);
 	}
 
 	protected final Object get(String name) {
@@ -212,15 +204,15 @@ public class PersistentObject implements Cloneable, Serializable {
 	}
 
 	protected final Object execute(MethodCall call) {
-		return connection.execute(call);
+		return store.execute(call);
 	}
 
 	protected final Object executeAtomic(MethodCall call) {
-		return connection.executeAtomic(call);
+		return store.executeAtomic(call);
 	}
 
 	protected final Object executeAtomic(MethodCall call, MethodCall undo, int index) {
-		return connection.executeAtomic(call,undo,index);
+		return store.executeAtomic(call,undo,index);
 	}
 
 	protected final class MethodCall implements Serializable {
@@ -292,7 +284,15 @@ public class PersistentObject implements Cloneable, Serializable {
 	}
 
 	public final PersistentClass persistentClass() {
-		return clazz==null?clazz=connection.getClass(accessor):clazz;
+		return clazz==null?clazz=getClass(accessor):clazz;
+	}
+
+	PersistentClass getClass(persistence.Accessor accessor) {
+		try {
+			return accessor.clazz();
+		} catch (RemoteException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	public int hashCode() {

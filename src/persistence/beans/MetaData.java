@@ -21,11 +21,11 @@ import java.beans.EventHandler;
 import java.beans.Introspector;
 
 import persistence.PersistentArray;
-import persistence.Connection;
+import persistence.Store;
 
 class NullPersistenceDelegate extends PersistenceDelegate {
-	public NullPersistenceDelegate(Connection connection) {
-		super(connection);
+	public NullPersistenceDelegate(Store store) {
+		super(store);
 	}
 
 	// Note this will be called by all classes when they reach the
@@ -40,8 +40,8 @@ class NullPersistenceDelegate extends PersistenceDelegate {
 }
 
 class PrimitivePersistenceDelegate extends PersistenceDelegate {
-	public PrimitivePersistenceDelegate(Connection connection) {
-		super(connection);
+	public PrimitivePersistenceDelegate(Store store) {
+		super(store);
 	}
 
 	protected boolean mutatesTo(Object oldInstance, Object newInstance) {
@@ -49,15 +49,15 @@ class PrimitivePersistenceDelegate extends PersistenceDelegate {
 	}
 
 	protected Expression instantiate(Object oldInstance, Encoder out) {
-		return new Expression(connection, oldInstance, oldInstance.getClass(),
+		return new Expression(store, oldInstance, oldInstance.getClass(),
 				  "new", new Object[]{oldInstance.toString()});
 	}
 }
 
 class ArrayPersistenceDelegate extends PersistenceDelegate {
-	public ArrayPersistenceDelegate(Connection connection) {
-		super(connection);
-		defaultPersistenceDelegate = new DefaultPersistenceDelegate(connection);
+	public ArrayPersistenceDelegate(Store store) {
+		super(store);
+		defaultPersistenceDelegate = new DefaultPersistenceDelegate(store);
 	}
 
 	DefaultPersistenceDelegate defaultPersistenceDelegate;
@@ -71,7 +71,7 @@ class ArrayPersistenceDelegate extends PersistenceDelegate {
 	protected Expression instantiate(Object oldInstance, Encoder out) {
 		// System.out.println("instantiate: " + type + " " + oldInstance);
 		Class oldClass = oldInstance.getClass();
-		return new Expression(connection, oldInstance, Array.class, "newInstance",
+		return new Expression(store, oldInstance, Array.class, "newInstance",
 				   new Object[]{oldClass.getComponentType(),
 								new Integer(Array.getLength(oldInstance))});
 	}
@@ -80,10 +80,10 @@ class ArrayPersistenceDelegate extends PersistenceDelegate {
 		int n = Array.getLength(oldInstance);
 		for (int i = 0; i < n; i++) {
 			Object index = new Integer(i);
-			// Expression oldGetExp = new Expression(connection, Array.class, "get", new Object[]{oldInstance, index});
-			// Expression newGetExp = new Expression(connection, Array.class, "get", new Object[]{newInstance, index});
-			Expression oldGetExp = new Expression(connection, oldInstance, "get", new Object[]{index});
-			Expression newGetExp = new Expression(connection, newInstance, "get", new Object[]{index});
+			// Expression oldGetExp = new Expression(store, Array.class, "get", new Object[]{oldInstance, index});
+			// Expression newGetExp = new Expression(store, Array.class, "get", new Object[]{newInstance, index});
+			Expression oldGetExp = new Expression(store, oldInstance, "get", new Object[]{index});
+			Expression newGetExp = new Expression(store, newInstance, "get", new Object[]{index});
 			try {
 				Object oldValue = oldGetExp.getValue();
 				Object newValue = newGetExp.getValue();
@@ -103,8 +103,8 @@ class ArrayPersistenceDelegate extends PersistenceDelegate {
 }
 
 class persistence_PersistentArray_PersistenceDelegate extends DefaultPersistenceDelegate {
-	public persistence_PersistentArray_PersistenceDelegate(Connection connection) {
-		super(connection);
+	public persistence_PersistentArray_PersistenceDelegate(Store store) {
+		super(store);
 	}
 
 	protected boolean mutatesTo(Object oldInstance, Object newInstance) {
@@ -115,7 +115,7 @@ class persistence_PersistentArray_PersistenceDelegate extends DefaultPersistence
 
 	protected Expression instantiate(Object oldInstance, Encoder out) {
 		persistence.Array oldO = (persistence.Array)oldInstance;
-		return new Expression(connection, oldInstance, PersistentArray.class, "newInstance", new Object[]{new Character(oldO.typeCode()), new Integer(oldO.length())});
+		return new Expression(store, oldInstance, PersistentArray.class, "newInstance", new Object[]{new Character(oldO.typeCode()), new Integer(oldO.length())});
 	}
 
 	protected void initialize(Class type, Object oldInstance, Object newInstance, Encoder out) {
@@ -125,8 +125,8 @@ class persistence_PersistentArray_PersistenceDelegate extends DefaultPersistence
 		for (int i = 0; i < n; i++) {
 			Object index = new Integer(i);
 
-			Expression oldGetExp = new Expression(connection, oldInstance, "get", new Object[]{index});
-			Expression newGetExp = new Expression(connection, newInstance, "get", new Object[]{index});
+			Expression oldGetExp = new Expression(store, oldInstance, "get", new Object[]{index});
+			Expression newGetExp = new Expression(store, newInstance, "get", new Object[]{index});
 			try {
 				Object oldValue = oldGetExp.getValue();
 				Object newValue = newGetExp.getValue();
@@ -143,8 +143,8 @@ class persistence_PersistentArray_PersistenceDelegate extends DefaultPersistence
 }
 
 class ProxyPersistenceDelegate extends PersistenceDelegate {
-	public ProxyPersistenceDelegate(Connection connection) {
-		super(connection);
+	public ProxyPersistenceDelegate(Store store) {
+		super(store);
 	}
 
 	protected Expression instantiate(Object oldInstance, Encoder out) {
@@ -166,12 +166,12 @@ class ProxyPersistenceDelegate extends PersistenceDelegate {
 				args.setSize(4);
 				args.add(eh.getListenerMethodName());
 			}
-			return new Expression(connection, oldInstance,
+			return new Expression(store, oldInstance,
 								  EventHandler.class,
 								  "create",
 								  args.toArray());
 		}
-		return new Expression(connection, oldInstance,
+		return new Expression(store, oldInstance,
 							  java.lang.reflect.Proxy.class,
 							  "newProxyInstance",
 							  new Object[]{type.getClassLoader(),
@@ -182,8 +182,8 @@ class ProxyPersistenceDelegate extends PersistenceDelegate {
 
 // Strings
 class java_lang_String_PersistenceDelegate extends PersistenceDelegate {
-	public java_lang_String_PersistenceDelegate(Connection connection) {
-		super(connection);
+	public java_lang_String_PersistenceDelegate(Store store) {
+		super(store);
 	}
 
 	protected Expression instantiate(Object oldInstance, Encoder out) { return null;}
@@ -195,8 +195,8 @@ class java_lang_String_PersistenceDelegate extends PersistenceDelegate {
 
 // Classes
 class java_lang_Class_PersistenceDelegate extends PersistenceDelegate {
-	public java_lang_Class_PersistenceDelegate(Connection connection) {
-		super(connection);
+	public java_lang_Class_PersistenceDelegate(Store store) {
+		super(store);
 	}
 
 	protected Expression instantiate(Object oldInstance, Encoder out) {
@@ -211,29 +211,29 @@ class java_lang_Class_PersistenceDelegate extends PersistenceDelegate {
 			} catch (NoSuchFieldException ex) { 
 				System.err.println("Unknown primitive type: " + c);
 			}
-			return new Expression(connection, oldInstance, field, "get", new Object[]{null});
+			return new Expression(store, oldInstance, field, "get", new Object[]{null});
 		}
 		else if (oldInstance == String.class) {
-			return new Expression(connection, oldInstance, "", "getClass", new Object[]{});
+			return new Expression(store, oldInstance, "", "getClass", new Object[]{});
 		}
 		else if (oldInstance == Class.class) {
-			return new Expression(connection, oldInstance, String.class, "getClass", new Object[]{});
+			return new Expression(store, oldInstance, String.class, "getClass", new Object[]{});
 		}
 		else {
-			return new Expression(connection, oldInstance, Class.class, "forName", new Object[]{c.getName()});
+			return new Expression(store, oldInstance, Class.class, "forName", new Object[]{c.getName()});
 		}
 	}
 }
 
 // Fields
 class java_lang_reflect_Field_PersistenceDelegate extends PersistenceDelegate {
-	public java_lang_reflect_Field_PersistenceDelegate(Connection connection) {
-		super(connection);
+	public java_lang_reflect_Field_PersistenceDelegate(Store store) {
+		super(store);
 	}
 
 	protected Expression instantiate(Object oldInstance, Encoder out) {
 		Field f = (Field)oldInstance;
-		return new Expression(connection, oldInstance,
+		return new Expression(store, oldInstance,
 				f.getDeclaringClass(),
 				"getField",
 				new Object[]{f.getName()});
@@ -242,13 +242,13 @@ class java_lang_reflect_Field_PersistenceDelegate extends PersistenceDelegate {
 
 // Methods
 class java_lang_reflect_Method_PersistenceDelegate extends PersistenceDelegate {
-	public java_lang_reflect_Method_PersistenceDelegate(Connection connection) {
-		super(connection);
+	public java_lang_reflect_Method_PersistenceDelegate(Store store) {
+		super(store);
 	}
 
 	protected Expression instantiate(Object oldInstance, Encoder out) {
 		Method m = (Method)oldInstance;
-		return new Expression(connection, oldInstance,
+		return new Expression(store, oldInstance,
 				m.getDeclaringClass(),
 				"getMethod",
 				new Object[]{m.getName(), m.getParameterTypes()});
@@ -272,8 +272,8 @@ delegates to be registered with concrete classes.
 
 // Collection
 class java_util_Collection_PersistenceDelegate extends DefaultPersistenceDelegate {
-	public java_util_Collection_PersistenceDelegate(Connection connection) {
-		super(connection);
+	public java_util_Collection_PersistenceDelegate(Store store) {
+		super(store);
 	}
 
 	protected void initialize(Class type, Object oldInstance, Object newInstance, Encoder out) {
@@ -291,8 +291,8 @@ class java_util_Collection_PersistenceDelegate extends DefaultPersistenceDelegat
 
 // List
 class java_util_List_PersistenceDelegate extends DefaultPersistenceDelegate {
-	public java_util_List_PersistenceDelegate(Connection connection) {
-		super(connection);
+	public java_util_List_PersistenceDelegate(Store store) {
+		super(store);
 	}
 
 	protected void initialize(Class type, Object oldInstance, Object newInstance, Encoder out) {
@@ -307,8 +307,8 @@ class java_util_List_PersistenceDelegate extends DefaultPersistenceDelegate {
 		for (int i = 0;i < newSize;i++) {
 			Object index = new Integer(i);
 
-			Expression oldGetExp = new Expression(connection, oldInstance, "get", new Object[]{index});
-			Expression newGetExp = new Expression(connection, newInstance, "get", new Object[]{index});
+			Expression oldGetExp = new Expression(store, oldInstance, "get", new Object[]{index});
+			Expression newGetExp = new Expression(store, newInstance, "get", new Object[]{index});
 			try {
 				Object oldValue = oldGetExp.getValue();
 				Object newValue = newGetExp.getValue();
@@ -329,8 +329,8 @@ class java_util_List_PersistenceDelegate extends DefaultPersistenceDelegate {
 
 // Map
 class java_util_Map_PersistenceDelegate extends DefaultPersistenceDelegate {
-	public java_util_Map_PersistenceDelegate(Connection connection) {
-		super(connection);
+	public java_util_Map_PersistenceDelegate(Store store) {
+		super(store);
 	}
 
 	protected void initialize(Class type, Object oldInstance, Object newInstance, Encoder out) {
@@ -354,9 +354,9 @@ class java_util_Map_PersistenceDelegate extends DefaultPersistenceDelegate {
 		while(oldKeys.hasNext()) {
 			Object oldKey = oldKeys.next();
 
-			Expression oldGetExp = new Expression(connection, oldInstance, "get", new Object[]{oldKey});
+			Expression oldGetExp = new Expression(store, oldInstance, "get", new Object[]{oldKey});
 			// Pending: should use newKey.
-			Expression newGetExp = new Expression(connection, newInstance, "get", new Object[]{oldKey});
+			Expression newGetExp = new Expression(store, newInstance, "get", new Object[]{oldKey});
 			try {
 				Object oldValue = oldGetExp.getValue();
 				Object newValue = newGetExp.getValue();
@@ -373,59 +373,59 @@ class java_util_Map_PersistenceDelegate extends DefaultPersistenceDelegate {
 }
 
 class java_util_AbstractCollection_PersistenceDelegate extends java_util_Collection_PersistenceDelegate {
-	public java_util_AbstractCollection_PersistenceDelegate(Connection connection) {
-		super(connection);
+	public java_util_AbstractCollection_PersistenceDelegate(Store store) {
+		super(store);
 	}
 }
 
 class persistence_util_AbstractCollection_PersistenceDelegate extends java_util_Collection_PersistenceDelegate {
-	public persistence_util_AbstractCollection_PersistenceDelegate(Connection connection) {
-		super(connection);
+	public persistence_util_AbstractCollection_PersistenceDelegate(Store store) {
+		super(store);
 	}
 }
 
 class java_util_AbstractList_PersistenceDelegate extends java_util_List_PersistenceDelegate {
-	public java_util_AbstractList_PersistenceDelegate(Connection connection) {
-		super(connection);
+	public java_util_AbstractList_PersistenceDelegate(Store store) {
+		super(store);
 	}
 }
 
 class persistence_util_AbstractList_PersistenceDelegate extends java_util_List_PersistenceDelegate {
-	public persistence_util_AbstractList_PersistenceDelegate(Connection connection) {
-		super(connection);
+	public persistence_util_AbstractList_PersistenceDelegate(Store store) {
+		super(store);
 	}
 }
 
 class java_util_AbstractMap_PersistenceDelegate extends java_util_Map_PersistenceDelegate {
-	public java_util_AbstractMap_PersistenceDelegate(Connection connection) {
-		super(connection);
+	public java_util_AbstractMap_PersistenceDelegate(Store store) {
+		super(store);
 	}
 }
 
 class java_util_Hashtable_PersistenceDelegate extends java_util_Map_PersistenceDelegate {
-	public java_util_Hashtable_PersistenceDelegate(Connection connection) {
-		super(connection);
+	public java_util_Hashtable_PersistenceDelegate(Store store) {
+		super(store);
 	}
 }
 
 class persistence_util_AbstractMap_PersistenceDelegate extends java_util_Map_PersistenceDelegate {
-	public persistence_util_AbstractMap_PersistenceDelegate(Connection connection) {
-		super(connection);
+	public persistence_util_AbstractMap_PersistenceDelegate(Store store) {
+		super(store);
 	}
 }
 
 // Beans
 class java_beans_beancontext_BeanContextSupport_PersistenceDelegate extends java_util_Collection_PersistenceDelegate {
-	public java_beans_beancontext_BeanContextSupport_PersistenceDelegate(Connection connection) {
-		super(connection);
+	public java_beans_beancontext_BeanContextSupport_PersistenceDelegate(Store store) {
+		super(store);
 	}
 }
 
 // AWT
 
 class StaticFieldsPersistenceDelegate extends PersistenceDelegate {
-	public StaticFieldsPersistenceDelegate(Connection connection) {
-		super(connection);
+	public StaticFieldsPersistenceDelegate(Store store) {
+		super(store);
 	}
 
 	protected void installFields(Encoder out, Class cls) {
@@ -435,7 +435,7 @@ class StaticFieldsPersistenceDelegate extends PersistenceDelegate {
 			// Don't install primitives, their identity will not be preserved 
 			// by wrapping. 
 			if (Object.class.isAssignableFrom(field.getType())) { 
-				out.writeExpression(new Expression(connection, field, "get", new Object[]{null}));
+				out.writeExpression(new Expression(store, field, "get", new Object[]{null}));
 			}
 		}
 	}
@@ -455,35 +455,35 @@ class StaticFieldsPersistenceDelegate extends PersistenceDelegate {
 
 // SystemColor
 class java_awt_SystemColor_PersistenceDelegate extends StaticFieldsPersistenceDelegate {
-	public java_awt_SystemColor_PersistenceDelegate(Connection connection) {
-		super(connection);
+	public java_awt_SystemColor_PersistenceDelegate(Store store) {
+		super(store);
 	}
 }
 
 // TextAttribute
 class java_awt_font_TextAttribute_PersistenceDelegate extends StaticFieldsPersistenceDelegate {
-	public java_awt_font_TextAttribute_PersistenceDelegate(Connection connection) {
-		super(connection);
+	public java_awt_font_TextAttribute_PersistenceDelegate(Store store) {
+		super(store);
 	}
 }
 
 // MenuShortcut
 class java_awt_MenuShortcut_PersistenceDelegate extends PersistenceDelegate {
-	public java_awt_MenuShortcut_PersistenceDelegate(Connection connection) {
-		super(connection);
+	public java_awt_MenuShortcut_PersistenceDelegate(Store store) {
+		super(store);
 	}
 
 	protected Expression instantiate(Object oldInstance, Encoder out) { 
 		java.awt.MenuShortcut m = (java.awt.MenuShortcut)oldInstance;
-		return new Expression(connection, oldInstance, m.getClass(), "new", 
+		return new Expression(store, oldInstance, m.getClass(), "new", 
 				   new Object[]{new Integer(m.getKey()), Boolean.valueOf(m.usesShiftModifier())});
 	}
 }
 
 // Component
 class java_awt_Component_PersistenceDelegate extends DefaultPersistenceDelegate {
-	public java_awt_Component_PersistenceDelegate(Connection connection) {
-		super(connection);
+	public java_awt_Component_PersistenceDelegate(Store store) {
+		super(store);
 	}
 
 	protected void initialize(Class type, Object oldInstance, Object newInstance, Encoder out) {
@@ -533,8 +533,8 @@ class java_awt_Component_PersistenceDelegate extends DefaultPersistenceDelegate 
 
 // Container
 class java_awt_Container_PersistenceDelegate extends DefaultPersistenceDelegate {
-	public java_awt_Container_PersistenceDelegate(Connection connection) {
-		super(connection);
+	public java_awt_Container_PersistenceDelegate(Store store) {
+		super(store);
 	}
 
 	protected void initialize(Class type, Object oldInstance, Object newInstance, Encoder out) {
@@ -557,8 +557,8 @@ class java_awt_Container_PersistenceDelegate extends DefaultPersistenceDelegate 
 
 // Choice
 class java_awt_Choice_PersistenceDelegate extends DefaultPersistenceDelegate {
-	public java_awt_Choice_PersistenceDelegate(Connection connection) {
-		super(connection);
+	public java_awt_Choice_PersistenceDelegate(Store store) {
+		super(store);
 	}
 
 	protected void initialize(Class type, Object oldInstance, Object newInstance, Encoder out) {
@@ -573,8 +573,8 @@ class java_awt_Choice_PersistenceDelegate extends DefaultPersistenceDelegate {
 
 // Menu
 class java_awt_Menu_PersistenceDelegate extends DefaultPersistenceDelegate {
-	public java_awt_Menu_PersistenceDelegate(Connection connection) {
-		super(connection);
+	public java_awt_Menu_PersistenceDelegate(Store store) {
+		super(store);
 	}
 
 	protected void initialize(Class type, Object oldInstance, Object newInstance, Encoder out) {
@@ -589,8 +589,8 @@ class java_awt_Menu_PersistenceDelegate extends DefaultPersistenceDelegate {
 
 // MenuBar
 class java_awt_MenuBar_PersistenceDelegate extends DefaultPersistenceDelegate {
-	public java_awt_MenuBar_PersistenceDelegate(Connection connection) {
-		super(connection);
+	public java_awt_MenuBar_PersistenceDelegate(Store store) {
+		super(store);
 	}
 
 	protected void initialize(Class type, Object oldInstance, Object newInstance, Encoder out) {
@@ -605,8 +605,8 @@ class java_awt_MenuBar_PersistenceDelegate extends DefaultPersistenceDelegate {
 
 // List
 class java_awt_List_PersistenceDelegate extends DefaultPersistenceDelegate {
-	public java_awt_List_PersistenceDelegate(Connection connection) {
-		super(connection);
+	public java_awt_List_PersistenceDelegate(Store store) {
+		super(store);
 	}
 
 	protected void initialize(Class type, Object oldInstance, Object newInstance, Encoder out) {
@@ -624,8 +624,8 @@ class java_awt_List_PersistenceDelegate extends DefaultPersistenceDelegate {
 
 // BorderLayout
 class java_awt_BorderLayout_PersistenceDelegate extends DefaultPersistenceDelegate {
-	public java_awt_BorderLayout_PersistenceDelegate(Connection connection) {
-		super(connection);
+	public java_awt_BorderLayout_PersistenceDelegate(Store store) {
+		super(store);
 	}
 
 	protected void initialize(Class type, Object oldInstance,  
@@ -656,8 +656,8 @@ class java_awt_BorderLayout_PersistenceDelegate extends DefaultPersistenceDelega
 
 // CardLayout
 class java_awt_CardLayout_PersistenceDelegate extends DefaultPersistenceDelegate {
-	public java_awt_CardLayout_PersistenceDelegate(Connection connection) {
-		super(connection);
+	public java_awt_CardLayout_PersistenceDelegate(Store store) {
+		super(store);
 	}
 
 	protected void initialize(Class type, Object oldInstance,  
@@ -678,8 +678,8 @@ class java_awt_CardLayout_PersistenceDelegate extends DefaultPersistenceDelegate
 
 // GridBagLayout
 class java_awt_GridBagLayout_PersistenceDelegate extends DefaultPersistenceDelegate {
-	public java_awt_GridBagLayout_PersistenceDelegate(Connection connection) {
-		super(connection);
+	public java_awt_GridBagLayout_PersistenceDelegate(Store store) {
+		super(store);
 	}
 
 	protected void initialize(Class type, Object oldInstance,  
@@ -704,8 +704,8 @@ class java_awt_GridBagLayout_PersistenceDelegate extends DefaultPersistenceDeleg
 // will be issued before we have added all the children to the JFrame and
 // will appear blank).
 class javax_swing_JFrame_PersistenceDelegate extends DefaultPersistenceDelegate {
-	public javax_swing_JFrame_PersistenceDelegate(Connection connection) {
-		super(connection);
+	public javax_swing_JFrame_PersistenceDelegate(Store store) {
+		super(store);
 	}
 
 	protected void initialize(Class type, Object oldInstance, Object newInstance, Encoder out) {
@@ -728,8 +728,8 @@ class javax_swing_JFrame_PersistenceDelegate extends DefaultPersistenceDelegate 
 
 // DefaultListModel
 class javax_swing_DefaultListModel_PersistenceDelegate extends DefaultPersistenceDelegate {
-	public javax_swing_DefaultListModel_PersistenceDelegate(Connection connection) {
-		super(connection);
+	public javax_swing_DefaultListModel_PersistenceDelegate(Store store) {
+		super(store);
 	}
 
 	protected void initialize(Class type, Object oldInstance, Object newInstance, Encoder out) {
@@ -746,8 +746,8 @@ class javax_swing_DefaultListModel_PersistenceDelegate extends DefaultPersistenc
 
 // DefaultComboBoxModel
 class javax_swing_DefaultComboBoxModel_PersistenceDelegate extends DefaultPersistenceDelegate {
-	public javax_swing_DefaultComboBoxModel_PersistenceDelegate(Connection connection) {
-		super(connection);
+	public javax_swing_DefaultComboBoxModel_PersistenceDelegate(Store store) {
+		super(store);
 	}
 
 	protected void initialize(Class type, Object oldInstance, Object newInstance, Encoder out) {
@@ -762,8 +762,8 @@ class javax_swing_DefaultComboBoxModel_PersistenceDelegate extends DefaultPersis
 
 // DefaultMutableTreeNode
 class javax_swing_tree_DefaultMutableTreeNode_PersistenceDelegate extends DefaultPersistenceDelegate {
-	public javax_swing_tree_DefaultMutableTreeNode_PersistenceDelegate(Connection connection) {
-		super(connection);
+	public javax_swing_tree_DefaultMutableTreeNode_PersistenceDelegate(Store store) {
+		super(store);
 	}
 
 	protected void initialize(Class type, Object oldInstance, Object
@@ -782,12 +782,12 @@ class javax_swing_tree_DefaultMutableTreeNode_PersistenceDelegate extends Defaul
 
 // ToolTipManager
 class javax_swing_ToolTipManager_PersistenceDelegate extends PersistenceDelegate {
-	public javax_swing_ToolTipManager_PersistenceDelegate(Connection connection) {
-		super(connection);
+	public javax_swing_ToolTipManager_PersistenceDelegate(Store store) {
+		super(store);
 	}
 
 	protected Expression instantiate(Object oldInstance, Encoder out) {
-		return new Expression(connection, oldInstance, javax.swing.ToolTipManager.class,
+		return new Expression(store, oldInstance, javax.swing.ToolTipManager.class,
 							  "sharedInstance", new Object[]{});
 	}
 }
@@ -801,8 +801,8 @@ class javax_swing_ToolTipManager_PersistenceDelegate extends PersistenceDelegate
 // We use the private fields here so that the code will work with
 // Kestrel beta.
 class javax_swing_JComponent_PersistenceDelegate extends DefaultPersistenceDelegate {
-	public javax_swing_JComponent_PersistenceDelegate(Connection connection) {
-		super(connection);
+	public javax_swing_JComponent_PersistenceDelegate(Store store) {
+		super(store);
 	}
 
 	protected void initialize(Class type, Object oldInstance, Object newInstance, Encoder out) {
@@ -828,8 +828,8 @@ class javax_swing_JComponent_PersistenceDelegate extends DefaultPersistenceDeleg
 
 // JTabbedPane
 class javax_swing_JTabbedPane_PersistenceDelegate extends DefaultPersistenceDelegate {
-	public javax_swing_JTabbedPane_PersistenceDelegate(Connection connection) {
-		super(connection);
+	public javax_swing_JTabbedPane_PersistenceDelegate(Store store) {
+		super(store);
 	}
 
 	protected void initialize(Class type, Object oldInstance, Object newInstance, Encoder out) {
@@ -852,8 +852,8 @@ class javax_swing_JTabbedPane_PersistenceDelegate extends DefaultPersistenceDele
 // need to be added to the menu item.
 // Not so for JMenu apparently.
 class javax_swing_JMenu_PersistenceDelegate extends DefaultPersistenceDelegate {
-	public javax_swing_JMenu_PersistenceDelegate(Connection connection) {
-		super(connection);
+	public javax_swing_JMenu_PersistenceDelegate(Store store) {
+		super(store);
 	}
 
 	protected void initialize(Class type, Object oldInstance, Object newInstance, Encoder out) {
@@ -868,8 +868,8 @@ class javax_swing_JMenu_PersistenceDelegate extends DefaultPersistenceDelegate {
 
 /* XXX - doens't seem to work. Debug later.
 class javax_swing_JMenu_PersistenceDelegate extends DefaultPersistenceDelegate {
-	public javax_swing_JMenu_PersistenceDelegate(Connection connection) {
-		super(connection);
+	public javax_swing_JMenu_PersistenceDelegate(Store store) {
+		super(store);
 	}
 
 	protected void initialize(Class type, Object oldInstance, Object newInstance, Encoder out) {
@@ -884,7 +884,7 @@ class javax_swing_JMenu_PersistenceDelegate extends DefaultPersistenceDelegate {
 */
 
 class MetaData {
-	Connection connection;
+	Store store;
 	private Hashtable internalPersistenceDelegates = new Hashtable();
 	private Hashtable transientProperties = new Hashtable();
 
@@ -894,11 +894,11 @@ class MetaData {
 	private PersistenceDelegate arrayPersistenceDelegate;
 	private PersistenceDelegate proxyPersistenceDelegate;
 
-	MetaData(Connection connection) {
-		this.connection=connection;
-		nullPersistenceDelegate = new NullPersistenceDelegate(connection);
-		primitivePersistenceDelegate = new PrimitivePersistenceDelegate(connection);
-		defaultPersistenceDelegate = new DefaultPersistenceDelegate(connection);
+	MetaData(Store store) {
+		this.store=store;
+		nullPersistenceDelegate = new NullPersistenceDelegate(store);
+		primitivePersistenceDelegate = new PrimitivePersistenceDelegate(store);
+		defaultPersistenceDelegate = new DefaultPersistenceDelegate(store);
 
 // Constructors.
 
@@ -1091,7 +1091,7 @@ class MetaData {
 		// The persistence delegate for arrays is non-trivial;instantiate it lazily.
 		if (type.isArray()) {
 			if (arrayPersistenceDelegate == null) {
-				arrayPersistenceDelegate = new ArrayPersistenceDelegate(connection);
+				arrayPersistenceDelegate = new ArrayPersistenceDelegate(store);
 			}
 			return arrayPersistenceDelegate;
 		}
@@ -1099,14 +1099,14 @@ class MetaData {
 		try {
 			if (java.lang.reflect.Proxy.isProxyClass(type)) {
 				if (proxyPersistenceDelegate == null) {
-					proxyPersistenceDelegate = new ProxyPersistenceDelegate(connection);
+					proxyPersistenceDelegate = new ProxyPersistenceDelegate(store);
 				}
 				return proxyPersistenceDelegate;
 			}
 		}
 		catch(Exception e) {}
 		// else if (type.getDeclaringClass() != null) {
-		//	 return new DefaultPersistenceDelegate(connection, new String[]{"this$0"});
+		//	 return new DefaultPersistenceDelegate(store, new String[]{"this$0"});
 		// }
 
 		String typeName = type.getName();
@@ -1133,7 +1133,7 @@ class MetaData {
 			try {
 				String name =  type.getName();
 				Class c = Class.forName("persistence.beans." + name.replace('.', '_') + "_PersistenceDelegate");
-				pd = (PersistenceDelegate)c.getConstructor(new Class[] {Connection.class}).newInstance(new Object[] {connection});
+				pd = (PersistenceDelegate)c.getConstructor(new Class[] {Store.class}).newInstance(new Object[] {store});
 				internalPersistenceDelegates.put(typeName, pd);
 			}
 			catch (ClassNotFoundException e) {}
@@ -1191,7 +1191,7 @@ class MetaData {
 // MetaData registration
 
 	private synchronized void registerConstructor(String typeName, String[] constructor) {
-		internalPersistenceDelegates.put(typeName, new DefaultPersistenceDelegate(connection, constructor));
+		internalPersistenceDelegates.put(typeName, new DefaultPersistenceDelegate(store, constructor));
 	}
 
 	private void removeProperty(String typeName, String property) {

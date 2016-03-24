@@ -71,7 +71,7 @@ public final class ArrayClass extends PersistentClass {
 
 	static PersistentClass create(Class componentType, int length, Store store) {
 		PersistentArray obj=new PersistentArray();
-		obj.connection=store.systemConnection;
+		obj.store=store;
 		return obj.createClass(componentType,length);
 	}
 }

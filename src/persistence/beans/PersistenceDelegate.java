@@ -6,13 +6,13 @@
  */
 package persistence.beans;
 
-import persistence.Connection;
+import persistence.Store;
 
 public abstract class PersistenceDelegate {
-	Connection connection;
+	Store store;
 
-	PersistenceDelegate(Connection connection) {
-		this.connection=connection;
+	PersistenceDelegate(Store store) {
+		this.store=store;
 	}
 
 	public void writeObject(Object oldInstance, Encoder out) {

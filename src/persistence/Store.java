@@ -21,6 +21,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.WeakHashMap;
+
 import persistence.PersistentObject.MethodCall;
 import persistence.beans.XMLDecoder;
 import persistence.beans.XMLEncoder;
@@ -31,7 +32,6 @@ import persistence.storage.MemoryModel;
 
 public class Store extends UnicastRemoteObject implements Collector {
 	final Heap heap;
-	final Connection systemConnection;
 	final Map connections=new WeakHashMap();
 	final Map cache=new WeakHashMap();
 	PersistentSystem system;
@@ -46,7 +46,6 @@ public class Store extends UnicastRemoteObject implements Collector {
 		} catch (FileNotFoundException e) {
 			throw new RuntimeException(e);
 		}
-		systemConnection=Connection.newInstance(this);
 		if((boot=heap.boot())==0) {
 			heap.mount(true);
 			create();
@@ -68,7 +67,7 @@ public class Store extends UnicastRemoteObject implements Collector {
 	}
 
 	void createSystem() {
-		system=(PersistentSystem)systemConnection.create(PersistentSystem.class);
+		system=(PersistentSystem)create(PersistentSystem.class);
 		incRefCount(boot=system.base);
 		heap.setBoot(boot);
 	}
@@ -88,6 +87,14 @@ public class Store extends UnicastRemoteObject implements Collector {
 		}
 	}
 
+	public synchronized PersistentClass get(String name) {
+		try {
+			return get(Class.forName(name));
+		} catch (ClassNotFoundException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	PersistentClass get(Class clazz) {
 		String name=clazz.getName();
 		synchronized(classes) {
@@ -99,6 +106,65 @@ public class Store extends UnicastRemoteObject implements Collector {
 
 	PersistentClass get(Class componentType, int length) {
 		return ArrayClass.create(componentType,length,this);
+	}
+
+	public Object root() {
+		return system.root();
+	}
+
+	public void setRoot(Object obj) {
+		system.setRoot(obj);
+	}
+
+	public PersistentObject create(String name) {
+		return create(get(name),new Class[] {},new Object[] {});
+	}
+
+	public PersistentObject create(Class clazz) {
+		return create(get(clazz),new Class[] {},new Object[] {});
+	}
+
+	public PersistentObject create(Class clazz, Class types[], Object args[]) {
+		return create(get(clazz),types,args);
+	}
+
+	public PersistentArray create(Class componentType, int length) {
+		return (PersistentArray)create(get(componentType,length),new Class[] {},new Object[] {});
+	}
+
+	public PersistentArray create(Object component[]) {
+		Class componentType=component.getClass().getComponentType();
+		int length=component.length;
+		return (PersistentArray)create(get(componentType,length),new Class[] {Object[].class},new Object[] {component});
+	}
+
+	synchronized PersistentObject create(PersistentClass clazz, Class types[], Object args[]) {
+		if(readOnly) throw new RuntimeException("read only");
+		try {
+			PersistentObject obj=create(clazz);
+			obj.getClass().getMethod("init",types).invoke(obj,args);
+			return obj;
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public Object execute(MethodCall call) {
+		return call.execute();
+	}
+
+	public Object executeAtomic(MethodCall call) {
+		return execute(call,null,0,true);
+	}
+
+	public Object executeAtomic(MethodCall call, MethodCall undo, int index) {
+		return execute(call,undo,index,false);
+	}
+
+	synchronized Object execute(MethodCall call, MethodCall undo, int index, boolean read) {
+		if(!read && readOnly) throw new RuntimeException("read only");
+		Object obj=call.execute(null);
+		return obj;
 	}
 
 	synchronized PersistentObject create(PersistentClass clazz) {
@@ -166,7 +232,7 @@ public class Store extends UnicastRemoteObject implements Collector {
 	void inport(String name) {
 		AccessController.checkPermission(new AdminPermission("import"));
 		try {
-			XMLDecoder d = new XMLDecoder(systemConnection,new BufferedInputStream(new FileInputStream(name)));
+			XMLDecoder d = new XMLDecoder(this,new BufferedInputStream(new FileInputStream(name)));
 			system.setRoot(d.readObject());
 			d.close();
 		} catch (IOException e) {
@@ -177,7 +243,7 @@ public class Store extends UnicastRemoteObject implements Collector {
 	void export(String name) {
 		AccessController.checkPermission(new AdminPermission("export"));
 		try {
-			XMLEncoder e = new XMLEncoder(systemConnection,new BufferedOutputStream(new FileOutputStream(name)));
+			XMLEncoder e = new XMLEncoder(this,new BufferedOutputStream(new FileOutputStream(name)));
 			e.writeObject(system.getRoot());
 			e.close();
 		} catch (IOException e) {
@@ -226,7 +292,6 @@ public class Store extends UnicastRemoteObject implements Collector {
 		for(Iterator it=cache.keySet().iterator();it.hasNext();it.remove()) {
 			UnicastRemoteObject.unexportObject((Accessor)it.next(),true);
 		}
-		UnicastRemoteObject.unexportObject(systemConnection.connection,true);
 		if(!readOnly) heap.mount(false);
 		closed=true;
 	}

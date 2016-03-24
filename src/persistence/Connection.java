@@ -44,56 +44,6 @@ public class Connection implements Serializable {
 		return conn;
 	}
 
-	public PersistentObject create(String name) {
-		return create(get(name),new Class[] {},new Object[] {});
-	}
-
-	public PersistentObject create(Class clazz) {
-		return create(get(clazz),new Class[] {},new Object[] {});
-	}
-
-	public PersistentObject create(Class clazz, Class types[], Object args[]) {
-		return create(get(clazz),types,args);
-	}
-
-	public PersistentArray create(Class componentType, int length) {
-		return (PersistentArray)create(get(componentType,length),new Class[] {},new Object[] {});
-	}
-
-	public PersistentArray create(Object component[]) {
-		Class componentType=component.getClass().getComponentType();
-		int length=component.length;
-		return (PersistentArray)create(get(componentType,length),new Class[] {Object[].class},new Object[] {component});
-	}
-
-	PersistentObject create(PersistentClass clazz, Class types[], Object args[]) {
-		return attach(connection.create(clazz,types,args));
-	}
-
-	PersistentClass get(String name) {
-		return (PersistentClass)attach(connection.get(name));
-	}
-
-	public PersistentClass get(Class clazz) {
-		return (PersistentClass)attach(connection.get(clazz));
-	}
-
-	PersistentClass get(Class componentType, int length) {
-		return (PersistentClass)attach(connection.get(componentType,length));
-	}
-
-	public PersistentSystem system() {
-		return (PersistentSystem)attach(connection.system());
-	}
-
-	public Object root() {
-		return system().root();
-	}
-
-	public void setRoot(Object obj) {
-		system().setRoot(obj);
-	}
-
 	public Subject subject() {
 		return subject==null?subject=connection.subject():subject;
 	}
@@ -126,10 +76,6 @@ public class Connection implements Serializable {
 		return cache==null?cache=new WeakHashMap():cache;
 	}
 
-	MethodCall attach(MethodCall call) {
-		return attach(call.target()).new MethodCall(call.method,call.types,attach(call.args));
-	}
-
 	Object attach(Object obj) {
 		if(obj instanceof PersistentObject) return attach((PersistentObject)obj);
 		if(obj instanceof Object[]) return attach((Object[])obj);
@@ -139,19 +85,6 @@ public class Connection implements Serializable {
 	Object[] attach(Object obj[]) {
 		for(int i=0;i<obj.length;i++) obj[i]=attach(obj[i]);
 		return obj;
-	}
-
-	PersistentObject attach(PersistentObject obj) {
-		cache();
-		synchronized(cache) {
-			PersistentObject o=get(obj.accessor);
-			if(o==null) {
-				o=obj.connection==null?obj:PersistentObject.newInstance(obj);
-				o.connection=this;
-				cache(o);
-			}
-			return o;
-		}
 	}
 
 	void cache(PersistentObject obj) {
@@ -170,18 +103,6 @@ public class Connection implements Serializable {
 		} catch (RemoteException e) {
 			throw new RuntimeException(e);
 		}
-	}
-
-	Object execute(MethodCall call) {
-		return attach(connection.execute(call));
-	}
-
-	Object executeAtomic(MethodCall call) {
-		return attach(connection.executeAtomic(call));
-	}
-
-	Object executeAtomic(MethodCall call, MethodCall undo, int index) {
-		return attach(connection.executeAtomic(call,undo,index));
 	}
 
 	public void close() {

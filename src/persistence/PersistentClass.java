@@ -68,7 +68,7 @@ public class PersistentClass extends PersistentObject {
 
 	protected PersistentClass createClass() {
 		if(getClass()==PersistentClass.class) {
-			PersistentClass c=(PersistentClass)connection.create(new ClassClass(),new Class[] {Class.class},new Object[] {getClass()});
+			PersistentClass c=(PersistentClass)store.create(new ClassClass(),new Class[] {Class.class},new Object[] {getClass()});
 			c.setup();
 			c.setClass(c);
 			return c;
@@ -133,7 +133,7 @@ public class PersistentClass extends PersistentObject {
 
 	static PersistentClass create(Class clazz, Store store) {
 		PersistentObject obj=newInstance(clazz);
-		obj.connection=store.systemConnection;
+		obj.store=store;
 		return obj.createClass();
 	}
 

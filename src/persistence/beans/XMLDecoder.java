@@ -18,26 +18,26 @@ import javax.xml.parsers.SAXParserFactory;
 import org.xml.sax.AttributeList;
 import org.xml.sax.HandlerBase;
 import org.xml.sax.SAXException;
-import persistence.Connection;
+import persistence.Store;
 
 public class XMLDecoder {
-	Connection connection;
+	Store store;
 	private InputStream in;
 	private Object owner;
 	private ExceptionListener exceptionListener;
 	private ObjectHandler handler;
 
-	public XMLDecoder(Connection connection, InputStream in) {
-		this(connection, in, null);
+	public XMLDecoder(Store store, InputStream in) {
+		this(store, in, null);
 	}
 
-	public XMLDecoder(Connection connection, InputStream in, Object owner) {
-		this(connection, in, owner, null);
+	public XMLDecoder(Store store, InputStream in, Object owner) {
+		this(store, in, owner, null);
 	}
 
-	public XMLDecoder(Connection connection, InputStream in, Object owner, ExceptionListener exceptionListener) {
+	public XMLDecoder(Store store, InputStream in, Object owner, ExceptionListener exceptionListener) {
 		this.in = in;
-		this.connection = connection;
+		this.store = store;
 		setOwner(owner);
 		setExceptionListener(exceptionListener);
 		SAXParserFactory factory = SAXParserFactory.newInstance();
@@ -101,8 +101,8 @@ class MutableExpression extends Expression {
 		return propertyName.substring(0, 1).toUpperCase() + propertyName.substring(1);
 	}
 	
-	public MutableExpression(Connection connection) {
-		super(connection, null, null, null);
+	public MutableExpression(Store store) {
+		super(store, null, null, null);
 	}
 	
 	public Object[] getArguments() {
@@ -269,7 +269,7 @@ class ObjectHandler extends HandlerBase {
 		}
 		HashMap attributes = getAttributes(attrs);
 		
-		MutableExpression e = new MutableExpression(is.connection);
+		MutableExpression e = new MutableExpression(is.store);
 		
 		// Target
 		String className = (String)attributes.get("class");
@@ -407,7 +407,7 @@ class ObjectHandler extends HandlerBase {
 		}
 		if (isPrimitive(name)) {
 			Class wrapper = typeNameToClass(name);
-			Expression e = new Expression(is.connection, wrapper, "new", new Object[]{chars.toString()});
+			Expression e = new Expression(is.store, wrapper, "new", new Object[]{chars.toString()});
 			addArg(getValue(e));
 			return;
 		}

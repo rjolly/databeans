@@ -12,12 +12,12 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import persistence.Connection;
+import persistence.Store;
 import persistence.PersistentArray;
 import persistence.PersistentObject;
 
 public class Statement {
-	Connection connection;
+	Store store;
 
 	private static Object[] emptyArray = new Object[]{};
 
@@ -33,8 +33,8 @@ public class Statement {
 	String methodName;
 	Object[] arguments;
 
-	public Statement(Connection connection, Object target, String methodName, Object[] arguments) {
-		this.connection=connection;
+	public Statement(Store store, Object target, String methodName, Object[] arguments) {
+		this.store=store;
 		this.target = target;
 		this.methodName = methodName;
 		this.arguments = (arguments == null) ? emptyArray : arguments;
@@ -111,10 +111,10 @@ public class Statement {
 				return result;
 			}
 			if (methodName == "newInstance" && target == PersistentArray.class) {
-				return connection.create(ReflectionUtils.componentTypeFor(((Character)arguments[0]).charValue()),((Integer)arguments[1]).intValue());
+				return store.create(ReflectionUtils.componentTypeFor(((Character)arguments[0]).charValue()),((Integer)arguments[1]).intValue());
 			}
 			if (methodName == "newInstance" && PersistentObject.class.isAssignableFrom((Class)target)) {
-				return connection.create((Class)target);
+				return store.create((Class)target);
 			}
 			if (methodName == "newInstance" && arguments.length != 0) {
 				// The Character class, as of 1.4, does not have a constructor

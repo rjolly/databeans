@@ -10,19 +10,19 @@ import java.beans.ExceptionListener;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
-import persistence.Connection;
+import persistence.Store;
 
 public class Encoder {
 	MetaData metaData;
-	Connection connection;
+	Store store;
 	private Map bindings = new IdentityHashMap();
 	private ExceptionListener exceptionListener;
 	boolean executeStatements = true;
 	private Map attributes;
 
-	Encoder(Connection connection) {
-		this.connection=connection;
-		metaData=new MetaData(connection);
+	Encoder(Store store) {
+		this.store=store;
+		metaData=new MetaData(store);
 	}
 
 	protected void writeObject(Object o) {
@@ -92,10 +92,10 @@ public class Encoder {
 			newArgs[i] = writeObject1(oldArgs[i]);
 		}
 		if (oldExp.getClass() == Statement.class) {
-			return new Statement(connection, newTarget, oldExp.getMethodName(), newArgs);
+			return new Statement(store, newTarget, oldExp.getMethodName(), newArgs);
 		}
 		else {
-			return new Expression(connection, newTarget, oldExp.getMethodName(), newArgs);
+			return new Expression(store, newTarget, oldExp.getMethodName(), newArgs);
 		}
 	}
 
