@@ -11,33 +11,6 @@ class RemoteAdminConnection extends RemoteConnection {
 		super(connection,store,readOnly,subject);
 	}
 
-	public void changePassword(final String username, final String oldPassword, final String newPassword) {
-		Subject.doAsPrivileged(subject,new PrivilegedAction() {
-			public Object run() {
-				store.changePassword(username,oldPassword,newPassword);
-				return null;
-			}
-		},null);
-	}
-
-	public void addUser(final String username, final String password) {
-		Subject.doAsPrivileged(subject,new PrivilegedAction() {
-			public Object run() {
-				store.addUser(username,password);
-				return null;
-			}
-		},null);
-	}
-
-	public void deleteUser(final String username) {
-		Subject.doAsPrivileged(subject,new PrivilegedAction() {
-			public Object run() {
-				store.deleteUser(username);
-				return null;
-			}
-		},null);
-	}
-
 	public void inport(final String name) {
 		Subject.doAsPrivileged(subject,new PrivilegedAction() {
 			public Object run() {

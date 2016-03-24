@@ -62,7 +62,6 @@ public class Store extends UnicastRemoteObject implements Collector {
 	synchronized void create() {
 		classes=new LinkedHashMap();
 		createSystem();
-		createUsers();
 		system.getClasses().putAll(new LinkedHashMap(classes));
 		system.getClasses().putAll(classes);
 		classes=system.getClasses();
@@ -72,11 +71,6 @@ public class Store extends UnicastRemoteObject implements Collector {
 		system=(PersistentSystem)systemConnection.create(PersistentSystem.class);
 		incRefCount(boot=system.base);
 		heap.setBoot(boot);
-	}
-
-	void createUsers() {
-		Map users=system.getUsers();
-		users.put("admin",new Password(""));
 	}
 
 	synchronized void instantiate() {
@@ -169,38 +163,6 @@ public class Store extends UnicastRemoteObject implements Collector {
 		}
 	}
 
-	void changePassword(String username, String oldPassword, String newPassword) {
-		if(oldPassword==null) AccessController.checkPermission(new AdminPermission("changePassword"));
-		Map users=system.getUsers();
-		synchronized(users) {
-			Password pw=(Password)users.get(username);
-			if(pw==null) throw new RuntimeException("the user "+username+" doesn't exist");
-			else {
-				if(oldPassword==null || pw.match(oldPassword)) users.put(username,new Password(newPassword));
-				else throw new RuntimeException("old password doesn't match");
-			}
-		}
-	}
-
-	void addUser(String username, String password) {
-		AccessController.checkPermission(new AdminPermission("addUser"));
-		Map users=system.getUsers();
-		synchronized(users) {
-			if(users.containsKey(username)) throw new RuntimeException("the user "+username+" already exists");
-			else users.put(username,new Password(password));
-		}
-	}
-
-	void deleteUser(String username) {
-		if(username.equals("admin")) throw new RuntimeException("can't delete admin user");
-		AccessController.checkPermission(new AdminPermission("deleteUser"));
-		Map users=system.getUsers();
-		synchronized(users) {
-			if(!users.containsKey(username)) throw new RuntimeException("the user "+username+" doesn't exist");
-			else users.remove(username);
-		}
-	}
-
 	void inport(String name) {
 		AccessController.checkPermission(new AdminPermission("import"));
 		try {
@@ -253,11 +215,6 @@ public class Store extends UnicastRemoteObject implements Collector {
 
 	long maxSpace() {
 		return heap.maxSpace();
-	}
-
-	public boolean authenticate(String username, char[] password) throws RemoteException {
-		Password pw=(Password)system.getUsers().get(username);
-		return pw==null?false:pw.match(password);
 	}
 
 	public synchronized void close() throws RemoteException {

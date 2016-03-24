@@ -6,7 +6,6 @@ import persistence.util.LinkedHashMap;
 
 public class PersistentSystem extends PersistentObject {
 	public void init() {
-		setUsers((Map)create(LinkedHashMap.class));
 		setClasses((Map)create(LinkedHashMap.class));
 	}
 
@@ -20,14 +19,6 @@ public class PersistentSystem extends PersistentObject {
 		public Object root() {
 			return getRoot();
 		}
-	}
-
-	public Map getUsers() {
-		return (Map)get("users");
-	}
-
-	public void setUsers(Map map) {
-		set("users",map);
 	}
 
 	public Map getClasses() {

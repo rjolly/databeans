@@ -7,22 +7,6 @@ public class AdminConnection extends Connection {
 
 	AdminConnection() {}
 
-	public void changePassword(String username, String password) {
-		changePassword(username,null,password);
-	}
-
-	public void changePassword(String username, String oldPassword, String newPassword) {
-		connection.changePassword(username,oldPassword,newPassword);
-	}
-
-	public void addUser(String username, String password) {
-		connection.addUser(username,password);
-	}
-
-	public void deleteUser(String username) {
-		connection.deleteUser(username);
-	}
-
 	public void inport(String name) {
 		connection.inport(name);
 	}
