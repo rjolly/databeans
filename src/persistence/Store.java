@@ -180,7 +180,7 @@ public class Store extends UnicastRemoteObject implements Collector {
 
 	PersistentObject instantiate(long base) {
 		synchronized(cache) {
-			PersistentObject o=get(PersistentObject.newInstance(base).accessor);
+			PersistentObject o=get(PersistentObject.newInstance(base));
 			if(o==null) {
 				incRefCount(base,true);
 				cache(o=selfClass(base)?PersistentClass.newInstance(base,this):PersistentObject.newInstance(base,getClass(base),this));
@@ -190,12 +190,12 @@ public class Store extends UnicastRemoteObject implements Collector {
 	}
 
 	void cache(PersistentObject obj) {
-		cache.remove(obj.accessor);
-		cache.put(obj.accessor,new WeakReference(obj));
+		cache.remove(obj);
+		cache.put(obj,new WeakReference(obj));
 	}
 
-	PersistentObject get(Accessor accessor) {
-		Reference w=(Reference)cache.get(accessor);
+	PersistentObject get(PersistentObject obj) {
+		Reference w=(Reference)cache.get(obj);
 		return w==null?null:(PersistentObject)w.get();
 	}
 
@@ -221,9 +221,9 @@ public class Store extends UnicastRemoteObject implements Collector {
 	}
 
 	PersistentObject attach(PersistentObject obj) {
-		if(!equals(obj.store())) throw new RuntimeException("not the same store");
+		if(!equals(obj.store)) throw new RuntimeException("not the same store");
 		synchronized(cache) {
-			return get(PersistentObject.newInstance(obj.base()).accessor);
+			return get(PersistentObject.newInstance(obj.base));
 		}
 	}
 
@@ -280,9 +280,6 @@ public class Store extends UnicastRemoteObject implements Collector {
 	public synchronized void close() throws RemoteException {
 		if(closed) return;
 		UnicastRemoteObject.unexportObject(this,true);
-		for(Iterator it=cache.keySet().iterator();it.hasNext();it.remove()) {
-			UnicastRemoteObject.unexportObject((Accessor)it.next(),true);
-		}
 		if(!readOnly) heap.mount(false);
 		closed=true;
 	}

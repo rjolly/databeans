@@ -1,13 +1,10 @@
 package persistence;
 
 import java.io.Serializable;
-import java.rmi.RemoteException;
-import java.rmi.server.UnicastRemoteObject;
 import java.util.Iterator;
 import javax.security.auth.Subject;
 
 public class PersistentObject implements Cloneable, Serializable {
-	persistence.Accessor accessor;
 	transient PersistentClass clazz;
 	transient Store store;
 	transient long base;
@@ -24,11 +21,6 @@ public class PersistentObject implements Cloneable, Serializable {
 		this.base=base;
 		this.clazz=clazz;
 		this.store=store;
-		try {
-			accessor=createAccessor();
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
 	}
 
 	static PersistentObject newInstance(long base) {
@@ -39,59 +31,6 @@ public class PersistentObject implements Cloneable, Serializable {
 
 	void init(long base) {
 		this.base=base;
-		accessor=new persistence.Accessor() {
-			public long base() {
-				return PersistentObject.this.base;
-			}
-
-			public PersistentClass clazz() {
-				return clazz;
-			}
-
-			public Store store() {
-				return store;
-			}
-
-			public int hashCode() {
-				return new Long(PersistentObject.this.base).hashCode();
-			}
-
-			public boolean equals(Object obj) {
-				return obj instanceof Accessor && PersistentObject.this.base==((Accessor)obj).object().base;
-			}
-		};
-	}
-
-	void init(PersistentObject object) {
-		accessor=object.accessor;
-	}
-
-	protected Accessor createAccessor() throws RemoteException {
-		return new Accessor();
-	}
-
-	protected class Accessor extends UnicastRemoteObject implements persistence.Accessor {
-		public Accessor() throws RemoteException {}
-
-		PersistentObject object() {
-			return PersistentObject.this;
-		}
-
-		public final long base() {
-			return base;
-		}
-
-		public final PersistentClass clazz() {
-			return clazz;
-		}
-
-		public final Store store() {
-			return store;
-		}
-
-		protected final void finalize() {
-			store.release(PersistentObject.this);
-		}
 	}
 
 	protected PersistentClass createClass() {
@@ -188,36 +127,8 @@ public class PersistentObject implements Cloneable, Serializable {
 		}
 	}
 
-	void close() {
-		accessor=null;
-	}
-
-	long base() {
-		try {
-			return accessor.base();
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	Store store() {
-		try {
-			return accessor.store();
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
 	public final PersistentClass persistentClass() {
-		return clazz==null?clazz=getClass(accessor):clazz;
-	}
-
-	PersistentClass getClass(persistence.Accessor accessor) {
-		try {
-			return accessor.clazz();
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
+		return clazz;
 	}
 
 	public final int hashCode() {
@@ -244,5 +155,9 @@ public class PersistentObject implements Cloneable, Serializable {
 			obj.set(field,get(field));
 		}
 		return obj;
+	}
+
+	protected final void finalize() {
+		store.release(this);
 	}
 }
