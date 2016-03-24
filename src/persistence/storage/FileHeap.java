@@ -70,7 +70,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 		}
 		if((c=get(last,s=normalized(size)))==null) {
 			extend();
-			if((c=get(last,s))==null) throw new StorageException("heap space exhausted");
+			if((c=get(last,s))==null) throw new RuntimeException("heap space exhausted");
 		}
 		c=c.alloc(s);
 		allocatedSpace+=c.size;
