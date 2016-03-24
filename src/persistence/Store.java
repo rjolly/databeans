@@ -21,11 +21,9 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.WeakHashMap;
-import javax.security.auth.callback.CallbackHandler;
 import persistence.PersistentObject.MethodCall;
 import persistence.beans.XMLDecoder;
 import persistence.beans.XMLEncoder;
-import persistence.server.Login;
 import persistence.storage.Collector;
 import persistence.storage.FileHeap;
 import persistence.storage.Heap;
@@ -260,15 +258,6 @@ public class Store extends UnicastRemoteObject implements Collector {
 	public boolean authenticate(String username, char[] password) throws RemoteException {
 		Password pw=(Password)system.getUsers().get(username);
 		return pw==null?false:pw.match(password);
-	}
-
-	public Connection getConnection(CallbackHandler handler, int level) throws RemoteException {
-		if(readOnly) throw new RuntimeException("store in recovery mode");
-		return Connection.newInstance(this,level,Login.login(handler).getSubject());
-	}
-
-	public AdminConnection getAdminConnection(CallbackHandler handler) throws RemoteException {
-		return Connection.newInstance(this,readOnly,Login.login(handler).getSubject());
 	}
 
 	public synchronized void close() throws RemoteException {

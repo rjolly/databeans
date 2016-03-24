@@ -1,12 +1,9 @@
 package persistence;
 
 import java.rmi.RemoteException;
-import java.rmi.server.ServerNotActiveException;
 import java.rmi.server.UnicastRemoteObject;
-import java.security.Principal;
 import javax.security.auth.Subject;
 import persistence.PersistentObject.MethodCall;
-import persistence.server.DatabeansPrincipal;
 
 class RemoteConnection extends UnicastRemoteObject {
 	final Connection connection;
@@ -31,14 +28,6 @@ class RemoteConnection extends UnicastRemoteObject {
 
 	void open() {
 		store.connections.put(this,null);
-	}
-
-	String client() {
-		String name=((Principal)subject.getPrincipals(DatabeansPrincipal.class).iterator().next()).getName();
-		try {
-			name+="@"+getClientHost();
-		} catch (ServerNotActiveException e) {}
-		return name;
 	}
 
 	public PersistentObject create(PersistentClass clazz, Class types[], Object args[]) {
