@@ -121,7 +121,7 @@ public class PersistentObject implements Cloneable, Serializable {
 			else {
 				t=getLock(TIMEOUT);
 				if(t==null) setLock(transaction);
-				else throw new PersistentException(this+" locked by "+t);
+				else throw new RuntimeException(this+" locked by "+t);
 			}
 		}
 

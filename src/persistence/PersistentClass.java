@@ -16,7 +16,7 @@ public class PersistentClass extends PersistentObject {
 	transient String name;
 
 	public void init(Class clazz) {
-		if(!PersistentObject.class.isAssignableFrom(clazz)) throw new PersistentException("type not persistent");
+		if(!PersistentObject.class.isAssignableFrom(clazz)) throw new RuntimeException("type not persistent");
 		BeanInfo info;
 		try {
 			info=Introspector.getBeanInfo(clazz);
@@ -101,7 +101,7 @@ public class PersistentClass extends PersistentObject {
 	Field getField(String name) {
 		if(map==null) setup();
 		Field f=(Field)map.get(name);
-		if(f==null) throw new PersistentException("no such property : "+name+" in class : "+name());
+		if(f==null) throw new RuntimeException("no such property : "+name+" in class : "+name());
 		return f;
 	}
 

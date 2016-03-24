@@ -3,7 +3,6 @@ package persistence.server;
 import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
-import persistence.PersistentException;
 
 public class Login {
 	public static LoginContext login(CallbackHandler handler) {
@@ -52,7 +51,7 @@ public class Login {
 		// did they fail three times?
 		if (i == 3) {
 			System.out.println("Sorry");
-			throw new PersistentException("permission denied");
+			throw new RuntimeException("permission denied");
 		}
 
 		System.out.println("Authentication succeeded!");

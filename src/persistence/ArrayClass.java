@@ -29,7 +29,7 @@ public final class ArrayClass extends PersistentClass {
 			Field f=new Field("element["+index+"]",getTypeCode());
 			f.setOffset(header+f.size*index);
 			return f;
-		} else throw new PersistentException("array index : "+index+" out of bounds : "+length);
+		} else throw new RuntimeException("array index : "+index+" out of bounds : "+length);
 	}
 
 	Iterator fieldIterator() {

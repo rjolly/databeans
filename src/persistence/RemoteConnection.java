@@ -48,7 +48,7 @@ class RemoteConnection extends UnicastRemoteObject {
 	}
 
 	synchronized PersistentObject create(PersistentClass clazz, Class types[], Object args[], boolean attached) {
-		if(readOnly) throw new PersistentException("read only");
+		if(readOnly) throw new RuntimeException("read only");
 		try {
 			PersistentObject obj=store.create(clazz);
 			obj.getClass().getMethod("init",types).invoke(obj,args);
@@ -119,7 +119,7 @@ class RemoteConnection extends UnicastRemoteObject {
 	}
 
 	synchronized Object execute(MethodCall call, MethodCall undo, int index, boolean read) {
-		if(!read && readOnly) throw new PersistentException("read only");
+		if(!read && readOnly) throw new RuntimeException("read only");
 		Object obj=transaction!=null?transaction.execute(call,undo,index,level,read,readOnly,subject):call.execute(subject);
 		if(autoCommit) commit();
 		return obj;

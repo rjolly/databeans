@@ -52,12 +52,12 @@ public class Transaction extends PersistentObject {
 		case Connection.TRANSACTION_SERIALIZABLE:
 			return copy(obj,true,!readOnly);
 		default:
-			throw new PersistentException("bad transaction isolation level");
+			throw new RuntimeException("bad transaction isolation level");
 		}
 	}
 
 	synchronized PersistentObject copy(PersistentObject obj, boolean create, boolean lock) {
-		if(isRollbackOnly()) throw new PersistentException("rollback only");
+		if(isRollbackOnly()) throw new RuntimeException("rollback only");
 		Array pair;
 		Map map=getPairs();
 //		Long base=new Long(obj.base);
@@ -84,7 +84,7 @@ public class Transaction extends PersistentObject {
 			getCalls().add(call(call));
 			break;
 		default:
-			throw new PersistentException("bad transaction isolation level");
+			throw new RuntimeException("bad transaction isolation level");
 		}
 	}
 
@@ -93,7 +93,7 @@ public class Transaction extends PersistentObject {
 	}
 
 	synchronized void commit(Subject subject) {
-		if(isRollbackOnly()) throw new PersistentException("rollback only");
+		if(isRollbackOnly()) throw new RuntimeException("rollback only");
 		for(ListIterator it=getCalls().listIterator(0);it.hasNext();it.remove()) {
 			((PersistentMethodCall)it.next()).call().execute(subject);
 		}

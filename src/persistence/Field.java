@@ -63,7 +63,7 @@ class Field {
 			reference=true;
 			break;
 		default:
-			throw new PersistentException("internal error");
+			throw new RuntimeException("internal error");
 		}
 	}
 
@@ -97,7 +97,7 @@ class Field {
 		case 'L':
 			return new Long(MemoryModel.model.readPointer(heap,base+offset));
 		default:
-			throw new PersistentException("internal error");
+			throw new RuntimeException("internal error");
 		}
 	}
 
@@ -132,7 +132,7 @@ class Field {
 			MemoryModel.model.writePointer(heap,base+offset,((Long)value).longValue());
 			break;
 		default:
-			throw new PersistentException("internal error");
+			throw new RuntimeException("internal error");
 		}
 	}
 

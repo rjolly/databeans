@@ -173,7 +173,7 @@ public class Store extends UnicastRemoteObject implements Collector {
 	}
 
 	PersistentObject attach(PersistentObject obj) {
-		if(!equals(obj.store())) throw new PersistentException("not the same store");
+		if(!equals(obj.store())) throw new RuntimeException("not the same store");
 		synchronized(cache) {
 			return get(PersistentObject.newInstance(obj.base()).accessor);
 		}
@@ -189,10 +189,10 @@ public class Store extends UnicastRemoteObject implements Collector {
 		Map users=system.getUsers();
 		synchronized(users) {
 			Password pw=(Password)users.get(username);
-			if(pw==null) throw new PersistentException("the user "+username+" doesn't exist");
+			if(pw==null) throw new RuntimeException("the user "+username+" doesn't exist");
 			else {
 				if(oldPassword==null || pw.match(oldPassword)) users.put(username,new Password(newPassword));
-				else throw new PersistentException("old password doesn't match");
+				else throw new RuntimeException("old password doesn't match");
 			}
 		}
 	}
@@ -201,17 +201,17 @@ public class Store extends UnicastRemoteObject implements Collector {
 		AccessController.checkPermission(new AdminPermission("addUser"));
 		Map users=system.getUsers();
 		synchronized(users) {
-			if(users.containsKey(username)) throw new PersistentException("the user "+username+" already exists");
+			if(users.containsKey(username)) throw new RuntimeException("the user "+username+" already exists");
 			else users.put(username,new Password(password));
 		}
 	}
 
 	void deleteUser(String username) {
-		if(username.equals("admin")) throw new PersistentException("can't delete admin user");
+		if(username.equals("admin")) throw new RuntimeException("can't delete admin user");
 		AccessController.checkPermission(new AdminPermission("deleteUser"));
 		Map users=system.getUsers();
 		synchronized(users) {
-			if(!users.containsKey(username)) throw new PersistentException("the user "+username+" doesn't exist");
+			if(!users.containsKey(username)) throw new RuntimeException("the user "+username+" doesn't exist");
 			else users.remove(username);
 		}
 	}
@@ -276,7 +276,7 @@ public class Store extends UnicastRemoteObject implements Collector {
 	}
 
 	public Connection getConnection(CallbackHandler handler, int level) throws RemoteException {
-		if(readOnly) throw new PersistentException("store in recovery mode");
+		if(readOnly) throw new RuntimeException("store in recovery mode");
 		return Connection.newInstance(this,level,Login.login(handler).getSubject());
 	}
 
@@ -373,7 +373,7 @@ public class Store extends UnicastRemoteObject implements Collector {
 					if(ptr!=0) mark(ptr);
 					break;
 				default:
-					throw new PersistentException("internal error");
+					throw new RuntimeException("internal error");
 				}
 			}
 		}
@@ -407,7 +407,7 @@ public class Store extends UnicastRemoteObject implements Collector {
 					if(ptr!=0) decRefCount(ptr);
 					break;
 				default:
-					throw new PersistentException("internal error");
+					throw new RuntimeException("internal error");
 				}
 			}
 		}
@@ -533,9 +533,9 @@ public class Store extends UnicastRemoteObject implements Collector {
 		try {
 			obj=new ObjectInputStream(is).readObject();
 		} catch (ClassNotFoundException e) {
-			throw new PersistentException("class not found");
+			throw new RuntimeException(e);
 		} catch (IOException e) {
-			throw new PersistentException("deserialization error");
+			throw new RuntimeException(e);
 		}
 		return obj;
 	}
@@ -545,7 +545,7 @@ public class Store extends UnicastRemoteObject implements Collector {
 		try {
 			new ObjectOutputStream(os).writeObject(obj);
 		} catch (IOException e) {
-			throw new PersistentException("serialization error");
+			throw new RuntimeException(e);
 		}
 		byte b[]=os.toByteArray();
 		byte s[]=new byte[Field.LOCK.offset+b.length];
@@ -621,7 +621,7 @@ public class Store extends UnicastRemoteObject implements Collector {
 				is.skip(ptr-this.ptr);
 				return is.readBoolean();
 			} catch (IOException e) {
-				throw new PersistentException("internal error");
+				throw new RuntimeException(e);
 			}
 		}
 
@@ -631,7 +631,7 @@ public class Store extends UnicastRemoteObject implements Collector {
 				is.skip(ptr-this.ptr);
 				return is.readByte();
 			} catch (IOException e) {
-				throw new PersistentException("internal error");
+				throw new RuntimeException(e);
 			}
 		}
 
@@ -641,7 +641,7 @@ public class Store extends UnicastRemoteObject implements Collector {
 				is.skip(ptr-this.ptr);
 				return is.readShort();
 			} catch (IOException e) {
-				throw new PersistentException("internal error");
+				throw new RuntimeException(e);
 			}
 		}
 
@@ -651,7 +651,7 @@ public class Store extends UnicastRemoteObject implements Collector {
 				is.skip(ptr-this.ptr);
 				return is.readChar();
 			} catch (IOException e) {
-				throw new PersistentException("internal error");
+				throw new RuntimeException(e);
 			}
 		}
 
@@ -661,7 +661,7 @@ public class Store extends UnicastRemoteObject implements Collector {
 				is.skip(ptr-this.ptr);
 				return is.readInt();
 			} catch (IOException e) {
-				throw new PersistentException("internal error");
+				throw new RuntimeException(e);
 			}
 		}
 
@@ -671,7 +671,7 @@ public class Store extends UnicastRemoteObject implements Collector {
 				is.skip(ptr-this.ptr);
 				return is.readLong();
 			} catch (IOException e) {
-				throw new PersistentException("internal error");
+				throw new RuntimeException(e);
 			}
 		}
 
@@ -681,7 +681,7 @@ public class Store extends UnicastRemoteObject implements Collector {
 				is.skip(ptr-this.ptr);
 				return is.readFloat();
 			} catch (IOException e) {
-				throw new PersistentException("internal error");
+				throw new RuntimeException(e);
 			}
 		}
 
@@ -691,7 +691,7 @@ public class Store extends UnicastRemoteObject implements Collector {
 				is.skip(ptr-this.ptr);
 				return is.readDouble();
 			} catch (IOException e) {
-				throw new PersistentException("internal error");
+				throw new RuntimeException(e);
 			}
 		}
 
