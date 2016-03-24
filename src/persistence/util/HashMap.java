@@ -7,8 +7,6 @@
 package persistence.util;
 
 import java.rmi.RemoteException;
-import java.util.AbstractCollection;
-import java.util.AbstractSet;
 import java.util.Collection;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
