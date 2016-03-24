@@ -85,24 +85,6 @@ public class PersistentObject implements Cloneable, Serializable {
 			}
 		}
 
-		public final Object get(String name) {
-			return get(clazz.getField(name));
-		}
-
-		public final Object set(String name, Object value) {
-			return set(clazz.getField(name),value);
-		}
-
-		Object get(Field field) {
-			return store.get(base,field);
-		}
-
-		synchronized Object set(Field field, Object value) {
-			Object obj=get(field);
-			store.set(base,field,value);
-			return obj;
-		}
-
 		public final long base() {
 			return base;
 		}
@@ -113,48 +95,6 @@ public class PersistentObject implements Cloneable, Serializable {
 
 		public final Store store() {
 			return store;
-		}
-
-		public int persistentHashCode() {
-			return hashCode();
-		}
-
-		public final int hashCode() {
-			return new Long(base).hashCode();
-		}
-
-		public boolean persistentEquals(PersistentObject obj) {
-			return equals(obj.accessor);
-		}
-
-		public final boolean equals(Object obj) {
-			return this == obj || (obj instanceof Accessor && equals((Accessor)obj));
-		}
-
-		boolean equals(Accessor accessor) {
-			return base==accessor.object().base;
-		}
-
-		public String persistentToString() {
-			return toString();
-		}
-
-		public final String toString() {
-			return clazz.name()+"@"+Long.toHexString(base);
-		}
-
-		public PersistentObject persistentClone() {
-			return ((Accessor)clone()).object();
-		}
-
-		public synchronized final Object clone() {
-			Accessor obj=(Accessor)store.create(clazz).accessor;
-			Iterator t=clazz.fieldIterator();
-			while(t.hasNext()) {
-				Field field=(Field)t.next();
-				obj.set(field,get(field));
-			}
-			return obj;
 		}
 
 		protected final void finalize() {
@@ -190,15 +130,22 @@ public class PersistentObject implements Cloneable, Serializable {
 		return store.get(clazz);
 	}
 
-	protected final Object get(String name) {
-		return executeAtomic(
-			new MethodCall("get",new Class[] {String.class},new Object[] {name}));
+	public final Object get(String name) {
+		return get(clazz.getField(name));
 	}
 
-	protected final Object set(String name, Object value) {
-		return executeAtomic(
-			new MethodCall("set",new Class[] {String.class,Object.class},new Object[] {name,value}),
-			new MethodCall("set",new Class[] {String.class,Object.class},new Object[] {name,null}),1);
+	public final Object set(String name, Object value) {
+		return set(clazz.getField(name),value);
+	}
+
+	Object get(Field field) {
+		return store.get(base,field);
+	}
+
+	synchronized Object set(Field field, Object value) {
+		Object obj=get(field);
+		store.set(base,field,value);
+		return obj;
 	}
 
 	protected final Object execute(MethodCall call) {
@@ -285,27 +232,29 @@ public class PersistentObject implements Cloneable, Serializable {
 		}
 	}
 
-	public int hashCode() {
-		return ((Integer)executeAtomic(
-			new MethodCall("persistentHashCode",new Class[] {},new Object[] {}))).intValue();
+	public final int hashCode() {
+		return new Long(base).hashCode();
 	}
 
-	public boolean equals(Object obj) {
+	public final boolean equals(Object obj) {
 		return this == obj || (obj instanceof PersistentObject && equals((PersistentObject)obj));
 	}
 
 	boolean equals(PersistentObject obj) {
-		return ((Boolean)executeAtomic(
-			new MethodCall("persistentEquals",new Class[] {PersistentObject.class},new Object[] {obj}))).booleanValue();
+		return base==obj.base;
 	}
 
 	public String toString() {
-		return (String)executeAtomic(
-			new MethodCall("persistentToString",new Class[] {},new Object[] {}));
+		return clazz.name()+"@"+Long.toHexString(base);
 	}
 
-	public Object clone() {
-		return executeAtomic(
-			new MethodCall("persistentClone",new Class[] {},new Object[] {}));
+	public synchronized final Object clone() {
+		PersistentObject obj=store.create(clazz);
+		Iterator t=clazz.fieldIterator();
+		while(t.hasNext()) {
+			Field field=(Field)t.next();
+			obj.set(field,get(field));
+		}
+		return obj;
 	}
 }

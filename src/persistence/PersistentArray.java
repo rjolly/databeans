@@ -13,31 +13,6 @@ public final class PersistentArray extends PersistentObject implements Array {
 
 	final class Accessor extends PersistentObject.Accessor {
 		public Accessor() throws RemoteException {}
-
-		public int length() {
-			return ((ArrayClass)clazz).getLength();
-		}
-
-		public char typeCode() {
-			return ((ArrayClass)clazz).getTypeCode();
-		}
-
-		public Object get(int index) {
-			return get(((ArrayClass)clazz).getField(index));
-		}
-
-		public Object set(int index, Object value) {
-			return set(((ArrayClass)clazz).getField(index),value);
-		}
-
-		public String persistentToString() {
-			StringBuffer s=new StringBuffer();
-			s.append("{");
-			int n=length();
-			for(int i=0;i<n;i++) s.append((i==0?"":", ")+get(i));
-			s.append("}");
-			return s.toString();
-		}
 	}
 
 	protected PersistentClass createClass() {
@@ -49,13 +24,11 @@ public final class PersistentArray extends PersistentObject implements Array {
 	}
 
 	public int length() {
-		return ((Integer)executeAtomic(
-			new MethodCall("length",new Class[] {},new Object[] {}))).intValue();
+		return ((ArrayClass)clazz).getLength();
 	}
 
 	public char typeCode() {
-		return ((Character)executeAtomic(
-			new MethodCall("typeCode",new Class[] {},new Object[] {}))).charValue();
+		return ((ArrayClass)clazz).getTypeCode();
 	}
 
 	public boolean getBoolean(int index) {
@@ -115,14 +88,11 @@ public final class PersistentArray extends PersistentObject implements Array {
 	}
 
 	public Object get(int index) {
-		return executeAtomic(
-			new MethodCall("get",new Class[] {int.class},new Object[] {new Integer(index)}));
+		return get(((ArrayClass)clazz).getField(index));
 	}
 
 	public void set(int index, Object value) {
-		executeAtomic(
-			new MethodCall("set",new Class[] {int.class,Object.class},new Object[] {new Integer(index),value}),
-			new MethodCall("set",new Class[] {int.class,Object.class},new Object[] {new Integer(index),null}),1);
+		set(((ArrayClass)clazz).getField(index),value);
 	}
 
 	public static void copy(Array src, int src_position, Array dst, int dst_position, int length) {
@@ -138,5 +108,14 @@ public final class PersistentArray extends PersistentObject implements Array {
 	public static void copy(Array src, int src_position, Object dst[], int dst_position, int length) {
 		if(src_position<dst_position) for(int i=length-1;i>=0;i--) dst[dst_position+i]=src.get(src_position+i);
 		else for(int i=0;i<length;i++) dst[dst_position+i]=src.get(src_position+i);
+	}
+
+	public String toString() {
+		StringBuffer s=new StringBuffer();
+		s.append("{");
+		int n=length();
+		for(int i=0;i<n;i++) s.append((i==0?"":", ")+get(i));
+		s.append("}");
+		return s.toString();
 	}
 }
