@@ -16,7 +16,6 @@ import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
-import java.security.AccessController;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -229,7 +228,6 @@ public class Store extends UnicastRemoteObject implements Collector {
 	}
 
 	void inport(String name) {
-		AccessController.checkPermission(new AdminPermission("import"));
 		try {
 			XMLDecoder d = new XMLDecoder(this,new BufferedInputStream(new FileInputStream(name)));
 			system.setRoot(d.readObject());
@@ -240,7 +238,6 @@ public class Store extends UnicastRemoteObject implements Collector {
 	}
 
 	void export(String name) {
-		AccessController.checkPermission(new AdminPermission("export"));
 		try {
 			XMLEncoder e = new XMLEncoder(this,new BufferedOutputStream(new FileOutputStream(name)));
 			e.writeObject(system.getRoot());
@@ -251,13 +248,11 @@ public class Store extends UnicastRemoteObject implements Collector {
 	}
 
 	void shutdown() throws RemoteException {
-		AccessController.checkPermission(new AdminPermission("shutdown"));
 		close();
 		System.gc();
 	}
 
 	void userGc() {
-		AccessController.checkPermission(new AdminPermission("gc"));
 		gc();
 		synchronized(classes) {
 			updateClasses();

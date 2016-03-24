@@ -3,8 +3,6 @@ package persistence;
 import java.io.Serializable;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.Iterator;
 import javax.security.auth.Subject;
 
@@ -239,11 +237,7 @@ public class PersistentObject implements Cloneable, Serializable {
 		}
 
 		Object execute(final PersistentObject target, Subject subject) {
-			return subject==null?target.call(method,types,args,false):Subject.doAsPrivileged(subject,new PrivilegedAction() {
-				public Object run() {
-					return target.call(method,types,args,true);
-				}
-			},null);
+			return target.call(method,types,args,false);
 		}
 	}
 
@@ -256,10 +250,6 @@ public class PersistentObject implements Cloneable, Serializable {
 	}
 
 	Object call(String method, Class types[], Object args[], boolean check) {
-		if(check) {
-			if((method.equals("get") || method.equals("set")) && types.length>0 && types[0]==String.class) AccessController.checkPermission(new PropertyPermission(clazz.name()+"."+args[0]));
-			else AccessController.checkPermission(new MethodPermission(clazz.name()+"."+method));
-		}
 		return ((Accessor)accessor).call(method,types,args);
 	}
 
