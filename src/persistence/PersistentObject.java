@@ -9,7 +9,6 @@ import java.util.Iterator;
 import javax.security.auth.Subject;
 
 public class PersistentObject implements Cloneable, Serializable {
-	static final int TIMEOUT=60000;
 	persistence.Accessor accessor;
 	transient Connection connection;
 	transient PersistentClass clazz;
@@ -112,39 +111,6 @@ public class PersistentObject implements Cloneable, Serializable {
 			Object obj=get(field);
 			store.set(base,field,value);
 			return obj;
-		}
-
-		synchronized void lock(Transaction transaction) {
-			Transaction t=getLock();
-			if(t==null) setLock(transaction);
-			else if(t==transaction);
-			else {
-				t=getLock(TIMEOUT);
-				if(t==null) setLock(transaction);
-				else throw new RuntimeException(this+" locked by "+t);
-			}
-		}
-
-		synchronized void unlock() {
-			setLock(null);
-			notify();
-		}
-
-		Transaction getLock() {
-			return getLock(0);
-		}
-
-		Transaction getLock(int timeout) {
-			if(timeout>0 && !store.closed) try {
-				wait(timeout);
-			} catch (InterruptedException e) {
-				throw new RuntimeException(e);
-			}
-			return store.getLock(base);
-		}
-
-		void setLock(Transaction transaction) {
-			store.setLock(base,transaction);
 		}
 
 		public final long base() {
@@ -303,14 +269,6 @@ public class PersistentObject implements Cloneable, Serializable {
 			else AccessController.checkPermission(new MethodPermission(clazz.name()+"."+method));
 		}
 		return ((Accessor)accessor).call(method,types,args);
-	}
-
-	void lock(Transaction transaction) {
-		((Accessor)accessor).lock(transaction);
-	}
-
-	void unlock() {
-		((Accessor)accessor).unlock();
 	}
 
 	void close() {

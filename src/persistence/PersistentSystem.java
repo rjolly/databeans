@@ -1,16 +1,13 @@
 package persistence;
 
 import java.rmi.RemoteException;
-import java.util.List;
 import java.util.Map;
-import persistence.util.ArrayList;
 import persistence.util.LinkedHashMap;
 
 public class PersistentSystem extends PersistentObject {
 	public void init() {
 		setUsers((Map)create(LinkedHashMap.class));
 		setClasses((Map)create(LinkedHashMap.class));
-		setTransactions((List)create(ArrayList.class));
 	}
 
 	protected PersistentObject.Accessor createAccessor() throws RemoteException {
@@ -39,14 +36,6 @@ public class PersistentSystem extends PersistentObject {
 
 	public void setClasses(Map map) {
 		set("classes",map);
-	}
-
-	public List getTransactions() {
-		return (List)get("transactions");
-	}
-
-	public void setTransactions(List list) {
-		set("transactions",list);
 	}
 
 	public Object getRoot() {

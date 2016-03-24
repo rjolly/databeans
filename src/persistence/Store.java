@@ -21,7 +21,6 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.WeakHashMap;
-import javax.security.auth.Subject;
 import javax.security.auth.callback.CallbackHandler;
 import persistence.PersistentObject.MethodCall;
 import persistence.beans.XMLDecoder;
@@ -87,7 +86,6 @@ public class Store extends UnicastRemoteObject implements Collector {
 		system=(PersistentSystem)instantiate(boot);
 		classes=system.getClasses();
 		if(readOnly) return;
-		rollback();
 	}
 
 	void release() {
@@ -95,12 +93,6 @@ public class Store extends UnicastRemoteObject implements Collector {
 		while(t.hasNext()) {
 			long ptr=((Long)t.next()).longValue();
 			if(heap.status(ptr)) clearRefCount(ptr,true);
-		}
-	}
-
-	void rollback() {
-		for(Iterator it=system.getTransactions().iterator();it.hasNext();it.remove()) {
-			((Transaction)it.next()).rollback(null);
 		}
 	}
 
@@ -177,11 +169,6 @@ public class Store extends UnicastRemoteObject implements Collector {
 		synchronized(cache) {
 			return get(PersistentObject.newInstance(obj.base()).accessor);
 		}
-	}
-
-	void abortTransaction(Transaction transaction) {
-		AccessController.checkPermission(new AdminPermission("abortTransction"));
-		transaction.abort();
 	}
 
 	void changePassword(String username, String oldPassword, String newPassword) {
@@ -284,25 +271,9 @@ public class Store extends UnicastRemoteObject implements Collector {
 		return Connection.newInstance(this,readOnly,Login.login(handler).getSubject());
 	}
 
-	Transaction getTransaction(String client) {
-		Transaction t=(Transaction)systemConnection.create(Transaction.class,new Class[] {String.class},new Object[] {client});
-		system.getTransactions().add(t);
-		return t;
-	}
-
-	synchronized void release(Transaction transaction, Subject subject) {
-		if(closed) return;
-//		if(readOnly) return;
-		system.getTransactions().remove(transaction);
-		transaction.rollback(subject);
-	}
-
 	public synchronized void close() throws RemoteException {
 		if(closed) return;
 		UnicastRemoteObject.unexportObject(this,true);
-		for(Iterator it=system.getTransactions().iterator();it.hasNext();) {
-			((Transaction)it.next()).abort();
-		}
 		for(Iterator it=connections.keySet().iterator();it.hasNext();it.remove()) {
 			UnicastRemoteObject.unexportObject((RemoteConnection)it.next(),true);
 		}
@@ -513,15 +484,6 @@ public class Store extends UnicastRemoteObject implements Collector {
 		return ptr==0;
 	}
 
-	synchronized Transaction getLock(long base) {
-		long ptr=((Long)Field.LOCK.get(heap,base)).longValue();
-		return ptr==0?null:(Transaction)instantiate(ptr);
-	}
-
-	synchronized void setLock(long base, Transaction transaction) {
-		Field.LOCK.set(heap,base,new Long(transaction==null?0:transaction.base));
-	}
-
 	Object readObject(long base) {
 		return readObject(heap,base);
 	}
@@ -529,7 +491,7 @@ public class Store extends UnicastRemoteObject implements Collector {
 	Object readObject(Heap heap, long base) {
 		Object obj;
 		byte b[]=heap.readBytes(base);
-		InputStream is=new ByteArrayInputStream(b,Field.LOCK.offset,b.length-Field.LOCK.offset);
+		InputStream is=new ByteArrayInputStream(b,Field.HEADER_SIZE,b.length-Field.HEADER_SIZE);
 		try {
 			obj=new ObjectInputStream(is).readObject();
 		} catch (ClassNotFoundException e) {
@@ -548,7 +510,7 @@ public class Store extends UnicastRemoteObject implements Collector {
 			throw new RuntimeException(e);
 		}
 		byte b[]=os.toByteArray();
-		byte s[]=new byte[Field.LOCK.offset+b.length];
+		byte s[]=new byte[Field.HEADER_SIZE+b.length];
 		System.arraycopy(b,0,s,s.length-b.length,b.length);
 		long base=heap.alloc(s.length);
 		heap.writeBytes(base,s);

@@ -7,10 +7,6 @@ public class AdminConnection extends Connection {
 
 	AdminConnection() {}
 
-	public void abortTransaction(Transaction transaction) {
-		connection.abortTransaction(transaction);
-	}
-
 	public void changePassword(String username, String password) {
 		changePassword(username,null,password);
 	}

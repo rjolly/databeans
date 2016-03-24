@@ -11,19 +11,6 @@ class RemoteAdminConnection extends RemoteConnection {
 		super(connection,store,readOnly,subject);
 	}
 
-	public void abortTransaction(Transaction transaction) {
-		abortTransaction((Transaction)store.attach(transaction),true);
-	}
-
-	void abortTransaction(final Transaction transaction, boolean attached) {
-		Subject.doAsPrivileged(subject,new PrivilegedAction() {
-			public Object run() {
-				store.abortTransaction(transaction);
-				return null;
-			}
-		},null);
-	}
-
 	public void changePassword(final String username, final String oldPassword, final String newPassword) {
 		Subject.doAsPrivileged(subject,new PrivilegedAction() {
 			public Object run() {

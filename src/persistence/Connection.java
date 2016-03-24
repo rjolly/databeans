@@ -184,14 +184,6 @@ public class Connection implements Serializable {
 		return attach(connection.executeAtomic(call,undo,index));
 	}
 
-	public void commit() {
-		connection.commit();
-	}
-
-	public void rollback() {
-		connection.rollback();
-	}
-
 	public void close() {
 		connection=null;
 		cache();
@@ -225,7 +217,6 @@ class ConnectionXAResource implements XAResource {
 	}
 
 	public void commit(Xid xid, boolean onePhase) {
-		connection.commit();
 	}
 
 	public void end(Xid xid, int flags) {}
@@ -257,7 +248,6 @@ class ConnectionXAResource implements XAResource {
 	}
 
 	public void rollback(Xid xid) {
-		connection.rollback();
 	}
 
 	public boolean setTransactionTimeout(int seconds) {

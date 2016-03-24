@@ -11,7 +11,6 @@ import persistence.server.DatabeansPrincipal;
 class RemoteConnection extends UnicastRemoteObject {
 	final Connection connection;
 	final Store store;
-	Transaction transaction;
 	int level;
 	boolean readOnly;
 	boolean autoCommit;
@@ -27,7 +26,6 @@ class RemoteConnection extends UnicastRemoteObject {
 		this.level=level;
 		this.readOnly=readOnly;
 		this.subject=subject;
-		if(level!=Connection.TRANSACTION_NONE) transaction=store.getTransaction(client());
 		open();
 	}
 
@@ -120,20 +118,7 @@ class RemoteConnection extends UnicastRemoteObject {
 
 	synchronized Object execute(MethodCall call, MethodCall undo, int index, boolean read) {
 		if(!read && readOnly) throw new RuntimeException("read only");
-		Object obj=transaction!=null?transaction.execute(call,undo,index,level,read,readOnly,subject):call.execute(subject);
-		if(autoCommit) commit();
+		Object obj=call.execute(subject);
 		return obj;
-	}
-
-	public synchronized void commit() {
-		if(transaction!=null) transaction.commit(subject);
-	}
-
-	public synchronized void rollback() {
-		if(transaction!=null) transaction.rollback(subject);
-	}
-
-	protected final void finalize() {
-		if(transaction!=null) store.release(transaction,subject);
 	}
 }

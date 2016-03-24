@@ -8,10 +8,9 @@ import persistence.storage.MemoryModel;
 class Field {
 	static final Field REF_COUNT=new Field("refCount",'L');
 	static final Field CLASS=new Field("class",'L');
-	static final Field LOCK=new Field("lock",'L');
 	static final int HEADER_SIZE;
 	static {
-		Field f[]=new Field[] {REF_COUNT,CLASS,LOCK};
+		Field f[]=new Field[] {REF_COUNT,CLASS};
 		int size=0;
 		for(int i=0;i<f.length;i++) {
 			f[i].setOffset(size);
