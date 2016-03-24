@@ -32,7 +32,6 @@ import persistence.storage.MemoryModel;
 
 public class Store extends UnicastRemoteObject implements Collector {
 	final Heap heap;
-	final Map connections=new WeakHashMap();
 	final Map cache=new WeakHashMap();
 	PersistentSystem system;
 	boolean readOnly;
@@ -286,9 +285,6 @@ public class Store extends UnicastRemoteObject implements Collector {
 	public synchronized void close() throws RemoteException {
 		if(closed) return;
 		UnicastRemoteObject.unexportObject(this,true);
-		for(Iterator it=connections.keySet().iterator();it.hasNext();it.remove()) {
-			UnicastRemoteObject.unexportObject((RemoteConnection)it.next(),true);
-		}
 		for(Iterator it=cache.keySet().iterator();it.hasNext();it.remove()) {
 			UnicastRemoteObject.unexportObject((Accessor)it.next(),true);
 		}
