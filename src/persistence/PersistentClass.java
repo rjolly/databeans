@@ -5,7 +5,6 @@ import java.beans.IndexedPropertyDescriptor;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
-import java.rmi.RemoteException;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -39,24 +38,6 @@ public class PersistentClass extends PersistentObject {
 
 	protected boolean banned(String property) {
 		return property.equals("class");
-	}
-
-	protected PersistentObject.Accessor createAccessor() throws RemoteException {
-		return new Accessor();
-	}
-
-	protected class Accessor extends PersistentObject.Accessor {
-		public Accessor() throws RemoteException {}
-
-		public String persistentToString() {
-			StringBuffer s=new StringBuffer();
-			String fields[]=getFields().split(";");
-			s.append(Long.toHexString(base));
-			s.append("[");
-			for(int i=0;i<fields.length;i++) s.append((i==0?"":", ")+fields[i]);
-			s.append("]");
-			return s.toString();
-		}
 	}
 
 	static PersistentClass newInstance(long base, Store store) {
@@ -129,6 +110,16 @@ public class PersistentClass extends PersistentObject {
 
 	public void setFields(String str) {
 		set("fields",str);
+	}
+
+	public String toString() {
+		StringBuffer s=new StringBuffer();
+		String fields[]=getFields().split(";");
+		s.append(Long.toHexString(base));
+		s.append("[");
+		for(int i=0;i<fields.length;i++) s.append((i==0?"":", ")+fields[i]);
+		s.append("]");
+		return s.toString();
 	}
 
 	static PersistentClass create(Class clazz, Store store) {

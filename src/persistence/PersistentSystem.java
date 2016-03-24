@@ -1,21 +1,8 @@
 package persistence;
 
-import java.rmi.RemoteException;
 import java.util.Map;
 
 public class PersistentSystem extends PersistentObject {
-	protected PersistentObject.Accessor createAccessor() throws RemoteException {
-		return new Accessor();
-	}
-
-	protected class Accessor extends PersistentObject.Accessor {
-		public Accessor() throws RemoteException {}
-
-		public Object root() {
-			return getRoot();
-		}
-	}
-
 	public Map getClasses() {
 		return (Map)get("classes");
 	}
@@ -33,7 +20,6 @@ public class PersistentSystem extends PersistentObject {
 	}
 
 	public Object root() {
-		return executeAtomic(
-			new MethodCall("root",new Class[] {},new Object[] {}));
+		return getRoot();
 	}
 }

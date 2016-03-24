@@ -1,18 +1,8 @@
 package persistence;
 
-import java.rmi.RemoteException;
-
 public final class PersistentArray extends PersistentObject implements Array {
 	public void init(Object component[]) {
 		copy(component,0,this,0,component.length);
-	}
-
-	protected PersistentObject.Accessor createAccessor() throws RemoteException {
-		return new Accessor();
-	}
-
-	final class Accessor extends PersistentObject.Accessor {
-		public Accessor() throws RemoteException {}
 	}
 
 	protected PersistentClass createClass() {

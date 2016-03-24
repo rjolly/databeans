@@ -77,14 +77,6 @@ public class PersistentObject implements Cloneable, Serializable {
 			return PersistentObject.this;
 		}
 
-		Object call(String method, Class types[], Object args[]) {
-			try {
-				return getClass().getMethod(method,types).invoke(this,args);
-			} catch (Exception e) {
-				throw new RuntimeException(e);
-			}
-		}
-
 		public final long base() {
 			return base;
 		}
@@ -184,7 +176,7 @@ public class PersistentObject implements Cloneable, Serializable {
 		}
 
 		Object execute(final PersistentObject target, Subject subject) {
-			return target.call(method,types,args,false);
+			return target.call(method,types,args);
 		}
 	}
 
@@ -194,10 +186,6 @@ public class PersistentObject implements Cloneable, Serializable {
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
-	}
-
-	Object call(String method, Class types[], Object args[], boolean check) {
-		return ((Accessor)accessor).call(method,types,args);
 	}
 
 	void close() {
