@@ -21,7 +21,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.WeakHashMap;
 
-import persistence.PersistentObject.MethodCall;
 import persistence.beans.XMLDecoder;
 import persistence.beans.XMLEncoder;
 import persistence.storage.Collector;
@@ -147,24 +146,6 @@ public class Store extends UnicastRemoteObject implements Collector {
 		}
 	}
 
-	public Object execute(MethodCall call) {
-		return call.execute();
-	}
-
-	public Object executeAtomic(MethodCall call) {
-		return execute(call,null,0,true);
-	}
-
-	public Object executeAtomic(MethodCall call, MethodCall undo, int index) {
-		return execute(call,undo,index,false);
-	}
-
-	synchronized Object execute(MethodCall call, MethodCall undo, int index, boolean read) {
-		if(!read && readOnly) throw new RuntimeException("read only");
-		Object obj=call.execute(null);
-		return obj;
-	}
-
 	synchronized PersistentObject create(PersistentClass clazz) {
 		byte b[]=new byte[clazz.size()];
 		long base=heap.alloc(b.length);
@@ -203,28 +184,6 @@ public class Store extends UnicastRemoteObject implements Collector {
 		if(closed) return;
 		if(readOnly) return;
 		decRefCount(obj.base,true);
-	}
-
-	MethodCall attach(MethodCall call) {
-		return attach(call.target()).new MethodCall(call.method,call.types,attach(call.args));
-	}
-
-	Object attach(Object obj) {
-		if(obj instanceof PersistentObject) return attach((PersistentObject)obj);
-		if(obj instanceof Object[]) return attach((Object[])obj);
-		return obj;
-	}
-
-	Object[] attach(Object obj[]) {
-		for(int i=0;i<obj.length;i++) obj[i]=attach(obj[i]);
-		return obj;
-	}
-
-	PersistentObject attach(PersistentObject obj) {
-		if(!equals(obj.store)) throw new RuntimeException("not the same store");
-		synchronized(cache) {
-			return get(PersistentObject.newInstance(obj.base));
-		}
 	}
 
 	void inport(String name) {

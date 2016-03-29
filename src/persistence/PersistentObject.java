@@ -2,7 +2,6 @@ package persistence;
 
 import java.io.Serializable;
 import java.util.Iterator;
-import javax.security.auth.Subject;
 
 public class PersistentObject implements Cloneable, Serializable {
 	transient PersistentClass clazz;
@@ -77,54 +76,6 @@ public class PersistentObject implements Cloneable, Serializable {
 		Object obj=get(field);
 		store.set(base,field,value);
 		return obj;
-	}
-
-	protected final Object execute(MethodCall call) {
-		return store.execute(call);
-	}
-
-	protected final Object executeAtomic(MethodCall call) {
-		return store.executeAtomic(call);
-	}
-
-	protected final Object executeAtomic(MethodCall call, MethodCall undo, int index) {
-		return store.executeAtomic(call,undo,index);
-	}
-
-	protected final class MethodCall implements Serializable {
-		String method;
-		Class types[];
-		Object args[];
-
-		public MethodCall(String method, Class types[], Object args[]) {
-			this.method=method;
-			this.types=types;
-			this.args=args;
-		}
-
-		PersistentObject target() {
-			return PersistentObject.this;
-		}
-
-		Object execute() {
-			return call(method,types,args);
-		}
-
-		Object execute(Subject subject) {
-			return execute(PersistentObject.this,subject);
-		}
-
-		Object execute(final PersistentObject target, Subject subject) {
-			return target.call(method,types,args);
-		}
-	}
-
-	Object call(String method, Class types[], Object args[]) {
-		try {
-			return getClass().getMethod(method,types).invoke(this,args);
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
 	}
 
 	public final PersistentClass persistentClass() {
