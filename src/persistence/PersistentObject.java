@@ -6,7 +6,7 @@ import java.util.Iterator;
 public class PersistentObject implements Cloneable, Serializable {
 	transient PersistentClass clazz;
 	transient Store store;
-	transient long base;
+	transient Long base;
 
 	public void init() {}
 
@@ -20,16 +20,6 @@ public class PersistentObject implements Cloneable, Serializable {
 		this.base=base;
 		this.clazz=clazz;
 		this.store=store;
-	}
-
-	static PersistentObject newInstance(long base) {
-		PersistentObject obj=new PersistentObject();
-		obj.init(base);
-		return obj;
-	}
-
-	void init(long base) {
-		this.base=base;
 	}
 
 	protected PersistentClass createClass() {
@@ -83,7 +73,7 @@ public class PersistentObject implements Cloneable, Serializable {
 	}
 
 	public final int hashCode() {
-		return new Long(base).hashCode();
+		return base.hashCode();
 	}
 
 	public final boolean equals(Object obj) {
@@ -91,7 +81,7 @@ public class PersistentObject implements Cloneable, Serializable {
 	}
 
 	boolean equals(PersistentObject obj) {
-		return base==obj.base;
+		return base.equals(obj.base);
 	}
 
 	public String toString() {

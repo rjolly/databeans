@@ -161,7 +161,7 @@ public class Store extends UnicastRemoteObject implements Collector {
 
 	PersistentObject instantiate(long base) {
 		synchronized(cache) {
-			PersistentObject o=get(PersistentObject.newInstance(base));
+			PersistentObject o=get(base);
 			if(o==null) {
 				incRefCount(base,true);
 				cache(o=selfClass(base)?PersistentClass.newInstance(base,this):PersistentObject.newInstance(base,getClass(base),this));
@@ -171,12 +171,12 @@ public class Store extends UnicastRemoteObject implements Collector {
 	}
 
 	void cache(PersistentObject obj) {
-		cache.remove(obj);
-		cache.put(obj,new WeakReference(obj));
+		cache.remove(obj.base);
+		cache.put(obj.base,new WeakReference(obj));
 	}
 
-	PersistentObject get(PersistentObject obj) {
-		Reference w=(Reference)cache.get(obj);
+	PersistentObject get(long base) {
+		Reference w=(Reference)cache.get(base);
 		return w==null?null:(PersistentObject)w.get();
 	}
 
@@ -427,7 +427,7 @@ public class Store extends UnicastRemoteObject implements Collector {
 	}
 
 	void setClass(long base, PersistentClass clazz) {
-		long ptr=clazz.base==0?base:clazz.base;
+		long ptr=clazz.base==null?base:clazz.base;
 		incRefCount(ptr);
 		Field.CLASS.set(heap,base,new Long(ptr));
 	}
