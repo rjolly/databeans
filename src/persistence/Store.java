@@ -93,10 +93,14 @@ public class Store extends UnicastRemoteObject implements Collector {
 	}
 
 	PersistentClass get(Class clazz) {
+		return get(PersistentClass.create(clazz,this));
+	}
+
+	PersistentClass get(PersistentClass clazz) {
 		String name=clazz.getName();
 		synchronized(classes) {
 			PersistentClass c=(PersistentClass)classes.get(name);
-			if(c==null) classes.put(name,c=PersistentClass.create(clazz,this));
+			if(c==null) classes.put(name,c=clazz);
 			return c;
 		}
 	}

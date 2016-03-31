@@ -3,6 +3,13 @@ package persistence;
 import java.util.Map;
 
 public class PersistentSystem extends PersistentObject {
+	public PersistentSystem() {
+	}
+
+	public PersistentSystem(final Store store) {
+		super(store);
+	}
+
 	public Map getClasses() {
 		return (Map)get("classes");
 	}

@@ -1,7 +1,12 @@
 package persistence;
 
 public final class PersistentArray extends PersistentObject implements Array {
-	public void init(Object component[]) {
+	public PersistentArray() {
+	}
+
+	public PersistentArray(final Store store, Object component[]) {
+		super(store);
+		clazz = createClass(component.getClass().getComponentType(), component.length);
 		copy(component,0,this,0,component.length);
 	}
 

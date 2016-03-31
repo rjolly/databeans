@@ -8,7 +8,13 @@ public class PersistentObject implements Cloneable, Serializable {
 	transient Store store;
 	transient Long base;
 
-	public void init() {}
+	public PersistentObject() {
+	}
+
+	public PersistentObject(final Store store) {
+		this.store = store;
+		clazz = store.get(createClass());
+	}
 
 	static PersistentObject newInstance(long base, PersistentClass clazz, Store store) {
 		PersistentObject obj=clazz.newInstance();
@@ -23,7 +29,7 @@ public class PersistentObject implements Cloneable, Serializable {
 	}
 
 	protected PersistentClass createClass() {
-		return (PersistentClass)create(PersistentClass.class,new Class[] {Class.class},new Object[] {getClass()});
+		return new PersistentClass(store, getClass());
 	}
 
 	protected final PersistentObject create(String name) {

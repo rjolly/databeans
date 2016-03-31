@@ -14,7 +14,15 @@ public class PersistentClass extends PersistentObject {
 	transient int size;
 	transient String name;
 
-	public void init(Class clazz) {
+	public PersistentClass() {
+	}
+
+	public PersistentClass(final Store store, final Class clazz) {
+		super(store);
+		init(clazz);
+	}
+
+	protected void init(Class clazz) {
 		if(!PersistentObject.class.isAssignableFrom(clazz)) throw new RuntimeException("type not persistent");
 		BeanInfo info;
 		try {

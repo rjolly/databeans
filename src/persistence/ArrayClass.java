@@ -6,12 +6,15 @@ import java.util.NoSuchElementException;
 public final class ArrayClass extends PersistentClass {
 	transient int header;
 
-	public void init(Class clazz, Class componentType, int length) {
-		init(clazz,new Field("element",componentType).typeCode,length);
+	public ArrayClass() {
 	}
 
-	void init(Class clazz, char typeCode, int length) {
-		init(clazz);
+	public ArrayClass(final Store store, Class clazz, Class componentType, int length) {
+		this(store, clazz,new Field("element",componentType).typeCode,length);
+	}
+
+	ArrayClass(final Store store, Class clazz, char typeCode, int length) {
+		super(store, clazz);
 		setTypeCode(typeCode);
 		setLength(length);
 	}
