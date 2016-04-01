@@ -105,10 +105,6 @@ public class Store extends UnicastRemoteObject implements Collector {
 		}
 	}
 
-	PersistentClass get(Class componentType, int length) {
-		return ArrayClass.create(componentType,length,this);
-	}
-
 	public Object root() {
 		return system.root();
 	}
@@ -129,16 +125,6 @@ public class Store extends UnicastRemoteObject implements Collector {
 		return create(get(clazz),types,args);
 	}
 
-	public PersistentArray create(Class componentType, int length) {
-		return (PersistentArray)create(get(componentType,length),new Class[] {},new Object[] {});
-	}
-
-	public PersistentArray create(Object component[]) {
-		Class componentType=component.getClass().getComponentType();
-		int length=component.length;
-		return (PersistentArray)create(get(componentType,length),new Class[] {Object[].class},new Object[] {component});
-	}
-
 	synchronized PersistentObject create(PersistentClass clazz, Class types[], Object args[]) {
 		if(readOnly) throw new RuntimeException("read only");
 		try {
@@ -147,6 +133,19 @@ public class Store extends UnicastRemoteObject implements Collector {
 			return obj;
 		} catch (Exception e) {
 			throw new RuntimeException(e);
+		}
+	}
+
+	synchronized void create(final PersistentObject obj) {
+		final PersistentClass clazz = obj.clazz;
+		final byte b[] = new byte[clazz.size()];
+		final long base = heap.alloc(b.length);
+		heap.writeBytes(base, b);
+		setClass(base, clazz);
+		obj.base = base;
+		synchronized(cache) {
+			incRefCount(base, true);
+			cache(obj);
 		}
 	}
 

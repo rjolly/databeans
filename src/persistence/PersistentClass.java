@@ -18,7 +18,7 @@ public class PersistentClass extends PersistentObject {
 	}
 
 	public PersistentClass(final Store store, final Class clazz) {
-		super(store);
+		super(store, clazz == PersistentClass.class?new ClassClass():null);
 		init(clazz);
 	}
 

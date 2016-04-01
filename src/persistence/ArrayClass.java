@@ -9,14 +9,8 @@ public final class ArrayClass extends PersistentClass {
 	public ArrayClass() {
 	}
 
-	public ArrayClass(final Store store, Class clazz, Class componentType, int length) {
-		this(store, clazz,new Field("element",componentType).typeCode,length);
-	}
-
-	ArrayClass(final Store store, Class clazz, char typeCode, int length) {
-		super(store, clazz);
-		setTypeCode(typeCode);
-		setLength(length);
+	public ArrayClass(final Store store) {
+		super(store, PersistentArray.class);
 	}
 
 	void setup() {
@@ -70,11 +64,5 @@ public final class ArrayClass extends PersistentClass {
 
 	public void setTypeCode(char c) {
 		set("typeCode",new Character(c));
-	}
-
-	static PersistentClass create(Class componentType, int length, Store store) {
-		PersistentArray obj=new PersistentArray();
-		obj.store=store;
-		return obj.createClass(componentType,length);
 	}
 }

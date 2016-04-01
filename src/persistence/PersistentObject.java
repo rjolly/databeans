@@ -12,8 +12,13 @@ public class PersistentObject implements Cloneable, Serializable {
 	}
 
 	public PersistentObject(final Store store) {
+		this(store, null);
+	}
+
+	PersistentObject(final Store store, final PersistentClass clazz) {
 		this.store = store;
-		clazz = store.get(createClass());
+		this.clazz = clazz == null?store.get(createClass()):clazz;
+		store.create(this);
 	}
 
 	static PersistentObject newInstance(long base, PersistentClass clazz, Store store) {
@@ -44,14 +49,6 @@ public class PersistentObject implements Cloneable, Serializable {
 		return store.create(clazz,types,args);
 	}
 
-	protected final PersistentArray create(Class componentType, int length) {
-		return store.create(componentType,length);
-	}
-
-	protected final PersistentArray create(Object component[]) {
-		return store.create(component);
-	}
-
 	protected final PersistentClass get(Class clazz) {
 		return store.get(clazz);
 	}
@@ -74,7 +71,7 @@ public class PersistentObject implements Cloneable, Serializable {
 		return obj;
 	}
 
-	public final PersistentClass persistentClass() {
+	public PersistentClass persistentClass() {
 		return clazz;
 	}
 

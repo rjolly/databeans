@@ -111,7 +111,7 @@ public class Statement {
 				return result;
 			}
 			if (methodName == "newInstance" && target == PersistentArray.class) {
-				return store.create(ReflectionUtils.componentTypeFor(((Character)arguments[0]).charValue()),((Integer)arguments[1]).intValue());
+				return new PersistentArray(store, ReflectionUtils.componentTypeFor(((Character)arguments[0]).charValue()), ((Integer)arguments[1]).intValue());
 			}
 			if (methodName == "newInstance" && PersistentObject.class.isAssignableFrom((Class)target)) {
 				return store.create((Class)target);

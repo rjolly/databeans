@@ -5,25 +5,26 @@ public final class PersistentArray extends PersistentObject implements Array {
 	}
 
 	public PersistentArray(final Store store, Object component[]) {
-		super(store);
-		clazz = createClass(component.getClass().getComponentType(), component.length);
-		copy(component,0,this,0,component.length);
+		this(store, component.getClass().getComponentType(), component.length);
+		copy(component, 0, this, 0, component.length);
+	}
+
+	public PersistentArray(final Store store, final Class componentType, final int length) {
+		super(store, new ArrayClass(store));
+		persistentClass().setLength(length);
+		persistentClass().setTypeCode(new Field("element", componentType).typeCode);
 	}
 
 	protected PersistentClass createClass() {
-		return createClass(int.class,0);
-	}
-
-	PersistentClass createClass(Class componentType, int length) {
-		return (PersistentClass)create(ArrayClass.class,new Class[] {Class.class,Class.class,int.class},new Object[] {getClass(),componentType,new Integer(length)});
+		return clazz;
 	}
 
 	public int length() {
-		return ((ArrayClass)clazz).getLength();
+		return persistentClass().getLength();
 	}
 
 	public char typeCode() {
-		return ((ArrayClass)clazz).getTypeCode();
+		return persistentClass().getTypeCode();
 	}
 
 	public boolean getBoolean(int index) {
@@ -83,11 +84,11 @@ public final class PersistentArray extends PersistentObject implements Array {
 	}
 
 	public Object get(int index) {
-		return get(((ArrayClass)clazz).getField(index));
+		return get(persistentClass().getField(index));
 	}
 
 	public void set(int index, Object value) {
-		set(((ArrayClass)clazz).getField(index),value);
+		set(persistentClass().getField(index),value);
 	}
 
 	public static void copy(Array src, int src_position, Array dst, int dst_position, int length) {
@@ -103,6 +104,10 @@ public final class PersistentArray extends PersistentObject implements Array {
 	public static void copy(Array src, int src_position, Object dst[], int dst_position, int length) {
 		if(src_position<dst_position) for(int i=length-1;i>=0;i--) dst[dst_position+i]=src.get(src_position+i);
 		else for(int i=0;i<length;i++) dst[dst_position+i]=src.get(src_position+i);
+	}
+
+	public final ArrayClass persistentClass() {
+		return (ArrayClass)clazz;
 	}
 
 	public String toString() {
