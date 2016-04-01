@@ -64,7 +64,7 @@ public class Store extends UnicastRemoteObject implements Collector {
 	}
 
 	void createSystem() {
-		system=(PersistentSystem)create(PersistentSystem.class);
+		system = new PersistentSystem(this);
 		incRefCount(boot=system.base);
 		heap.setBoot(boot);
 	}
@@ -84,18 +84,6 @@ public class Store extends UnicastRemoteObject implements Collector {
 		}
 	}
 
-	public synchronized PersistentClass get(String name) {
-		try {
-			return get(Class.forName(name));
-		} catch (ClassNotFoundException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	PersistentClass get(Class clazz) {
-		return get(PersistentClass.create(clazz,this));
-	}
-
 	PersistentClass get(PersistentClass clazz) {
 		String name=clazz.getName();
 		synchronized(classes) {
@@ -113,30 +101,16 @@ public class Store extends UnicastRemoteObject implements Collector {
 		system.setRoot(obj);
 	}
 
-	public PersistentObject create(String name) {
-		return create(get(name),new Class[] {},new Object[] {});
-	}
-
-	public PersistentObject create(Class clazz) {
-		return create(get(clazz),new Class[] {},new Object[] {});
-	}
-
-	public PersistentObject create(Class clazz, Class types[], Object args[]) {
-		return create(get(clazz),types,args);
-	}
-
-	synchronized PersistentObject create(PersistentClass clazz, Class types[], Object args[]) {
-		if(readOnly) throw new RuntimeException("read only");
+	public PersistentObject create(final Class clazz) {
 		try {
-			PersistentObject obj=create(clazz);
-			obj.getClass().getMethod("init",types).invoke(obj,args);
-			return obj;
-		} catch (Exception e) {
-			throw new RuntimeException(e);
+			return (PersistentObject)clazz.getConstructor(Store.class).newInstance(this);
+		} catch (final Exception ex) {
+			throw new RuntimeException(ex);
 		}
 	}
 
 	synchronized void create(final PersistentObject obj) {
+		if(readOnly) throw new RuntimeException("read only");
 		final PersistentClass clazz = obj.clazz;
 		final byte b[] = new byte[clazz.size()];
 		final long base = heap.alloc(b.length);
@@ -149,28 +123,30 @@ public class Store extends UnicastRemoteObject implements Collector {
 		}
 	}
 
-	synchronized PersistentObject create(PersistentClass clazz) {
-		byte b[]=new byte[clazz.size()];
-		long base=heap.alloc(b.length);
-		heap.writeBytes(base,b);
-		setClass(base,clazz);
-		synchronized(cache) {
-			PersistentObject o;
-			incRefCount(base,true);
-			cache(o=PersistentObject.newInstance(base,clazz,this));
-			return o;
-		}
-	}
-
-	PersistentObject instantiate(long base) {
+	PersistentObject instantiate(final long base) {
 		synchronized(cache) {
 			PersistentObject o=get(base);
 			if(o==null) {
 				incRefCount(base,true);
-				cache(o=selfClass(base)?PersistentClass.newInstance(base,this):PersistentObject.newInstance(base,getClass(base),this));
+				cache(o=selfClass(base)?instantiateClass(base):instantiate(base, getClass(base)));
 			}
 			return o;
 		}
+	}
+
+	PersistentClass instantiateClass(final long base) {
+		PersistentClass c=(PersistentClass)instantiate(base, new ClassClass());
+		c.setup();
+		c.setClass(c);
+		return c;
+	}
+
+	PersistentObject instantiate(final long base, final PersistentClass clazz) {
+		PersistentObject obj = clazz.newInstance();
+		obj.base = base;
+		obj.clazz = clazz;
+		obj.store = this;
+		return obj;
 	}
 
 	void cache(PersistentObject obj) {

@@ -1,6 +1,14 @@
 import persistence.PersistentObject;
+import persistence.Store;
 
 public class Employee extends PersistentObject implements Comparable {
+	public Employee() {
+	}
+
+	public Employee(final Store store) {
+		super(store);
+	}
+
 	public String getName() {
 		return (String)get("name");
 	}

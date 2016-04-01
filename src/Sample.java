@@ -13,16 +13,16 @@ public class Sample {
 
 		Collection employees=new java.util.ArrayList();
 
-		Department accounting=(Department)store.create("Department");
+		Department accounting=new Department(store);
 		accounting.setName("Accounting");
 
-		Department research=(Department)store.create("Department");
+		Department research=new Department(store);
 		research.setName("Research");
 
-		Department sales=(Department)store.create("Department");
+		Department sales=new Department(store);
 		sales.setName("Sales");
 
-		Employee clark=(Employee)store.create("Employee");
+		Employee clark=new Employee(store);
 		clark.setName("Clark");
 		clark.setDepartment(accounting);
 		clark.setLocation("New York");
@@ -30,7 +30,7 @@ public class Sample {
 		clark.setJob("Manager");
 		employees.add(clark);
 
-		Employee king=(Employee)store.create("Employee");
+		Employee king=new Employee(store);
 		king.setName("King");
 		king.setDepartment(accounting);
 		king.setLocation("New York");
@@ -38,7 +38,7 @@ public class Sample {
 		king.setJob("President");
 		employees.add(king);
 
-		Employee miller=(Employee)store.create("Employee");
+		Employee miller=new Employee(store);
 		miller.setName("Miller");
 		miller.setDepartment(accounting);
 		miller.setLocation("New York");
@@ -46,7 +46,7 @@ public class Sample {
 		miller.setJob("Clerk");
 		employees.add(miller);
 
-		Employee smith=(Employee)store.create("Employee");
+		Employee smith=new Employee(store);
 		smith.setName("Smith");
 		smith.setDepartment(research);
 		smith.setLocation("New York");
@@ -54,7 +54,7 @@ public class Sample {
 		smith.setJob("Clerk");
 		employees.add(smith);
 
-		Employee adams=(Employee)store.create("Employee");
+		Employee adams=new Employee(store);
 		adams.setName("Adams");
 		adams.setDepartment(research);
 		adams.setLocation("New York");
@@ -62,7 +62,7 @@ public class Sample {
 		adams.setJob("Clerk");
 		employees.add(adams);
 
-		Employee ford=(Employee)store.create("Employee");
+		Employee ford=new Employee(store);
 		ford.setName("Ford");
 		ford.setDepartment(research);
 		ford.setLocation("New York");
@@ -70,7 +70,7 @@ public class Sample {
 		ford.setJob("Analyst");
 		employees.add(ford);
 
-		Employee scott=(Employee)store.create("Employee");
+		Employee scott=new Employee(store);
 		scott.setName("Scott");
 		scott.setDepartment(research);
 		scott.setLocation("New York");
@@ -78,7 +78,7 @@ public class Sample {
 		scott.setJob("Analyst");
 		employees.add(scott);
 
-		Employee jones=(Employee)store.create("Employee");
+		Employee jones=new Employee(store);
 		jones.setName("Jones");
 		jones.setDepartment(research);
 		jones.setLocation("New York");
@@ -86,7 +86,7 @@ public class Sample {
 		jones.setJob("Manager");
 		employees.add(jones);
 
-		Employee allen=(Employee)store.create("Employee");
+		Employee allen=new Employee(store);
 		allen.setName("Allen");
 		allen.setDepartment(sales);
 		allen.setLocation("New York");
@@ -94,7 +94,7 @@ public class Sample {
 		allen.setJob("Salesman");
 		employees.add(allen);
 
-		Employee blake=(Employee)store.create("Employee");
+		Employee blake=new Employee(store);
 		blake.setName("Blake");
 		blake.setDepartment(sales);
 		blake.setLocation("New York");
@@ -102,7 +102,7 @@ public class Sample {
 		blake.setJob("Manager");
 		employees.add(blake);
 
-		Employee martin=(Employee)store.create("Employee");
+		Employee martin=new Employee(store);
 		martin.setName("Martin");
 		martin.setDepartment(sales);
 		martin.setLocation("New York");
@@ -110,7 +110,7 @@ public class Sample {
 		martin.setJob("Salesman");
 		employees.add(martin);
 
-		Employee james=(Employee)store.create("Employee");
+		Employee james=new Employee(store);
 		james.setName("James");
 		james.setDepartment(sales);
 		james.setLocation("New York");
@@ -118,7 +118,7 @@ public class Sample {
 		james.setJob("Clerk");
 		employees.add(james);
 
-		Employee turner=(Employee)store.create("Employee");
+		Employee turner=new Employee(store);
 		turner.setName("Turner");
 		turner.setDepartment(sales);
 		turner.setLocation("New York");
@@ -126,7 +126,7 @@ public class Sample {
 		turner.setJob("Salesman");
 		employees.add(turner);
 
-		Employee ward=(Employee)store.create("Employee");
+		Employee ward=new Employee(store);
 		ward.setName("Ward");
 		ward.setDepartment(sales);
 		ward.setLocation("New York");
@@ -153,7 +153,7 @@ public class Sample {
 
 		NumberFormat format=NumberFormat.getCurrencyInstance();
 
-		Employee average=(Employee)store.create("Employee");
+		Employee average=new Employee(store);
 		average.setName("");
 		average.setSalary(24878.);
 

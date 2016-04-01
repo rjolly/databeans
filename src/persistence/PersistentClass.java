@@ -20,6 +20,10 @@ public class PersistentClass extends PersistentObject {
 	public PersistentClass(final Store store, final Class clazz) {
 		super(store, clazz == PersistentClass.class?new ClassClass():null);
 		init(clazz);
+		if (clazz == PersistentClass.class) {
+			setup();
+			setClass(this);
+		}
 	}
 
 	protected void init(Class clazz) {
@@ -48,24 +52,8 @@ public class PersistentClass extends PersistentObject {
 		return property.equals("class");
 	}
 
-	static PersistentClass newInstance(long base, Store store) {
-		PersistentClass c=(PersistentClass)newInstance(base,new ClassClass(),store);
-		c.setup();
-		c.setClass(c);
-		return c;
-	}
-
-	protected PersistentClass createClass() {
-		if(getClass()==PersistentClass.class) {
-			PersistentClass c=(PersistentClass)store.create(new ClassClass(),new Class[] {Class.class},new Object[] {getClass()});
-			c.setup();
-			c.setClass(c);
-			return c;
-		} else return super.createClass();
-	}
-
-	void setClass(PersistentClass clazz) {
-		this.clazz=clazz;
+	void setClass(final PersistentClass clazz) {
+		this.clazz = clazz;
 	}
 
 	void setup() {
@@ -128,12 +116,6 @@ public class PersistentClass extends PersistentObject {
 		for(int i=0;i<fields.length;i++) s.append((i==0?"":", ")+fields[i]);
 		s.append("]");
 		return s.toString();
-	}
-
-	static PersistentClass create(Class clazz, Store store) {
-		PersistentObject obj=newInstance(clazz);
-		obj.store=store;
-		return obj.createClass();
 	}
 
 	static PersistentObject newInstance(Class clazz) {

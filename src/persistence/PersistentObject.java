@@ -21,36 +21,8 @@ public class PersistentObject implements Cloneable, Serializable {
 		store.create(this);
 	}
 
-	static PersistentObject newInstance(long base, PersistentClass clazz, Store store) {
-		PersistentObject obj=clazz.newInstance();
-		obj.init(base,clazz,store);
-		return obj;
-	}
-
-	void init(long base, PersistentClass clazz, Store store) {
-		this.base=base;
-		this.clazz=clazz;
-		this.store=store;
-	}
-
 	protected PersistentClass createClass() {
 		return new PersistentClass(store, getClass());
-	}
-
-	protected final PersistentObject create(String name) {
-		return store.create(name);
-	}
-
-	protected final PersistentObject create(Class clazz) {
-		return store.create(clazz);
-	}
-
-	protected final PersistentObject create(Class clazz, Class types[], Object args[]) {
-		return store.create(clazz,types,args);
-	}
-
-	protected final PersistentClass get(Class clazz) {
-		return store.get(clazz);
 	}
 
 	public final Object get(String name) {
@@ -92,11 +64,11 @@ public class PersistentObject implements Cloneable, Serializable {
 	}
 
 	public synchronized final Object clone() {
-		PersistentObject obj=store.create(clazz);
-		Iterator t=clazz.fieldIterator();
-		while(t.hasNext()) {
-			Field field=(Field)t.next();
-			obj.set(field,get(field));
+		final PersistentObject obj = store.create(getClass());
+		final Iterator t = clazz.fieldIterator();
+		while (t.hasNext()) {
+			final Field field = (Field)t.next();
+			obj.set(field, get(field));
 		}
 		return obj;
 	}
