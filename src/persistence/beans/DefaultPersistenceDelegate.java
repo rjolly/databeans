@@ -33,8 +33,7 @@ public class DefaultPersistenceDelegate extends PersistenceDelegate {
 		try {
 			type.getDeclaredMethod("equals", new Class[]{Object.class});
 			return true;
-		}
-		catch(NoSuchMethodException e) {
+		} catch(NoSuchMethodException e) {
 			return false;
 		}
 	}
@@ -42,8 +41,7 @@ public class DefaultPersistenceDelegate extends PersistenceDelegate {
 	private boolean definesEquals(Object instance) {
 		if (definesEquals != null) {
 			return (definesEquals == Boolean.TRUE);
-		}
-		else {
+		} else {
 			boolean result = definesEquals(instance.getClass());
 			definesEquals = result ? Boolean.TRUE : Boolean.FALSE;
 			return result;
@@ -81,14 +79,12 @@ public class DefaultPersistenceDelegate extends PersistenceDelegate {
 				// System.out.println("Trying field " + name + " in " + type);
 				f = type.getDeclaredField(name);
 				f.setAccessible(true);
-			}
-			catch (NoSuchFieldException e) {}
+			} catch (NoSuchFieldException e) {}
 			try {
 				constructorArgs[i] = (f != null && !Modifier.isStatic(f.getModifiers())) ?
 				f.get(oldInstance) :
-				MethodUtil.invoke(ReflectionUtils.getPublicMethod(type, "get" + NameGenerator.capitalize(name), new Class[0]), oldInstance, new Object[0]); 
-			}
-			catch (Exception e) {
+				MethodUtil.invoke(ReflectionUtils.getPublicMethod(type, "get" + NameGenerator.capitalize(name), new Class[0]), oldInstance, new Object[0]);
+			} catch (Exception e) {
 				// handleError(e, "Warning: Failed to get " + name + " property for " + oldInstance.getClass() + " constructor");
 				out.getExceptionListener().exceptionThrown(e);
 			}
@@ -141,17 +137,17 @@ public class DefaultPersistenceDelegate extends PersistenceDelegate {
 			Expression newGetExp = new Expression(store, newInstance, getter.getName(), new Object[]{});
 			Object oldValue = oldGetExp.getValue();
 			Object newValue = newGetExp.getValue();
-			out.writeExpression(oldGetExp); 
-			if (!equals(newValue, out.get(oldValue))) { 
-				// Search for a static constant with this value; 
-				Object e = (Object[])pd.getValue("enumerationValues"); 
-				if (e instanceof Object[] && Array.getLength(e) % 3 == 0) { 
-					Object[] a = (Object[])e; 
-					for(int i = 0; i < a.length; i = i + 3) { 
-						try { 
-						   Field f = type.getField((String)a[i]); 
-						   if (f.get(null).equals(oldValue)) { 
-							   out.remove(oldValue); 
+			out.writeExpression(oldGetExp);
+			if (!equals(newValue, out.get(oldValue))) {
+				// Search for a static constant with this value;
+				Object e = (Object[])pd.getValue("enumerationValues");
+				if (e instanceof Object[] && Array.getLength(e) % 3 == 0) {
+					Object[] a = (Object[])e;
+					for(int i = 0; i < a.length; i = i + 3) {
+						try {
+						   Field f = type.getField((String)a[i]);
+						   if (f.get(null).equals(oldValue)) {
+							   out.remove(oldValue);
 							   out.writeExpression(new Expression(store, oldValue, f, "get", new Object[]{null}));
 						   }
 						}
@@ -177,8 +173,7 @@ public class DefaultPersistenceDelegate extends PersistenceDelegate {
 		for (int i = 0; i < propertyDescriptors.length; ++i ) {
 			try {
 				doProperty(type, propertyDescriptors[i], oldInstance, newInstance, out);
-			}
-			catch (Exception e) {
+			} catch (Exception e) {
 				out.getExceptionListener().exceptionThrown(e);
 			}
 		}
@@ -194,12 +189,12 @@ public class DefaultPersistenceDelegate extends PersistenceDelegate {
 		TableModelListener (the JTable itself in this case) to the supplied
 		table model.
 
-		We do not need to explictly add these listeners to the model in an 
-		archive as they will be added automatically by, in the above case, 
-		the JTable's "setModel" method. In some cases, we must specifically 
+		We do not need to explictly add these listeners to the model in an
+		archive as they will be added automatically by, in the above case,
+		the JTable's "setModel" method. In some cases, we must specifically
 		avoid trying to do this since the listener may be an inner class
-		that cannot be instantiated using public API. 
-		
+		that cannot be instantiated using public API.
+
 		No general mechanism currently
 		exists for differentiating between these kind of listeners and
 		those which were added explicitly by the user. A mechanism must
@@ -214,7 +209,6 @@ public class DefaultPersistenceDelegate extends PersistenceDelegate {
 		for (int e = 0; e < eventSetDescriptors.length; e++) {
 			EventSetDescriptor d = eventSetDescriptors[e];
 			Class listenerType = d.getListenerType();
-
 
 			// The ComponentListener is added automatically, when
 			// Contatiner:add is called on the parent.
@@ -240,14 +234,12 @@ public class DefaultPersistenceDelegate extends PersistenceDelegate {
 				Method m = d.getGetListenerMethod();
 				oldL = (EventListener[])MethodUtil.invoke(m, oldInstance, new Object[]{});
 				newL = (EventListener[])MethodUtil.invoke(m, newInstance, new Object[]{});
-			}
-			catch (Throwable e2) {
+			} catch (Throwable e2) {
 				try {
 					Method m = type.getMethod("getListeners", new Class[]{Class.class});
 					oldL = (EventListener[])MethodUtil.invoke(m, oldInstance, new Object[]{listenerType});
 					newL = (EventListener[])MethodUtil.invoke(m, newInstance, new Object[]{listenerType});
-				}
-				catch (Exception e3) {
+				} catch (Exception e3) {
 					return;
 				}
 			}
@@ -268,7 +260,7 @@ public class DefaultPersistenceDelegate extends PersistenceDelegate {
 	}
 
 	protected void initialize(Class type, Object oldInstance, Object newInstance, Encoder out) {
-		// System.out.println("DefulatPD:initialize" + type);
+		// System.out.println("DefaultPD:initialize" + type);
 		super.initialize(type, oldInstance, newInstance, out);
 		if (oldInstance.getClass() == type) { // !type.isInterface()) {
 			initBean(type, oldInstance, newInstance, out);

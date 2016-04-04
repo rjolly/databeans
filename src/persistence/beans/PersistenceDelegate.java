@@ -21,15 +21,13 @@ public abstract class PersistenceDelegate {
 		if (!mutatesTo(oldInstance, newInstance)) {
 			out.remove(oldInstance);
 			out.writeExpression(instantiate(oldInstance, out));
-		}
-		else {
+		} else {
 			initialize(oldInstance.getClass(), oldInstance, newInstance, out);
 		}
 	}
 
 	protected boolean mutatesTo(Object oldInstance, Object newInstance) {
-		return (newInstance != null &&
-				oldInstance.getClass() == newInstance.getClass());
+		return (newInstance != null && oldInstance.getClass() == newInstance.getClass());
 	}
 
 	protected abstract Expression instantiate(Object oldInstance, Encoder out);

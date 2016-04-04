@@ -57,8 +57,7 @@ public class XMLEncoder extends Encoder {
 	public void writeObject(Object o) {
 		if (internal) {
 			super.writeObject(o);
-		}
-		else {
+		} else {
 			writeStatement(new Statement(store, this, "writeObject", new Object[]{o}));
 		}
 	}
@@ -73,19 +72,18 @@ public class XMLEncoder extends Encoder {
 		return list;
 	}
 
-	
 	private void mark(Object o, boolean isArgument) {
 		if (o == null || o == this) {
 			return;
 		}
 		ValueData d = getValueData(o);
 		Expression exp = d.exp;
-		// Do not mark liternal strings. Other strings, which might,  
-		// for example, come from resource bundles should still be marked. 
-		if (o.getClass() == String.class && exp == null) { 
+		// Do not mark liternal strings. Other strings, which might,
+		// for example, come from resource bundles should still be marked.
+		if (o.getClass() == String.class && exp == null) {
 			return;
-		} 
-		
+		}
+
 		// Bump the reference counts of all arguments
 		if (isArgument) {
 			d.refs++;
@@ -98,12 +96,12 @@ public class XMLEncoder extends Encoder {
 		if (!(target instanceof Class)) {
 			statementList(target).add(exp);
 			// Pending: Why does the reference count need to
-			// be incremented here?
+			// be incremented here ?
 			d.refs++;
 		}
 		mark(exp);
 	}
-	
+
 	private void mark(Statement stm) {
 		Object[] args = stm.getArguments();
 		for (int i = 0;i < args.length;i++) {
@@ -129,8 +127,7 @@ public class XMLEncoder extends Encoder {
 			*/
 			mark(oldStm);
 			statementList(oldStm.getTarget()).add(oldStm);
-		}
-		catch (Exception e) {
+		} catch (Exception e) {
 			getExceptionListener().exceptionThrown(new Exception("XMLEncoder: discarding statement " + oldStm, e));
 		}
 		this.internal = internal;
@@ -161,8 +158,7 @@ public class XMLEncoder extends Encoder {
 			Statement s = (Statement)roots.get(i);
 			if (s.getMethodName() == "writeObject") {
 				outputValue(s.getArguments()[0], this, true);
-			}
-			else {
+			} else {
 				outputStatement(s, this, false);
 			}
 		}
@@ -170,14 +166,13 @@ public class XMLEncoder extends Encoder {
 
 		try {
 			out.flush();
-		}
-		catch (IOException e) {
+		} catch (IOException e) {
 			getExceptionListener().exceptionThrown(e);
 		}
 		clear();
 	}
 
-	void clear() { 
+	void clear() {
 		super.clear();
 		nameGenerator.clear();
 		valueToExpression.clear();
@@ -189,8 +184,7 @@ public class XMLEncoder extends Encoder {
 		writeln("</java>");
 		try {
 			out.close();
-		}
-		catch (IOException e) {
+		} catch (IOException e) {
 			getExceptionListener().exceptionThrown(e);
 		}
 	}
@@ -227,7 +221,7 @@ public class XMLEncoder extends Encoder {
 			} else if (c == '\'') {
 				replacement = "&apos;";
 			}
-			
+
 			if (replacement != null) {
 				if (result == null) {
 					result = new StringBuffer(s);
@@ -249,8 +243,7 @@ public class XMLEncoder extends Encoder {
 			}
 			out.write(exp.getBytes(encoding));
 			out.write(" \n".getBytes());
-		}
-		catch (IOException e) {
+		} catch (IOException e) {
 			getExceptionListener().exceptionThrown(e);
 		}
 	}
@@ -266,13 +259,13 @@ public class XMLEncoder extends Encoder {
 			return;
 		}
 
-		ValueData d = getValueData(value);		 
+		ValueData d = getValueData(value);
 		if (d.exp != null && d.exp.getTarget() instanceof Field && d.exp.getMethodName() == "get") {
 			Field f = (Field)d.exp.getTarget();
 			writeln("<object class=" + quote(f.getDeclaringClass().getName()) + " field=" + quote(f.getName()) + "/>");
 			return;
-		}		
-		
+		}
+
 		Class primitiveType = ReflectionUtils.primitiveTypeFor(value.getClass());
 		if (primitiveType != null && d.exp.getTarget() == value.getClass() && d.exp.getMethodName() == "new") {
 			String primitiveTypeName = primitiveType.getName();
@@ -317,43 +310,35 @@ public class XMLEncoder extends Encoder {
 
 		// Special cases for targets.
 		if (target == outer) {
-		}
-		else if (target == Array.class && methodName == "newInstance") {
+		} else if (target == Array.class && methodName == "newInstance") {
 			tag = "array";
 			attributes = attributes + " class=" + quote(((Class)args[0]).getName());
 			attributes = attributes + " length=" + quote(args[1].toString());
 			args = new Object[]{};
-		}
-		else if (target == PersistentArray.class && methodName == "newInstance") {
+		} else if (target == PersistentArray.class && methodName == "newInstance") {
 			tag = "persistentArray";
 			attributes = attributes + " typeCode=" + quote(args[0].toString());
 			attributes = attributes + " length=" + quote(args[1].toString());
 			args = new Object[]{};
-		}
-		else if (target.getClass() == Class.class) {
+		} else if (target.getClass() == Class.class) {
 			attributes = attributes + " class=" + quote(((Class)target).getName());
-		}
-		else {
+		} else {
 			d.refs = 2;
 			outputValue(target, outer, false);
 			outputValue(value, outer, false);
 			return;
 		}
 
-
 		// Special cases for methods.
 		if ((!expression && methodName == "set" && args.length == 2 && args[0] instanceof Integer) ||
 			 (expression && methodName == "get" && args.length == 1 && args[0] instanceof Integer)) {
 			attributes = attributes + " index=" + quote(args[0].toString());
 			args = (args.length == 1) ? new Object[]{} : new Object[]{args[1]};
-
-		}
-		else if ((!expression && methodName.startsWith("set") && args.length == 1) ||
+		} else if ((!expression && methodName.startsWith("set") && args.length == 1) ||
 				  (expression && methodName.startsWith("get") && args.length == 0)) {
-			attributes = attributes + " property=" +  
+			attributes = attributes + " property=" +
 				quote(Introspector.decapitalize(methodName.substring(3)));
-		}
-		else if (methodName != "new" && methodName != "newInstance") {
+		} else if (methodName != "new" && methodName != "newInstance") {
 			attributes = attributes + " method=" + quote(methodName);
 		}
 

@@ -34,7 +34,7 @@ public class Statement {
 	Object[] arguments;
 
 	public Statement(Store store, Object target, String methodName, Object[] arguments) {
-		this.store=store;
+		this.store = store;
 		this.target = target;
 		this.methodName = methodName;
 		this.arguments = (arguments == null) ? emptyArray : arguments;
@@ -71,8 +71,7 @@ public class Statement {
 		String methodName = getMethodName();
 
 		if (target == null || methodName == null) {
-			throw new NullPointerException((target == null ? "target" : 
-											"methodName") + " should not be null");
+			throw new NullPointerException((target == null ? "target" : "methodName") + " should not be null");
 		}
 
 		Object[] arguments = getArguments();
@@ -105,7 +104,7 @@ public class Statement {
 			// Provide a short form for array instantiation by faking an nary-constructor.
 			if (methodName == "newInstance" && ((Class)target).isArray()) {
 				Object result = Array.newInstance(((Class)target).getComponentType(), arguments.length);
-				for(int i = 0;i < arguments.length;i++) { 
+				for(int i = 0;i < arguments.length;i++) {
 					Array.set(result, i, arguments[i]);
 				}
 				return result;
@@ -122,8 +121,7 @@ public class Statement {
 				// for Java's primitive types have a String constructor so we
 				// fake such a constructor here so that this special case can be
 				// ignored elsewhere.
-				if (target == Character.class && arguments.length == 1 &&  
-					argClasses[0] == String.class) { 
+				if (target == Character.class && arguments.length == 1 && argClasses[0] == String.class) {
 					return new Character(((String)arguments[0]).charAt(0));
 				}
 				m = ReflectionUtils.getConstructor((Class)target, argClasses);
@@ -134,8 +132,7 @@ public class Statement {
 			if (m == null) {
 				m = ReflectionUtils.getMethod(Class.class, methodName, argClasses);
 			}
-		}
-		else {
+		} else {
 			/*
 			This special casing of arrays is not necessary, but makes files
 			involving arrays much shorter and simplifies the archiving infrastrcure.
@@ -148,8 +145,7 @@ public class Statement {
 				int index = ((Integer)arguments[0]).intValue();
 				if (methodName == "get") {
 					return Array.get(target, index);
-				}
-				else {
+				} else {
 					Array.set(target, index, arguments[1]);
 					return null;
 				}
@@ -160,22 +156,16 @@ public class Statement {
 			try {
 				if (m instanceof Method) {
 					return MethodUtil.invoke((Method)m, target, arguments);
-				}
-				else {
+				} else {
 					return ((Constructor)m).newInstance(arguments);
 				}
-			}
-			catch (IllegalAccessException iae) {
-				throw new Exception("Statement cannot invoke: " +  
-									methodName + " on " + target.getClass(), 
-									iae);
-			}
-			catch (InvocationTargetException ite) {
+			} catch (IllegalAccessException iae) {
+				throw new Exception("Statement cannot invoke: " + methodName + " on " + target.getClass(), iae);
+			} catch (InvocationTargetException ite) {
 				Throwable te = ite.getTargetException();
 				if (te instanceof Exception) {
 					throw (Exception)te;
-				}
-				else {
+				} else {
 					throw ite;
 				}
 			}
@@ -183,14 +173,14 @@ public class Statement {
 		throw new NoSuchMethodException(toString());
 	}
 
-	String instanceName(Object instance) {  
-		if (instance == null) { 
+	String instanceName(Object instance) {
+		if (instance == null) {
 			return "null";
-		} else if (instance.getClass() == String.class) { 
+		} else if (instance.getClass() == String.class) {
 			return "\""+(String)instance + "\"";
-		} else { 
+		} else {
 			return NameGenerator.unqualifiedClassName(instance.getClass());
-		} 
+		}
 	}
 
 	public String toString() {
