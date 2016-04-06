@@ -17,7 +17,7 @@ public class PersistentObject implements Cloneable, Serializable {
 
 	PersistentObject(final Store store, final PersistentClass clazz) {
 		this.store = store;
-		this.clazz = clazz == null?store.get(createClass()):clazz;
+		this.clazz = clazz == null?store.persistentClass(this):clazz;
 		store.create(this);
 	}
 
