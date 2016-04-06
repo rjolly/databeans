@@ -1,41 +1,31 @@
 package persistence.util;
 
-import java.rmi.RemoteException;
 import persistence.PersistentClass;
 import persistence.PersistentObject;
+import persistence.Store;
 
 public final class AbstractMapClass extends PersistentClass {
-	public void init(Class clazz) {
-		super.init(clazz);
-		setNULL(create(PersistentObject.class));
+	public AbstractMapClass() {
 	}
 
-	protected boolean banned(String property) {
-		return super.banned(property) || property.equals("empty");
+	public AbstractMapClass(final Store store) {
+		super(store, AbstractMap.class);
+		setNULL(new PersistentObject(store));
 	}
 
-	protected PersistentObject.Accessor createAccessor() throws RemoteException {
-		return new Accessor();
-	}
-
-	protected class Accessor extends PersistentClass.Accessor {
-		public Accessor() throws RemoteException {}
-
-		public PersistentObject NULL() {
-			return getNULL();
-		}
+	protected boolean secondary(String property) {
+		return super.secondary(property) || property.equals("empty");
 	}
 
 	PersistentObject NULL() {
-		return (PersistentObject)executeAtomic(
-			new MethodCall("NULL",new Class[] {},new Object[] {}));
+		return getNULL();
 	}
 
 	public PersistentObject getNULL() {
 		return (PersistentObject)get("NULL");
 	}
 
-	public void setNULL(PersistentObject obj) {
+	private void setNULL(PersistentObject obj) {
 		set("NULL",obj);
 	}
 }

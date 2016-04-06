@@ -6,44 +6,49 @@
  */
 package persistence.util;
 
-import java.rmi.RemoteException;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
 import persistence.PersistentClass;
 import persistence.PersistentObject;
+import persistence.Store;
 
-public class HashSet extends AbstractSet implements Set, Cloneable
-{
-	protected PersistentObject.Accessor createAccessor() throws RemoteException {
-		return new Accessor();
+public class HashSet extends AbstractSet implements Set, Cloneable {
+	public HashSet() {
 	}
 
-	protected class Accessor extends AbstractSet.Accessor {
-		public Accessor() throws RemoteException {}
+	public HashSet(final Store store) {
+		this(store, new HashMap(store));
+	}
 
-		public void init(HashMap map) {
-			setMap(map);
-		}
+	public HashSet(final Store store, Collection c) {
+		this(store, new HashMap(store, Math.max((int) (c.size()/.75f) + 1, 16)));
+		addAll(c);
+	}
 
-		public HashMap map() {
-			return getMap();
-		}
+	public HashSet(final Store store, int initialCapacity, float loadFactor) {
+		this(store, new HashMap(store, initialCapacity, loadFactor));
+	}
 
-		public synchronized PersistentObject persistentClone() {
-			HashSet newSet = (HashSet)super.persistentClone();
-			newSet.setMap((HashMap)getMap().clone());
-			return newSet;
-		}
+	public HashSet(final Store store, int initialCapacity) {
+		this(store, new HashMap(store, initialCapacity));
+	}
+
+	public HashSet(final Store store, int initialCapacity, float loadFactor, boolean dummy) {
+		this(store, new LinkedHashMap(store, initialCapacity, loadFactor));
+	}
+
+	HashSet(final Store store, HashMap map) {
+		super(store);
+		setMap(map);
 	}
 
 	protected PersistentClass createClass() {
-		return (PersistentClass)create(HashSetClass.class,new Class[] {Class.class},new Object[] {getClass()});
+		return new HashSetClass(getStore());
 	}
 
 	HashMap map() {
-		return (HashMap)executeAtomic(
-			new MethodCall("map",new Class[] {},new Object[] {}));
+		return getMap();
 	}
 
 	public HashMap getMap() {
@@ -52,32 +57,6 @@ public class HashSet extends AbstractSet implements Set, Cloneable
 
 	public void setMap(HashMap map) {
 		set("map",map);
-	}
-
-	void init(HashMap map) {
-		executeAtomic(
-			new MethodCall("init",new Class[] {HashMap.class},new Object[] {map}));
-	}
-
-	public void init() {
-		init((HashMap)create(HashMap.class));
-	}
-
-	public void init(Collection c) {
-		init((HashMap)create(HashMap.class,new Class[] {int.class},new Object[] {new Integer(Math.max((int) (c.size()/.75f) + 1, 16))}));
-		addAll(c);
-	}
-
-	public void init(int initialCapacity, float loadFactor) {
-		init((HashMap)create(HashMap.class,new Class[] {int.class,float.class},new Object[] {new Integer(initialCapacity),new Float(loadFactor)}));
-	}
-
-	public void init(int initialCapacity) {
-		init((HashMap)create(HashMap.class,new Class[] {int.class},new Object[] {new Integer(initialCapacity)}));
-	}
-
-	public void init(int initialCapacity, float loadFactor, boolean dummy) {
-		init((HashMap)create(LinkedHashMap.class,new Class[] {int.class,float.class},new Object[] {new Integer(initialCapacity),new Float(loadFactor)}));
 	}
 
 	public Iterator iterator() {
@@ -97,14 +76,24 @@ public class HashSet extends AbstractSet implements Set, Cloneable
 	}
 
 	public boolean add(Object o) {
-		return map().put(o, ((HashSetClass)persistentClass()).PRESENT())==null;
+		return map().put(o, persistentClass().PRESENT())==null;
 	}
 
 	public boolean remove(Object o) {
-		return map().remove(o)==((HashSetClass)persistentClass()).PRESENT();
+		return map().remove(o)==persistentClass().PRESENT();
 	}
 
 	public void clear() {
 		map().clear();
+	}
+
+	public final HashSetClass persistentClass() {
+		return (HashSetClass)super.persistentClass();
+	}
+
+	public synchronized PersistentObject clone() {
+		HashSet newSet = (HashSet)super.clone();
+		newSet.setMap((HashMap)getMap().clone());
+		return newSet;
 	}
 }

@@ -6,7 +6,6 @@
  */
 package persistence.util;
 
-import java.rmi.RemoteException;
 import java.util.Collection;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
@@ -15,57 +14,14 @@ import java.util.ListIterator;
 import java.util.NoSuchElementException;
 import java.util.RandomAccess;
 import persistence.PersistentObject;
+import persistence.Store;
 
 public abstract class AbstractList extends AbstractCollection implements List {
-	protected abstract class Accessor extends AbstractCollection.Accessor {
-		public Accessor() throws RemoteException {}
+	public AbstractList() {
+	}
 
-		abstract public Object get(int index);
-
-		public Object set(int index, Object element) {
-			throw new UnsupportedOperationException();
-		}
-
-		public int add(int index, Object element) {
-			throw new UnsupportedOperationException();
-		}
-
-		public Object remove(int index) {
-			throw new UnsupportedOperationException();
-		}
-
-		// Comparison and hashing
-
-		public synchronized boolean persistentEquals(PersistentObject o) {
-			if (o == AbstractList.this)
-				return true;
-			if (!(o instanceof List))
-				return false;
-
-			ListIterator e1 = listIterator();
-			ListIterator e2 = ((List) o).listIterator();
-			while(e1.hasNext() && e2.hasNext()) {
-				Object o1 = e1.next();
-				Object o2 = e2.next();
-				if (!(o1==null ? o2==null : o1.equals(o2)))
-					return false;
-			}
-			return !(e1.hasNext() || e2.hasNext());
-		}
-
-		public synchronized int persistentHashCode() {
-			int hashCode = 1;
-			Iterator i = iterator();
-			while (i.hasNext()) {
-				Object obj = i.next();
-				hashCode = 31*hashCode + (obj==null ? 0 : obj.hashCode());
-			}
-			return hashCode;
-		}
-
-		public int modCount() {
-			return getModCount();
-		}
+	public AbstractList(final Store store) {
+		super(store);
 	}
 
 	public boolean add(Object o) {
@@ -73,32 +29,23 @@ public abstract class AbstractList extends AbstractCollection implements List {
 		return true;
 	}
 
-	public Object get(int index) {
-		return executeAtomic(
-			new MethodCall("get",new Class[] {int.class},new Object[] {new Integer(index)}));
-	}
+	abstract public Object get(int index);
 
 	public Object set(int index, Object element) {
-		return executeAtomic(
-			new MethodCall("set",new Class[] {int.class,Object.class},new Object[] {new Integer(index),element}),
-			new MethodCall("set",new Class[] {int.class,Object.class},new Object[] {new Integer(index),null}),1);
+		throw new UnsupportedOperationException();
 	}
 
 	public void add(int index, Object element) {
-		executeAtomic(
-			new MethodCall("add",new Class[] {int.class,Object.class},new Object[] {new Integer(index),element}),
-			new MethodCall("remove",new Class[] {int.class},new Object[] {null}),0);
+		throw new UnsupportedOperationException();
 	}
 
 	public Object remove(int index) {
-		return executeAtomic(
-			new MethodCall("remove",new Class[] {int.class},new Object[] {new Integer(index)}),
-			new MethodCall("add",new Class[] {int.class,Object.class},new Object[] {new Integer(index),null}),1);
+		throw new UnsupportedOperationException();
 	}
 
 	// Search Operations
 
-	public int _indexOf(Object o) {
+	public int indexOf(Object o) {
 		ListIterator e = listIterator();
 		if (o==null) {
 			while (e.hasNext())
@@ -112,12 +59,7 @@ public abstract class AbstractList extends AbstractCollection implements List {
 		return -1;
 	}
 
-	public int indexOf(Object o) {
-		return ((Integer)execute(
-			new MethodCall("_indexOf",new Class[] {Object.class},new Object[] {o}))).intValue();
-	}
-
-	public int _lastIndexOf(Object o) {
+	public int lastIndexOf(Object o) {
 		ListIterator e = listIterator(size());
 		if (o==null) {
 			while (e.hasPrevious())
@@ -131,18 +73,13 @@ public abstract class AbstractList extends AbstractCollection implements List {
 		return -1;
 	}
 
-	public int lastIndexOf(Object o) {
-		return ((Integer)execute(
-			new MethodCall("_lastIndexOf",new Class[] {Object.class},new Object[] {o}))).intValue();
-	}
-
 	// Bulk Operations
 
-	public void _clear() {
+	public void clear() {
 		removeRange(0, size());
 	}
 
-	public boolean _addAll(int index, Collection c) {
+	public boolean addAll(int index, Collection c) {
 		boolean modified = false;
 		Iterator e = c.iterator();
 		while (e.hasNext()) {
@@ -150,11 +87,6 @@ public abstract class AbstractList extends AbstractCollection implements List {
 			modified = true;
 		}
 		return modified;
-	}
-
-	public boolean addAll(int index, Collection c) {
-		return ((Boolean)execute(
-			new MethodCall("_addAll",new Class[] {int.class,Collection.class},new Object[] {new Integer(index),c}))).booleanValue();
 	}
 
 	// Iterators
@@ -175,8 +107,7 @@ public abstract class AbstractList extends AbstractCollection implements List {
 	}
 
 	int modCount() {
-		return ((Integer)executeAtomic(
-			new MethodCall("modCount",new Class[] {},new Object[] {}))).intValue();
+		return getModCount();
 	}
 
 	private class Itr implements Iterator {
@@ -298,6 +229,35 @@ public abstract class AbstractList extends AbstractCollection implements List {
 
 	public void setModCount(int n) {
 		set("modCount",new Integer(n));
+	}
+
+	// Comparison and hashing
+
+	public synchronized boolean equals(PersistentObject o) {
+		if (o == AbstractList.this)
+			return true;
+		if (!(o instanceof List))
+			return false;
+
+		ListIterator e1 = listIterator();
+		ListIterator e2 = ((List) o).listIterator();
+		while(e1.hasNext() && e2.hasNext()) {
+			Object o1 = e1.next();
+			Object o2 = e2.next();
+			if (!(o1==null ? o2==null : o1.equals(o2)))
+				return false;
+		}
+		return !(e1.hasNext() || e2.hasNext());
+	}
+
+	public synchronized int hashCode() {
+		int hashCode = 1;
+		Iterator i = iterator();
+		while (i.hasNext()) {
+			Object obj = i.next();
+			hashCode = 31*hashCode + (obj==null ? 0 : obj.hashCode());
+		}
+		return hashCode;
 	}
 }
 

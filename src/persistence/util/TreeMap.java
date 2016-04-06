@@ -6,7 +6,6 @@
  */
 package persistence.util;
 
-import java.rmi.RemoteException;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.ConcurrentModificationException;
@@ -16,268 +15,33 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.SortedMap;
 import persistence.PersistentObject;
+import persistence.Store;
 
 public class TreeMap extends AbstractMap implements SortedMap, Cloneable {
-
-	protected PersistentObject.Accessor createAccessor() throws RemoteException {
-		return new Accessor();
+	public TreeMap() {
 	}
 
-	protected class Accessor extends AbstractMap.Accessor {
-		public Accessor() throws RemoteException {}
+	public TreeMap(final Store store) {
+		super(store);
+	}
 
-		public void init(Comparator c) {
-			setComparator(c);
-		}
+	public TreeMap(final Store store, final Comparator c) {
+		super(store);
+		setComparator(c);
+	}
 
-		public void init(SortedMap m) {
-			comparator = m.comparator();
-			try {
-				buildFromSorted(m.size(), m.entrySet().iterator(), null, null);
-			} catch (java.io.IOException cannotHappen) {
-			} catch (ClassNotFoundException cannotHappen) {
-			}
-		}
+	public TreeMap(final Store store, final Map m) {
+		super(store);
+		putAll(m);
+	}
 
-		public int size() {
-			return getSize();
-		}
-
-		public synchronized boolean containsValue(Object value) {
-			return (getRoot()==null ? false :
-				(value==null ? valueSearchNull(getRoot())
-				: valueSearchNonNull(getRoot(), value)));
-		}
-
-		public Comparator comparator() {
-			return getComparator();
-		}
-
-		public synchronized Entry getEntry(Object key) {
-			Entry p = getRoot();
-			while (p != null) {
-				int cmp = compare(key,p.getKey0());
-				if (cmp == 0)
-					return p;
-				else if (cmp < 0)
-					p = p.getLeft();
-				else
-					p = p.getRight();
-			}
-			return null;
-		}
-
-		public synchronized Entry getCeilEntry(Object key) {
-			Entry p = getRoot();
-			if (p==null)
-				return null;
-
-			while (true) {
-				int cmp = compare(key, p.getKey0());
-				if (cmp == 0) {
-					return p;
-				} else if (cmp < 0) {
-					if (p.getLeft() != null)
-						p = p.getLeft();
-					else
-						return p;
-				} else {
-					if (p.getRight() != null) {
-						p = p.getRight();
-					} else {
-						Entry parent = p.getParent();
-						Entry ch = p;
-						while (parent != null && ch == parent.getRight()) {
-							ch = parent;
-							parent = parent.getParent();
-						}
-						return parent;
-					}
-				}
-			}
-		}
-
-		public synchronized Entry getPrecedingEntry(Object key) {
-			Entry p = getRoot();
-			if (p==null)
-				return null;
-
-			while (true) {
-				int cmp = compare(key, p.getKey0());
-				if (cmp > 0) {
-					if (p.getRight() != null)
-						p = p.getRight();
-					else
-						return p;
-				} else {
-					if (p.getLeft() != null) {
-						p = p.getLeft();
-					} else {
-						Entry parent = p.getParent();
-						Entry ch = p;
-						while (parent != null && ch == parent.getLeft()) {
-							ch = parent;
-							parent = parent.getParent();
-						}
-						return parent;
-					}
-				}
-			}
-		}
-
-		Object put0(Object key, Object value) {
-			Entry t = getRoot();
-
-			if (t == null) {
-				incrementSize();
-				setRoot((Entry)create(Entry.class,new Class[] {Object.class,Object.class,Entry.class},new Object[] {key, value, null}));
-				return ((AbstractMapClass)persistentClass()).NULL();
-			}
-
-			while (true) {
-				int cmp = compare(key, t.getKey0());
-				if (cmp == 0) {
-					return t.setValue(value);
-				} else if (cmp < 0) {
-					if (t.getLeft() != null) {
-						t = t.getLeft();
-					} else {
-						incrementSize();
-						t.setLeft((Entry)create(Entry.class,new Class[] {Object.class,Object.class,Entry.class},new Object[] {key, value, t}));
-						fixAfterInsertion(t.getLeft());
-						return ((AbstractMapClass)persistentClass()).NULL();
-					}
-				} else { // cmp > 0
-					if (t.getRight() != null) {
-						t = t.getRight();
-					} else {
-						incrementSize();
-						t.setRight((Entry)create(Entry.class,new Class[] {Object.class,Object.class,Entry.class},new Object[] {key, value, t}));
-						fixAfterInsertion(t.getRight());
-						return ((AbstractMapClass)persistentClass()).NULL();
-					}
-				}
-			}
-		}
-
-		Object remove0(Object key) {
-			Entry p = getEntry(key);
-			if (p == null)
-				return ((AbstractMapClass)persistentClass()).NULL();
-			
-			Object oldValue = p.getValue0();
-			deleteEntry(p);
-			return oldValue;
-		}
-
-		void deleteEntry(Entry p) {
-			decrementSize();
-
-			// If strictly internal, copy successor's element to p and then make p
-			// point to successor.
-			if (p.getLeft() != null && p.getRight() != null) {
-				Entry s = successor (p);
-				p.setKey0(s.getKey0());
-				p.setValue0(s.getValue0());
-				p = s;
-			} // p has 2 children
-
-			// Start fixup at replacement node, if it exists.
-			Entry replacement = (p.getLeft() != null ? p.getLeft() : p.getRight());
-
-			if (replacement != null) {
-				// Link replacement to parent
-				replacement.setParent(p.getParent());
-				if (p.getParent() == null)
-					setRoot(replacement);
-				else if (p == p.getParent().getLeft())
-					p.getParent().setLeft(replacement);
-				else
-					p.getParent().setRight(replacement);
-
-				// Null out links so they are OK to use by fixAfterDeletion.
-				p.setLeft(null);
-				p.setRight(null);
-				p.setParent(null);
-
-				// Fix replacement
-				if (p.getColor() == BLACK)
-					fixAfterDeletion(replacement);
-			} else if (p.getParent() == null) { // return if we are the only node.
-				setRoot(null);
-			} else { //  No children. Use self as phantom replacement and unlink.
-				if (p.getColor() == BLACK)
-					fixAfterDeletion(p);
-
-				if (p.getParent() != null) {
-					if (p == p.getParent().getLeft())
-						p.getParent().setLeft(null);
-					else if (p == p.getParent().getRight())
-						p.getParent().setRight(null);
-					p.setParent(null);
-				}
-			}
-		}
-
-		public synchronized PersistentObject persistentClone() {
-			TreeMap clone = (TreeMap)super.persistentClone();
-
-			// Put clone into "virgin" state (except for comparator)
-			clone.setRoot(null);
-			clone.setSize(0);
-			clone.setModCount(0);
-
-			// Initialize clone with our mappings
-			try {
-				clone.buildFromSorted(getSize(), entrySet().iterator(), null, null);
-			} catch (java.io.IOException cannotHappen) {
-			} catch (ClassNotFoundException cannotHappen) {
-			}
-
-			return clone;
-		}
-
-		public synchronized boolean hasChildren(Entry entry) {
-			return entry.getLeft() != null && entry.getRight() != null;
-		}
-
-		public synchronized Entry firstEntry() {
-			Entry p = getRoot();
-			if (p != null)
-				while (p.getLeft() != null)
-					p = p.getLeft();
-			return p;
-		}
-
-		public synchronized Entry lastEntry() {
-			Entry p = getRoot();
-			if (p != null)
-				while (p.getRight() != null)
-					p = p.getRight();
-			return p;
-		}
-
-		public synchronized Entry successor(Entry t) {
-			if (t == null)
-				return null;
-			else if (t.getRight() != null) {
-				Entry p = t.getRight();
-				while (p.getLeft() != null)
-					p = p.getLeft();
-				return p;
-			} else {
-				Entry p = t.getParent();
-				Entry ch = t;
-				while (p != null && ch == p.getRight()) {
-					ch = p;
-					p = p.getParent();
-				}
-				return p;
-			}
-		}
-
-		public int modCount() {
-			return getModCount();
+	public TreeMap(final Store store, final SortedMap m) {
+		super(store);
+		comparator = m.comparator();
+		try {
+			buildFromSorted(m.size(), m.entrySet().iterator(), null, null);
+		} catch (java.io.IOException cannotHappen) {
+		} catch (ClassNotFoundException cannotHappen) {
 		}
 	}
 
@@ -316,37 +80,20 @@ public class TreeMap extends AbstractMap implements SortedMap, Cloneable {
 	private void incrementSize()   { setModCount(getModCount()+1); setSize(getSize()+1); }
 	private void decrementSize()   { setModCount(getModCount()+1); setSize(getSize()-1); }
 
-	public void init() {
-	}
-
-	public void init(Comparator c) {
-		executeAtomic(
-			new MethodCall("init",new Class[] {Comparator.class},new Object[] {c}));
-	}
-
-	public void init(Map m) {
-		putAll(m);
-	}
-
-	public void init(SortedMap m) {
-		executeAtomic(
-			new MethodCall("init",new Class[] {SortedMap.class},new Object[] {m}));
-	}
-
 	// Query Operations
 
 	public int size() {
-		return ((Integer)executeAtomic(
-			new MethodCall("size",new Class[] {},new Object[] {}))).intValue();
+		return getSize();
 	}
 
 	public boolean containsKey(Object key) {
 		return getEntry(key) != null;
 	}
 
-	public boolean containsValue(Object value) {
-		return ((Boolean)executeAtomic(
-			new MethodCall("containsValue",new Class[] {Object.class},new Object[] {value}))).booleanValue();
+	public synchronized boolean containsValue(Object value) {
+		return (getRoot()==null ? false :
+			(value==null ? valueSearchNull(getRoot())
+			: valueSearchNonNull(getRoot(), value)));
 	}
 
 	private boolean valueSearchNull(Entry n) {
@@ -376,8 +123,7 @@ public class TreeMap extends AbstractMap implements SortedMap, Cloneable {
 	transient Comparator comparator;
 
 	public Comparator comparator() {
-		return comparator==null?comparator=(Comparator)executeAtomic(
-			new MethodCall("comparator",new Class[] {},new Object[] {})):comparator;
+		return comparator==null?comparator=getComparator():comparator;
 	}
 
 	public Object firstKey() {
@@ -406,19 +152,121 @@ public class TreeMap extends AbstractMap implements SortedMap, Cloneable {
 //		super.putAll(map);
 //	}
 
-	Entry getEntry(Object key) {
-		return (Entry)executeAtomic(
-			new MethodCall("getEntry",new Class[] {Object.class},new Object[] {key}));
+	synchronized Entry getEntry(Object key) {
+		Entry p = getRoot();
+		while (p != null) {
+			int cmp = compare(key,p.getKey0());
+			if (cmp == 0)
+				return p;
+			else if (cmp < 0)
+				p = p.getLeft();
+			else
+				p = p.getRight();
+		}
+		return null;
 	}
 
-	Entry getCeilEntry(Object key) {
-		return (Entry)executeAtomic(
-			new MethodCall("getCeilEntry",new Class[] {Object.class},new Object[] {key}));
+	synchronized Entry getCeilEntry(Object key) {
+		Entry p = getRoot();
+		if (p==null)
+			return null;
+
+		while (true) {
+			int cmp = compare(key, p.getKey0());
+			if (cmp == 0) {
+				return p;
+			} else if (cmp < 0) {
+				if (p.getLeft() != null)
+					p = p.getLeft();
+				else
+					return p;
+			} else {
+				if (p.getRight() != null) {
+					p = p.getRight();
+				} else {
+					Entry parent = p.getParent();
+					Entry ch = p;
+					while (parent != null && ch == parent.getRight()) {
+						ch = parent;
+						parent = parent.getParent();
+					}
+					return parent;
+				}
+			}
+		}
 	}
 
-	Entry getPrecedingEntry(Object key) {
-		return (Entry)executeAtomic(
-			new MethodCall("getPrecedingEntry",new Class[] {Object.class},new Object[] {key}));
+	synchronized Entry getPrecedingEntry(Object key) {
+		Entry p = getRoot();
+		if (p==null)
+			return null;
+
+		while (true) {
+			int cmp = compare(key, p.getKey0());
+			if (cmp > 0) {
+				if (p.getRight() != null)
+					p = p.getRight();
+				else
+					return p;
+			} else {
+				if (p.getLeft() != null) {
+					p = p.getLeft();
+				} else {
+					Entry parent = p.getParent();
+					Entry ch = p;
+					while (parent != null && ch == parent.getLeft()) {
+						ch = parent;
+						parent = parent.getParent();
+					}
+					return parent;
+				}
+			}
+		}
+	}
+
+	Object put0(Object key, Object value) {
+		Entry t = getRoot();
+
+		if (t == null) {
+			incrementSize();
+			setRoot(new Entry(getStore(), key, value, null));
+			return ((AbstractMapClass)persistentClass()).NULL();
+		}
+
+		while (true) {
+			int cmp = compare(key, t.getKey0());
+			if (cmp == 0) {
+				return t.setValue(value);
+			} else if (cmp < 0) {
+				if (t.getLeft() != null) {
+					t = t.getLeft();
+				} else {
+					incrementSize();
+					t.setLeft(new Entry(getStore(), key, value, t));
+					fixAfterInsertion(t.getLeft());
+					return ((AbstractMapClass)persistentClass()).NULL();
+				}
+			} else { // cmp > 0
+				if (t.getRight() != null) {
+					t = t.getRight();
+				} else {
+					incrementSize();
+					t.setRight(new Entry(getStore(), key, value, t));
+					fixAfterInsertion(t.getRight());
+					return ((AbstractMapClass)persistentClass()).NULL();
+				}
+			}
+		}
+	}
+
+	Object remove0(Object key) {
+		Entry p = getEntry(key);
+		if (p == null)
+			return ((AbstractMapClass)persistentClass()).NULL();
+		
+		Object oldValue = p.getValue0();
+		deleteEntry(p);
+		return oldValue;
 	}
 
 	static Object key(Entry e) {
@@ -431,6 +279,24 @@ public class TreeMap extends AbstractMap implements SortedMap, Cloneable {
 //		setSize(0);
 //		setRoot(null);
 //	}
+
+	public synchronized PersistentObject clone() {
+		TreeMap clone = (TreeMap)super.clone();
+
+		// Put clone into "virgin" state (except for comparator)
+		clone.setRoot(null);
+		clone.setSize(0);
+		clone.setModCount(0);
+
+		// Initialize clone with our mappings
+		try {
+			clone.buildFromSorted(getSize(), entrySet().iterator(), null, null);
+		} catch (java.io.IOException cannotHappen) {
+		} catch (ClassNotFoundException cannotHappen) {
+		}
+
+		return clone;
+	}
 
 	// Views
 
@@ -715,8 +581,7 @@ public class TreeMap extends AbstractMap implements SortedMap, Cloneable {
 	}
 
 	int modCount() {
-		return ((Integer)executeAtomic(
-			new MethodCall("modCount",new Class[] {},new Object[] {}))).intValue();
+		return getModCount();
 	}
 
 	private class EntryIterator implements Iterator {
@@ -764,9 +629,8 @@ public class TreeMap extends AbstractMap implements SortedMap, Cloneable {
 		}
 	}
 
-	boolean hasChildren(Entry entry) {
-		return ((Boolean)executeAtomic(
-			new MethodCall("hasChildren",new Class[] {Entry.class},new Object[] {entry}))).booleanValue();
+	synchronized boolean hasChildren(Entry entry) {
+		return entry.getLeft() != null && entry.getRight() != null;
 	}
 
 	private class KeyIterator extends EntryIterator {
@@ -814,51 +678,15 @@ public class TreeMap extends AbstractMap implements SortedMap, Cloneable {
 	private static final boolean BLACK = true;
 
 	public static class Entry extends PersistentObject implements Map.Entry {
-		protected PersistentObject.Accessor createAccessor() throws RemoteException {
-			return new Accessor();
+		public Entry() {
 		}
 
-		protected class Accessor extends PersistentObject.Accessor {
-			public Accessor() throws RemoteException {}
-
-			public void init(Object key, Object value, Entry parent) {
-				setKey0(key);
-				setValue0(value);
-				setParent(parent);
-				setColor(BLACK);
-			}
-
-			public Object getKey() {
-				return getKey0();
-			}
-
-			public Object getValue() {
-				return getValue0();
-			}
-
-			public Object setValue(Object value) {
-				Object oldValue = getValue0();
-				setValue0(value);
-				return oldValue;
-			}
-
-			public boolean persistentEquals(Object o) {
-				if (!(o instanceof Map.Entry))
-					return false;
-				Map.Entry e = (Map.Entry)o;
-				
-				return valEquals(getKey0(),e.getKey()) && valEquals(getValue0(),e.getValue());
-			}
-
-			public int persistentHashCode() {
-				int keyHash = (getKey0()==null ? 0 : getKey0().hashCode());
-				int valueHash = (getValue0()==null ? 0 : getValue0().hashCode());
-				return keyHash ^ valueHash;
-			}
-
-			public String persistentToString() {
-				return getKey0() + "=" + getValue0();
-			}
+		public Entry(final Store store, final Object key, final Object value, final Entry parent) {
+			super(store);
+			setKey0(key);
+			setValue0(value);
+			setParent(parent);
+			setColor(BLACK);
 		}
 
 		Object getKey0() {
@@ -909,41 +737,72 @@ public class TreeMap extends AbstractMap implements SortedMap, Cloneable {
 			set("color",new Boolean(b));
 		}
 
-		public void init(Object key, Object value, Entry parent) { 
-			executeAtomic(
-				new MethodCall("init",new Class[] {Object.class,Object.class,Entry.class},new Object[] {key,value,parent}));
-		}
-
 		public Object getKey() {
-			return executeAtomic(
-				new MethodCall("getKey",new Class[] {},new Object[] {}));
+			return getKey0();
 		}
 
 		public Object getValue() {
-			return executeAtomic(
-				new MethodCall("getValue",new Class[] {},new Object[] {}));
+			return getValue0();
 		}
 	
 		public Object setValue(Object value) {
-			return executeAtomic(
-				new MethodCall("setValue",new Class[] {Object.class},new Object[] {value}),
-				new MethodCall("setValue",new Class[] {Object.class},new Object[] {null}),0);
+			Object oldValue = getValue0();
+			setValue0(value);
+			return oldValue;
+		}
+
+		public boolean equals(PersistentObject o) {
+			if (!(o instanceof Map.Entry))
+				return false;
+			Map.Entry e = (Map.Entry)o;
+			
+			return valEquals(getKey0(),e.getKey()) && valEquals(getValue0(),e.getValue());
+		}
+
+		public int hashCode() {
+			int keyHash = (getKey0()==null ? 0 : getKey0().hashCode());
+			int valueHash = (getValue0()==null ? 0 : getValue0().hashCode());
+			return keyHash ^ valueHash;
+		}
+
+		public String toString() {
+			return getKey0() + "=" + getValue0();
 		}
 	}
 
-	Entry firstEntry() {
-		return (Entry)executeAtomic(
-			new MethodCall("firstEntry",new Class[] {},new Object[] {}));
+	synchronized Entry firstEntry() {
+		Entry p = getRoot();
+		if (p != null)
+			while (p.getLeft() != null)
+				p = p.getLeft();
+		return p;
 	}
 
-	Entry lastEntry() {
-		return (Entry)executeAtomic(
-			new MethodCall("lastEntry",new Class[] {},new Object[] {}));
+	synchronized Entry lastEntry() {
+		Entry p = getRoot();
+		if (p != null)
+			while (p.getRight() != null)
+				p = p.getRight();
+		return p;
 	}
 
-	private Entry successor(Entry t) {
-		return (Entry)executeAtomic(
-			new MethodCall("successor",new Class[] {Entry.class},new Object[] {t}));
+	private synchronized Entry successor(Entry t) {
+		if (t == null)
+			return null;
+		else if (t.getRight() != null) {
+			Entry p = t.getRight();
+			while (p.getLeft() != null)
+				p = p.getLeft();
+			return p;
+		} else {
+			Entry p = t.getParent();
+			Entry ch = t;
+			while (p != null && ch == p.getRight()) {
+				ch = p;
+				p = p.getParent();
+			}
+			return p;
+		}
 	}
 
 	private static boolean colorOf(Entry p) {
@@ -1043,7 +902,52 @@ public class TreeMap extends AbstractMap implements SortedMap, Cloneable {
 	}
 
 	void deleteEntry(Entry p) {
-		remove(p.getKey());
+		decrementSize();
+
+		// If strictly internal, copy successor's element to p and then make p
+		// point to successor.
+		if (p.getLeft() != null && p.getRight() != null) {
+			Entry s = successor (p);
+			p.setKey0(s.getKey0());
+			p.setValue0(s.getValue0());
+			p = s;
+		} // p has 2 children
+
+		// Start fixup at replacement node, if it exists.
+		Entry replacement = (p.getLeft() != null ? p.getLeft() : p.getRight());
+
+		if (replacement != null) {
+			// Link replacement to parent
+			replacement.setParent(p.getParent());
+			if (p.getParent() == null)
+				setRoot(replacement);
+			else if (p == p.getParent().getLeft())
+				p.getParent().setLeft(replacement);
+			else
+				p.getParent().setRight(replacement);
+
+			// Null out links so they are OK to use by fixAfterDeletion.
+			p.setLeft(null);
+			p.setRight(null);
+			p.setParent(null);
+
+			// Fix replacement
+			if (p.getColor() == BLACK)
+				fixAfterDeletion(replacement);
+		} else if (p.getParent() == null) { // return if we are the only node.
+			setRoot(null);
+		} else { //  No children. Use self as phantom replacement and unlink.
+			if (p.getColor() == BLACK)
+				fixAfterDeletion(p);
+
+			if (p.getParent() != null) {
+				if (p == p.getParent().getLeft())
+					p.getParent().setLeft(null);
+				else if (p == p.getParent().getRight())
+					p.getParent().setRight(null);
+				p.setParent(null);
+			}
+		}
 	}
 
 	/** From CLR **/
@@ -1160,7 +1064,7 @@ public class TreeMap extends AbstractMap implements SortedMap, Cloneable {
 			value = (defaultVal != null ? defaultVal : str.readObject());
 		}
 
-		Entry middle = (Entry)create(Entry.class,new Class[] {Object.class,Object.class,Entry.class},new Object[] {key, value, null});
+		Entry middle = new Entry(getStore(), key, value, null);
 		
 		// color nodes in non-full bottommost level red
 		if (level == redLevel)

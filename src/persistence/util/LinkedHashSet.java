@@ -8,23 +8,26 @@ package persistence.util;
 
 import java.util.Collection;
 import java.util.Set;
+import persistence.Store;
 
 public class LinkedHashSet extends HashSet implements Set, Cloneable {
-
-	public void init(int initialCapacity, float loadFactor) {
-		super.init(initialCapacity, loadFactor, true);
+	public LinkedHashSet() {
 	}
 
-	public void init(int initialCapacity) {
-		super.init(initialCapacity, .75f, true);
+	public LinkedHashSet(final Store store, int initialCapacity, float loadFactor) {
+		super(store, initialCapacity, loadFactor, true);
 	}
 
-	public  void init() {
-		super.init(16, .75f, true);
+	public LinkedHashSet(final Store store, int initialCapacity) {
+		super(store, initialCapacity, .75f, true);
 	}
 
-	public  void init(Collection c) {
-		super.init(Math.max(2*c.size(), 11), .75f, true);
+	public LinkedHashSet(final Store store) {
+		super(store, 16, .75f, true);
+	}
+
+	public LinkedHashSet(final Store store, Collection c) {
+		super(store, Math.max(2*c.size(), 11), .75f, true);
 		addAll(c);
 	}
 }

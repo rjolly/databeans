@@ -1,37 +1,27 @@
 package persistence.util;
 
-import java.rmi.RemoteException;
 import persistence.PersistentObject;
+import persistence.Store;
 
 public final class HashSetClass extends AbstractCollectionClass {
-	public void init(Class clazz) {
-		super.init(clazz);
-		setPRESENT(create(PersistentObject.class));
+	public HashSetClass() {
 	}
 
-	protected PersistentObject.Accessor createAccessor() throws RemoteException {
-		return new Accessor();
-	}
-
-	protected class Accessor extends AbstractCollectionClass.Accessor {
-		public Accessor() throws RemoteException {}
-
-		public PersistentObject PRESENT() {
-			return getPRESENT();
-		}
+	public HashSetClass(final Store store) {
+		super(store, HashSet.class);
+		setPRESENT(new PersistentObject(store));
 	}
 
 	// Dummy value to associate with an Object in the backing Map
 	PersistentObject PRESENT() {
-		return (PersistentObject)executeAtomic(
-			new MethodCall("PRESENT",new Class[] {},new Object[] {}));
+		return getPRESENT();
 	}
 
 	public PersistentObject getPRESENT() {
 		return (PersistentObject)get("PRESENT");
 	}
 
-	public void setPRESENT(PersistentObject obj) {
+	private void setPRESENT(PersistentObject obj) {
 		set("PRESENT",obj);
 	}
 }

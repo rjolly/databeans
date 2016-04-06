@@ -1,41 +1,31 @@
 package persistence.util;
 
-import java.rmi.RemoteException;
 import persistence.PersistentClass;
 import persistence.PersistentObject;
+import persistence.Store;
 
 public final class HashMapClass extends PersistentClass {
-	public void init(Class clazz) {
-		super.init(clazz);
-		setNULL_KEY(create(PersistentObject.class));
+	public HashMapClass() {
 	}
 
-	protected boolean banned(String property) {
-		return super.banned(property) || property.equals("empty");
+	public HashMapClass(final Store store) {
+		super(store, HashMap.class);
+		setNULL_KEY(new PersistentObject(store));
 	}
 
-	protected PersistentObject.Accessor createAccessor() throws RemoteException {
-		return new Accessor();
-	}
-
-	protected class Accessor extends PersistentClass.Accessor {
-		public Accessor() throws RemoteException {}
-
-		public PersistentObject NULL_KEY() {
-			return getNULL_KEY();
-		}
+	protected boolean secondary(String property) {
+		return super.secondary(property) || property.equals("empty");
 	}
 
 	PersistentObject NULL_KEY() {
-		return (PersistentObject)executeAtomic(
-			new MethodCall("NULL_KEY",new Class[] {},new Object[] {}));
+		return getNULL_KEY();
 	}
 
 	public PersistentObject getNULL_KEY() {
 		return (PersistentObject)get("NULL_KEY");
 	}
 
-	public void setNULL_KEY(PersistentObject obj) {
+	private void setNULL_KEY(PersistentObject obj) {
 		set("NULL_KEY",obj);
 	}
 }

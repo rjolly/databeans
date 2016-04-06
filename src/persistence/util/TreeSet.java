@@ -6,7 +6,6 @@
  */
 package persistence.util;
 
-import java.rmi.RemoteException;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -15,38 +14,41 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 import persistence.PersistentClass;
 import persistence.PersistentObject;
+import persistence.Store;
 
 public class TreeSet extends AbstractSet implements SortedSet, Cloneable {
-
-	protected PersistentObject.Accessor createAccessor() throws RemoteException {
-		return new Accessor();
+	public TreeSet() {
 	}
 
-	protected class Accessor extends AbstractSet.Accessor {
-		public Accessor() throws RemoteException {}
+	public TreeSet(final Store store, SortedMap map) {
+		super(store);
+		setM(map);
+	}
 
-		public void init(SortedMap map) {
-			setM(map);
-		}
+	public TreeSet(final Store store) {
+		this(store, new TreeMap(store));
+	}
 
-		public SortedMap m() {
-			return getM();
-		}
+	public TreeSet(final Store store, Comparator c) {
+		this(store, new TreeMap(store, c));
+	}
 
-		public synchronized PersistentObject persistentClone() {
-			TreeSet clone = (TreeSet)super.persistentClone();
-			clone.setM((SortedMap)create(TreeMap.class,new Class[] {SortedMap.class},new Object[] {getM()}));
-			return clone;
-		}
+	public TreeSet(final Store store, Collection c) {
+		this(store);
+		addAll(c);		
+	}
+
+	public TreeSet(final Store store, SortedSet s) {
+		this(store, s.comparator());
+		addAll(s);
 	}
 
 	protected PersistentClass createClass() {
-		return (PersistentClass)create(TreeSetClass.class,new Class[] {Class.class},new Object[] {getClass()});
+		return new TreeSetClass(getStore());
 	}
 
 	SortedMap m() {
-		return (SortedMap)executeAtomic(
-			new MethodCall("m",new Class[] {},new Object[] {}));
+		return getM();
 	}
 
 	Set keySet() {
@@ -59,29 +61,6 @@ public class TreeSet extends AbstractSet implements SortedSet, Cloneable {
 
 	public void setM(SortedMap map) {
 		set("m",map);
-	}
-
-	public void init(SortedMap map) {
-		executeAtomic(
-			new MethodCall("init",new Class[] {SortedMap.class},new Object[] {map}));
-	}
-
-	public void init() {
-		init((SortedMap)create(TreeMap.class));
-	}
-
-	public void init(Comparator c) {
-		init((SortedMap)create(TreeMap.class,new Class[] {Comparator.class},new Object[] {c}));
-	}
-
-	public void init(Collection c) {
-		init();
-		addAll(c);		
-	}
-
-	public void init(SortedSet s) {
-		init(s.comparator());
-		addAll(s);
 	}
 
 	public Iterator iterator() {
@@ -101,11 +80,11 @@ public class TreeSet extends AbstractSet implements SortedSet, Cloneable {
 	}
 
 	public boolean add(Object o) {
-		return m().put(o, ((TreeSetClass)persistentClass()).PRESENT())==null;
+		return m().put(o, persistentClass().PRESENT())==null;
 	}
 
 	public boolean remove(Object o) {
-		return m().remove(o)==((TreeSetClass)persistentClass()).PRESENT();
+		return m().remove(o)==persistentClass().PRESENT();
 	}
 
 	public void clear() {
@@ -121,7 +100,7 @@ public class TreeSet extends AbstractSet implements SortedSet, Cloneable {
 //			Comparator cc = set.comparator();
 //			Comparator mc = map.comparator();
 //			if (cc==mc || (cc != null && cc.equals(mc))) {
-//				map.addAllForTreeSet(set, ((TreeSetClass)persistentClass()).PRESENT());
+//				map.addAllForTreeSet(set, persistentClass().PRESENT());
 //				return true;
 //			}
 //		}
@@ -129,15 +108,15 @@ public class TreeSet extends AbstractSet implements SortedSet, Cloneable {
 //	}
 
 	public SortedSet subSet(Object fromElement, Object toElement) {
-		return new TreeSetView((TreeSetClass)persistentClass(), m().subMap(fromElement, toElement));
+		return new TreeSetView(persistentClass(), m().subMap(fromElement, toElement));
 	}
 
 	public SortedSet headSet(Object toElement) {
-		return new TreeSetView((TreeSetClass)persistentClass(), m().headMap(toElement));
+		return new TreeSetView(persistentClass(), m().headMap(toElement));
 	}
 
 	public SortedSet tailSet(Object fromElement) {
-		return new TreeSetView((TreeSetClass)persistentClass(), m().tailMap(fromElement));
+		return new TreeSetView(persistentClass(), m().tailMap(fromElement));
 	}
 
 	public Comparator comparator() {
@@ -150,6 +129,16 @@ public class TreeSet extends AbstractSet implements SortedSet, Cloneable {
 
 	public Object last() {
 		return m().lastKey();
+	}
+
+	public final TreeSetClass persistentClass() {
+		return (TreeSetClass)super.persistentClass();
+	}
+
+	public synchronized PersistentObject clone() {
+		TreeSet clone = (TreeSet)super.clone();
+		clone.setM(new TreeMap(getStore(), getM()));
+		return clone;
 	}
 }
 

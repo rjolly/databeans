@@ -6,56 +6,36 @@
  */
 package persistence.util;
 
-import java.rmi.RemoteException;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import persistence.Array;
-import persistence.PersistentObject;
+import persistence.Store;
 
 public class LinkedHashMap extends HashMap {
-	protected PersistentObject.Accessor createAccessor() throws RemoteException {
-		return new Accessor();
+	public LinkedHashMap() {
 	}
 
-	protected class Accessor extends HashMap.Accessor {
-		public Accessor() throws RemoteException {}
+	public LinkedHashMap(final Store store, int initialCapacity, float loadFactor) {
+		super(store, initialCapacity, loadFactor);
+	}
 
-		public void init(int initialCapacity, float loadFactor,
-							 boolean accessOrder) {
-			LinkedHashMap.super.init(initialCapacity,loadFactor);
-			setAccessOrder(accessOrder);
-		}
+	public LinkedHashMap(final Store store, int initialCapacity) {
+		super(store, initialCapacity);
+	}
 
-		public synchronized boolean containsValue(Object value) {
-			// Overridden to take advantage of faster iterator
-			if (value==null) {
-				for (Entry e = getHeader().getAfter(); e != getHeader(); e = e.getAfter())
-					if (e.getValue()==null)
-						return true;
-			} else {
-				for (Entry e = getHeader().getAfter(); e != getHeader(); e = e.getAfter())
-					if (value.equals(e.getValue()))
-						return true;
-			}
-			return false;
-		}
+	public LinkedHashMap(final Store store) {
+		super(store);
+	}
 
-		public synchronized Object get(Object key) {
-			Entry e = (Entry)getEntry(key);
-			if (e == null)
-				return null;
-			e.recordAccess(LinkedHashMap.this);
-			return e.getValue();
-		}
+	public LinkedHashMap(final Store store, final Map m) {
+		super(store, m);
+	}
 
-		public synchronized Object put(HashMap.Entry entry, Object value) {
-			Object oldValue = entry.getValue();
-			entry.setValue(value);
-			entry.recordAccess(LinkedHashMap.this);
-			return oldValue;
-		}
+	public LinkedHashMap(final Store store, int initialCapacity, float loadFactor, boolean accessOrder) {
+		super(store, initialCapacity, loadFactor);
+		setAccessOrder(accessOrder);
 	}
 
 	public Entry getHeader() {
@@ -74,29 +54,8 @@ public class LinkedHashMap extends HashMap {
 		set("accessOrder",new Boolean(b));
 	}
 
-	public void init(int initialCapacity, float loadFactor) {
-		super.init(initialCapacity, loadFactor);
-	}
-
-	public void init(int initialCapacity) {
-		super.init(initialCapacity);
-	}
-
-	public void init() {
-		super.init();
-	}
-
-	public void init(Map m) {
-		super.init(m);
-	}
-
-	public void init(int initialCapacity, float loadFactor, boolean accessOrder) {
-		executeAtomic(
-			new MethodCall("init",new Class[] {int.class,float.class,boolean.class},new Object[] {new Integer(initialCapacity),new Float(loadFactor),new Boolean(accessOrder)}));
-	}
-
-	void init0() {
-		setHeader((Entry)create(Entry.class,new Class[] {int.class,Object.class,Object.class,HashMap.Entry.class},new Object[] {new Integer(-1), null, null, null}));
+	void init() {
+		setHeader(new Entry(getStore(), -1, null, null, null));
 		getHeader().setBefore(getHeader());
 		getHeader().setAfter(getHeader());
 	}
@@ -110,9 +69,26 @@ public class LinkedHashMap extends HashMap {
 		}
 	}
 
-	public Object get(Object key) {
-		return executeAtomic(
-			new MethodCall("get",new Class[] {Object.class},new Object[] {key}));
+	public synchronized boolean containsValue(Object value) {
+		// Overridden to take advantage of faster iterator
+		if (value==null) {
+			for (Entry e = getHeader().getAfter(); e != getHeader(); e = e.getAfter())
+				if (e.getValue()==null)
+					return true;
+		} else {
+			for (Entry e = getHeader().getAfter(); e != getHeader(); e = e.getAfter())
+				if (value.equals(e.getValue()))
+					return true;
+		}
+		return false;
+	}
+
+	public synchronized Object get(Object key) {
+		Entry e = (Entry)getEntry(key);
+		if (e == null)
+			return null;
+		e.recordAccess(LinkedHashMap.this);
+		return e.getValue();
 	}
 
 	public Object put(Object key, Object value) {
@@ -121,10 +97,11 @@ public class LinkedHashMap extends HashMap {
 		else return putMapping(key,value);
 	}
 
-	Object put(HashMap.Entry entry, Object value) {
-		return executeAtomic(
-			new MethodCall("put",new Class[] {HashMap.Entry.class,Object.class},new Object[] {entry,value}),
-			new MethodCall("put",new Class[] {HashMap.Entry.class,Object.class},new Object[] {entry,null}),1);
+	synchronized Object put(HashMap.Entry entry, Object value) {
+		Object oldValue = entry.getValue();
+		entry.setValue(value);
+		entry.recordAccess(LinkedHashMap.this);
+		return oldValue;
 	}
 
 	public void clear() {
@@ -134,8 +111,15 @@ public class LinkedHashMap extends HashMap {
 	}
 
 	public static class Entry extends HashMap.Entry {
+		public Entry() {
+		}
+
+		public Entry(final Store store, final int hash, final Object key, final Object value, final HashMap.Entry next) {
+			super(store, hash, key, value, next);
+		}
+
 		protected HashMapClass enclosingClass() {
-			return (HashMapClass)get(LinkedHashMap.class);
+			return (HashMapClass)getStore().get(LinkedHashMap.class);
 		}
 
 		public Entry getBefore() {
@@ -152,10 +136,6 @@ public class LinkedHashMap extends HashMap {
 
 		public void setAfter(Entry entry) {
 			set("after",entry);
-		}
-
-		public void init(int hash, Object key, Object value, HashMap.Entry next) {
-			super.init(hash, key, value, next);
 		}
 
 		private void remove() {
@@ -247,7 +227,7 @@ public class LinkedHashMap extends HashMap {
 	}
 
 	HashMap.Entry createEntry(int hash, Object key, Object value, int bucketIndex) {
-		Entry e = (Entry)create(Entry.class,new Class[] {int.class,Object.class,Object.class,HashMap.Entry.class},new Object[] {new Integer(hash), key, value, getTable().get(bucketIndex)});
+		Entry e = new Entry(getStore(), hash, key, value, (HashMap.Entry)getTable().get(bucketIndex));
 		getTable().set(bucketIndex,e);
 		e.addBefore(getHeader());
 		setSize(getSize()+1);

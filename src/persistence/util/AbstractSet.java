@@ -6,53 +6,21 @@
  */
 package persistence.util;
 
-import java.rmi.RemoteException;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
 import persistence.PersistentObject;
+import persistence.Store;
 
 public abstract class AbstractSet extends AbstractCollection implements Set {
-	protected PersistentObject.Accessor createAccessor() throws RemoteException {
-		return new Accessor();
+	public AbstractSet() {
 	}
 
-	protected class Accessor extends AbstractCollection.Accessor {
-		public Accessor() throws RemoteException {}
-
-		// Comparison and hashing
-
-		public synchronized boolean persistentEquals(PersistentObject o) {
-			if (o == AbstractSet.this)
-				return true;
-
-			if (!(o instanceof Set))
-				return false;
-			Collection c = (Collection) o;
-			if (c.size() != size())
-				return false;
-			try {
-				return containsAll(c);
-			} catch(ClassCastException unused)   {
-				return false;
-			} catch(NullPointerException unused) {
-				return false;
-			}
-		}
-
-		public synchronized int persistentHashCode() {
-			int h = 0;
-			Iterator i = iterator();
-			while (i.hasNext()) {
-				Object obj = i.next();
-				if (obj != null)
-					h += obj.hashCode();
-			}
-			return h;
-		}
+	public AbstractSet(final Store store) {
+		super(store);
 	}
 
-	public boolean _removeAll(Collection c) {
+	public boolean removeAll(Collection c) {
 		boolean modified = false;
 
 		if (size() > c.size()) {
@@ -67,5 +35,36 @@ public abstract class AbstractSet extends AbstractCollection implements Set {
 			}
 		}
 		return modified;
+	}
+
+	// Comparison and hashing
+
+	public synchronized boolean equals(PersistentObject o) {
+		if (o == AbstractSet.this)
+			return true;
+
+		if (!(o instanceof Set))
+			return false;
+		Collection c = (Collection) o;
+		if (c.size() != size())
+			return false;
+		try {
+			return containsAll(c);
+		} catch(ClassCastException unused)   {
+			return false;
+		} catch(NullPointerException unused) {
+			return false;
+		}
+	}
+
+	public synchronized int hashCode() {
+		int h = 0;
+		Iterator i = iterator();
+		while (i.hasNext()) {
+			Object obj = i.next();
+			if (obj != null)
+				h += obj.hashCode();
+		}
+		return h;
 	}
 }
