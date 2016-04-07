@@ -62,7 +62,7 @@ class Field {
 			reference=true;
 			break;
 		default:
-			throw new RuntimeException("internal error");
+			assert false;
 		}
 	}
 

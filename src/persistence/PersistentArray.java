@@ -10,9 +10,7 @@ public final class PersistentArray extends PersistentObject implements Array {
 	}
 
 	public PersistentArray(final Store store, final Class componentType, final int length) {
-		super(store, new ArrayClass(store));
-		persistentClass().setLength(length);
-		persistentClass().setTypeCode(new Field("element", componentType).typeCode);
+		super(store, new ArrayClass(store, componentType, length));
 	}
 
 	protected PersistentClass createClass() {

@@ -9,8 +9,14 @@ public final class ArrayClass extends PersistentClass {
 	public ArrayClass() {
 	}
 
-	public ArrayClass(final Store store) {
+	public ArrayClass(final Store store, Class componentType, int length) {
+		this(store, new Field("element",componentType).typeCode, length);
+	}
+
+	public ArrayClass(final Store store, char typeCode, int length) {
 		super(store, PersistentArray.class);
+		setTypeCode(typeCode);
+		setLength(length);
 	}
 
 	void setup() {
