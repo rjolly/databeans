@@ -40,7 +40,7 @@ public class PersistentClass extends PersistentObject {
 		for(int i=0;i<desc.length;i++) {
 			PropertyDescriptor d=desc[i];
 			if(d instanceof IndexedPropertyDescriptor) continue;
-			if(banned(d.getName())) continue;
+			if(secondary(d.getName())) continue;
 			buffer.append(first?"":";").append(new Field(d));
 			first=false;
 		}
@@ -48,8 +48,8 @@ public class PersistentClass extends PersistentObject {
 		setName(clazz.getName());
 	}
 
-	protected boolean banned(String property) {
-		return property.equals("class");
+	protected boolean secondary(String property) {
+		return property.equals("class") || property.equals("store");
 	}
 
 	void setClass(final PersistentClass clazz) {

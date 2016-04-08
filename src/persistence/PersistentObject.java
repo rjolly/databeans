@@ -43,11 +43,15 @@ public class PersistentObject implements Cloneable, Serializable {
 		return obj;
 	}
 
+	public Store getStore() {
+		return store;
+	}
+
 	public PersistentClass persistentClass() {
 		return clazz;
 	}
 
-	public final int hashCode() {
+	public int hashCode() {
 		return base.hashCode();
 	}
 
@@ -63,7 +67,7 @@ public class PersistentObject implements Cloneable, Serializable {
 		return clazz.name()+"@"+Long.toHexString(base);
 	}
 
-	public synchronized final Object clone() {
+	public synchronized Object clone() {
 		final PersistentObject obj = store.create(getClass());
 		final Iterator t = clazz.fieldIterator();
 		while (t.hasNext()) {
