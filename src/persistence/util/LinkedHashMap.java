@@ -10,9 +10,7 @@ import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
-
 import persistence.Array;
-import persistence.PersistentClass;
 import persistence.Store;
 
 public class LinkedHashMap extends HashMap {
@@ -38,10 +36,6 @@ public class LinkedHashMap extends HashMap {
 	public LinkedHashMap(final Store store, int initialCapacity, float loadFactor, boolean accessOrder) {
 		super(store, initialCapacity, loadFactor);
 		setAccessOrder(accessOrder);
-	}
-
-	protected PersistentClass createClass() {
-		return new LinkedHashMapClass(getStore());
 	}
 
 	public Entry getHeader() {
@@ -122,10 +116,6 @@ public class LinkedHashMap extends HashMap {
 
 		public Entry(final Store store, final int hash, final Object key, final Object value, final HashMap.Entry next) {
 			super(store, hash, key, value, next);
-		}
-
-		private LinkedHashMapClass enclosingClass() {
-			return (LinkedHashMapClass)getStore().get(LinkedHashMap.class);
 		}
 
 		public Entry getBefore() {

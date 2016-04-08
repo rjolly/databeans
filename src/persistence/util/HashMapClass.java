@@ -2,19 +2,14 @@ package persistence.util;
 
 import persistence.PersistentClass;
 import persistence.PersistentObject;
-import persistence.Store;
 
 public final class HashMapClass extends PersistentClass {
 	public HashMapClass() {
 	}
 
-	public HashMapClass(final Store store) {
-		super(store, HashMap.class);
-		setNULL_KEY(new PersistentObject(store));
-	}
-
-	protected boolean secondary(String property) {
-		return super.secondary(property) || property.equals("empty");
+	HashMapClass(final PersistentObject obj) {
+		super(obj);
+		setNULL_KEY(new PersistentObject(getStore()));
 	}
 
 	PersistentObject NULL_KEY() {

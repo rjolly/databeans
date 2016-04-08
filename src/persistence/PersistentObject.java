@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.Iterator;
 
 public class PersistentObject implements Cloneable, Serializable {
+	static final String secondary[] = new String[] {"class", "store"};
 	transient PersistentClass clazz;
 	transient Store store;
 	transient Long base;
@@ -22,7 +23,18 @@ public class PersistentObject implements Cloneable, Serializable {
 	}
 
 	protected PersistentClass createClass() {
-		return new PersistentClass(store, getClass());
+		return new PersistentClass(this);
+	}
+
+	protected String[] secondary() {
+		return secondary;
+	}
+
+	protected static String[] concat(final String a[], final String b[]) {
+		final String c[] = new String[a.length + b.length];
+		System.arraycopy(a, 0, c, 0, a.length);
+		System.arraycopy(b, 0, c, a.length, b.length);
+		return c;
 	}
 
 	public final Object get(String name) {
@@ -45,10 +57,6 @@ public class PersistentObject implements Cloneable, Serializable {
 
 	public Store getStore() {
 		return store;
-	}
-
-	public PersistentClass persistentClass() {
-		return clazz;
 	}
 
 	public int hashCode() {

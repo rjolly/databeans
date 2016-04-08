@@ -8,7 +8,6 @@ package persistence.util;
 
 import java.util.Collection;
 import java.util.Set;
-import persistence.PersistentClass;
 import persistence.Store;
 
 public class LinkedHashSet extends HashSet implements Set, Cloneable {
@@ -30,9 +29,5 @@ public class LinkedHashSet extends HashSet implements Set, Cloneable {
 	public LinkedHashSet(final Store store, Collection c) {
 		super(store, Math.max(2*c.size(), 11), .75f, true);
 		addAll(c);
-	}
-
-	protected PersistentClass createClass() {
-		return new AbstractCollectionClass(getStore(), getClass());
 	}
 }

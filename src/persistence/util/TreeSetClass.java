@@ -1,15 +1,15 @@
 package persistence.util;
 
+import persistence.PersistentClass;
 import persistence.PersistentObject;
-import persistence.Store;
 
-public final class TreeSetClass extends AbstractCollectionClass {
+public final class TreeSetClass extends PersistentClass {
 	public TreeSetClass() {
 	}
 
-	public TreeSetClass(final Store store) {
-		super(store, TreeSet.class);
-		setPRESENT(new PersistentObject(store));
+	TreeSetClass(final PersistentObject obj) {
+		super(obj);
+		setPRESENT(new PersistentObject(getStore()));
 	}
 
 	// Dummy value to associate with an Object in the backing Map

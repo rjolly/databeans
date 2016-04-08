@@ -7,7 +7,7 @@ public class PersistentSystem extends PersistentObject {
 	public PersistentSystem() {
 	}
 
-	public PersistentSystem(final Store store) {
+	PersistentSystem(final Store store) {
 		super(store);
 		setClasses(new LinkedHashMap(store));
 	}

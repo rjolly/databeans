@@ -44,7 +44,7 @@ public class HashSet extends AbstractSet implements Set, Cloneable {
 	}
 
 	protected PersistentClass createClass() {
-		return new HashSetClass(getStore());
+		return getClass() == HashSet.class?new HashSetClass(this):super.createClass();
 	}
 
 	HashMap map() {
@@ -75,20 +75,20 @@ public class HashSet extends AbstractSet implements Set, Cloneable {
 		return map().containsKey(o);
 	}
 
+	Object PRESENT() {
+		return ((HashSetClass)getStore().get(HashSet.class)).PRESENT();
+	}
+
 	public boolean add(Object o) {
-		return map().put(o, persistentClass().PRESENT())==null;
+		return map().put(o, PRESENT())==null;
 	}
 
 	public boolean remove(Object o) {
-		return map().remove(o)==persistentClass().PRESENT();
+		return map().remove(o)==PRESENT();
 	}
 
 	public void clear() {
 		map().clear();
-	}
-
-	public final HashSetClass persistentClass() {
-		return (HashSetClass)super.persistentClass();
 	}
 
 	public synchronized PersistentObject clone() {

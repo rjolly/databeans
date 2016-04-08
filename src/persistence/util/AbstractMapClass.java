@@ -2,19 +2,14 @@ package persistence.util;
 
 import persistence.PersistentClass;
 import persistence.PersistentObject;
-import persistence.Store;
 
 public final class AbstractMapClass extends PersistentClass {
 	public AbstractMapClass() {
 	}
 
-	public AbstractMapClass(final Store store, final Class clazz) {
-		super(store, clazz);
-		setNULL(new PersistentObject(store));
-	}
-
-	protected boolean secondary(String property) {
-		return super.secondary(property) || property.equals("empty");
+	AbstractMapClass(final PersistentObject obj) {
+		super(obj);
+		setNULL(new PersistentObject(getStore()));
 	}
 
 	PersistentObject NULL() {

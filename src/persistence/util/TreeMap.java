@@ -14,7 +14,6 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.SortedMap;
-
 import persistence.PersistentClass;
 import persistence.PersistentObject;
 import persistence.Store;
@@ -45,6 +44,10 @@ public class TreeMap extends AbstractMap implements SortedMap, Cloneable {
 		} catch (java.io.IOException cannotHappen) {
 		} catch (ClassNotFoundException cannotHappen) {
 		}
+	}
+
+	protected PersistentClass createClass() {
+		return getClass() == TreeMap.class?new AbstractMapClass(this):super.createClass();
 	}
 
 	public Comparator getComparator() {
@@ -226,8 +229,8 @@ public class TreeMap extends AbstractMap implements SortedMap, Cloneable {
 		}
 	}
 
-	protected AbstractMapClass abstractMapClass() {
-		return (AbstractMapClass)getStore().get(TreeMap.class);
+	Object NULL() {
+		return ((AbstractMapClass)getStore().get(TreeMap.class)).NULL();
 	}
 
 	Object put0(Object key, Object value) {
@@ -236,7 +239,7 @@ public class TreeMap extends AbstractMap implements SortedMap, Cloneable {
 		if (t == null) {
 			incrementSize();
 			setRoot(new Entry(getStore(), key, value, null));
-			return abstractMapClass().NULL();
+			return NULL();
 		}
 
 		while (true) {
@@ -250,7 +253,7 @@ public class TreeMap extends AbstractMap implements SortedMap, Cloneable {
 					incrementSize();
 					t.setLeft(new Entry(getStore(), key, value, t));
 					fixAfterInsertion(t.getLeft());
-					return abstractMapClass().NULL();
+					return NULL();
 				}
 			} else { // cmp > 0
 				if (t.getRight() != null) {
@@ -259,7 +262,7 @@ public class TreeMap extends AbstractMap implements SortedMap, Cloneable {
 					incrementSize();
 					t.setRight(new Entry(getStore(), key, value, t));
 					fixAfterInsertion(t.getRight());
-					return abstractMapClass().NULL();
+					return NULL();
 				}
 			}
 		}
@@ -268,7 +271,7 @@ public class TreeMap extends AbstractMap implements SortedMap, Cloneable {
 	Object remove0(Object key) {
 		Entry p = getEntry(key);
 		if (p == null)
-			return abstractMapClass().NULL();
+			return NULL();
 
 		Object oldValue = p.getValue0();
 		deleteEntry(p);

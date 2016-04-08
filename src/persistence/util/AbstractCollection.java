@@ -8,7 +8,6 @@ package persistence.util;
 
 import java.util.Collection;
 import java.util.Iterator;
-import persistence.PersistentClass;
 import persistence.PersistentObject;
 import persistence.Store;
 
@@ -20,8 +19,8 @@ public abstract class AbstractCollection extends PersistentObject implements Col
 		super(store);
 	}
 
-	protected PersistentClass createClass() {
-		return new AbstractCollectionClass(getStore(), getClass());
+	protected String[] secondary() {
+		return concat(super.secondary(), new String[] {"empty"});
 	}
 
 	// Query Operations

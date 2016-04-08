@@ -10,7 +10,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import persistence.PersistentClass;
 import persistence.PersistentObject;
 import persistence.Store;
 
@@ -22,8 +21,8 @@ public abstract class AbstractMap extends PersistentObject implements Map {
 		super(store);
 	}
 
-	protected PersistentClass createClass() {
-		return new AbstractMapClass(getStore(), getClass());
+	protected String[] secondary() {
+		return concat(super.secondary(), new String[] {"empty"});
 	}
 
 	// Query Operations
@@ -92,9 +91,11 @@ public abstract class AbstractMap extends PersistentObject implements Map {
 
 	// Modification Operations
 
+	abstract Object NULL();
+
 	public synchronized Object put(Object key, Object value) {
 		Object obj=put0(key,value);
-		return obj==((AbstractMapClass)persistentClass()).NULL()?null:obj;
+		return obj==NULL()?null:obj;
 	}
 
 	Object put0(Object key, Object value) {
@@ -103,7 +104,7 @@ public abstract class AbstractMap extends PersistentObject implements Map {
 
 	public synchronized Object remove(Object key) {
 		Object obj=remove0(key);
-		return obj==((AbstractMapClass)persistentClass()).NULL()?null:obj;
+		return obj==NULL()?null:obj;
 	}
 
 	Object remove0(Object key) {
@@ -123,7 +124,7 @@ public abstract class AbstractMap extends PersistentObject implements Map {
 			}
 		}
 
-		Object oldValue = ((AbstractMapClass)persistentClass()).NULL();
+		Object oldValue = NULL();
 		if (correctEntry !=null) {
 			oldValue = correctEntry.getValue();
 			i.remove();

@@ -14,15 +14,19 @@ public final class PersistentArray extends PersistentObject implements Array {
 	}
 
 	protected PersistentClass createClass() {
-		return clazz;
+		throw new UnsupportedOperationException();
+	}
+
+	private ArrayClass arrayClass() {
+		return (ArrayClass)clazz;
 	}
 
 	public int length() {
-		return persistentClass().getLength();
+		return arrayClass().getLength();
 	}
 
 	public char typeCode() {
-		return persistentClass().getTypeCode();
+		return arrayClass().getTypeCode();
 	}
 
 	public boolean getBoolean(int index) {
@@ -82,11 +86,11 @@ public final class PersistentArray extends PersistentObject implements Array {
 	}
 
 	public Object get(int index) {
-		return get(persistentClass().getField(index));
+		return get(arrayClass().getField(index));
 	}
 
 	public void set(int index, Object value) {
-		set(persistentClass().getField(index),value);
+		set(arrayClass().getField(index),value);
 	}
 
 	public static void copy(Array src, int src_position, Array dst, int dst_position, int length) {
@@ -102,10 +106,6 @@ public final class PersistentArray extends PersistentObject implements Array {
 	public static void copy(Array src, int src_position, Object dst[], int dst_position, int length) {
 		if(src_position<dst_position) for(int i=length-1;i>=0;i--) dst[dst_position+i]=src.get(src_position+i);
 		else for(int i=0;i<length;i++) dst[dst_position+i]=src.get(src_position+i);
-	}
-
-	public final ArrayClass persistentClass() {
-		return (ArrayClass)clazz;
 	}
 
 	public String toString() {

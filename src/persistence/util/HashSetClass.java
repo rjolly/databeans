@@ -1,15 +1,15 @@
 package persistence.util;
 
+import persistence.PersistentClass;
 import persistence.PersistentObject;
-import persistence.Store;
 
-public final class HashSetClass extends AbstractCollectionClass {
+public final class HashSetClass extends PersistentClass {
 	public HashSetClass() {
 	}
 
-	public HashSetClass(final Store store) {
-		super(store, HashSet.class);
-		setPRESENT(new PersistentObject(store));
+	HashSetClass(final PersistentObject obj) {
+		super(obj);
+		setPRESENT(new PersistentObject(getStore()));
 	}
 
 	// Dummy value to associate with an Object in the backing Map

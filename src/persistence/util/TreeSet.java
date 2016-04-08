@@ -44,7 +44,7 @@ public class TreeSet extends AbstractSet implements SortedSet, Cloneable {
 	}
 
 	protected PersistentClass createClass() {
-		return new TreeSetClass(getStore());
+		return getClass() == TreeSet.class?new TreeSetClass(this):super.createClass();
 	}
 
 	SortedMap m() {
@@ -79,12 +79,16 @@ public class TreeSet extends AbstractSet implements SortedSet, Cloneable {
 		return m().containsKey(o);
 	}
 
+	Object PRESENT() {
+		return ((TreeSetClass)getStore().get(TreeSet.class)).PRESENT();
+	}
+
 	public boolean add(Object o) {
-		return m().put(o, persistentClass().PRESENT())==null;
+		return m().put(o, PRESENT())==null;
 	}
 
 	public boolean remove(Object o) {
-		return m().remove(o)==persistentClass().PRESENT();
+		return m().remove(o)==PRESENT();
 	}
 
 	public void clear() {
@@ -108,15 +112,15 @@ public class TreeSet extends AbstractSet implements SortedSet, Cloneable {
 //	}
 
 	public SortedSet subSet(Object fromElement, Object toElement) {
-		return new TreeSetView(persistentClass(), m().subMap(fromElement, toElement));
+		return new TreeSetView(this, m().subMap(fromElement, toElement));
 	}
 
 	public SortedSet headSet(Object toElement) {
-		return new TreeSetView(persistentClass(), m().headMap(toElement));
+		return new TreeSetView(this, m().headMap(toElement));
 	}
 
 	public SortedSet tailSet(Object fromElement) {
-		return new TreeSetView(persistentClass(), m().tailMap(fromElement));
+		return new TreeSetView(this, m().tailMap(fromElement));
 	}
 
 	public Comparator comparator() {
@@ -131,10 +135,6 @@ public class TreeSet extends AbstractSet implements SortedSet, Cloneable {
 		return m().lastKey();
 	}
 
-	public final TreeSetClass persistentClass() {
-		return (TreeSetClass)super.persistentClass();
-	}
-
 	public synchronized PersistentObject clone() {
 		TreeSet clone = (TreeSet)super.clone();
 		clone.setM(new TreeMap(getStore(), getM()));
@@ -147,10 +147,10 @@ class TreeSetView extends java.util.AbstractSet implements SortedSet {
 	private SortedMap m; // The backing Map
 	private Set keySet;  // The keySet view of the backing Map
 
-	TreeSetClass clazz;
+	TreeSet outer;
 
-	TreeSetView(TreeSetClass clazz, SortedMap m) {
-		this.clazz = clazz;
+	TreeSetView(TreeSet outer, SortedMap m) {
+		this.outer = outer;
 		this.m = m;
 		keySet = m.keySet();
 	}
@@ -172,11 +172,11 @@ class TreeSetView extends java.util.AbstractSet implements SortedSet {
 	}
 
 	public boolean add(Object o) {
-		return m.put(o, clazz.PRESENT())==null;
+		return m.put(o, outer.PRESENT())==null;
 	}
 
 	public boolean remove(Object o) {
-		return m.remove(o)==clazz.PRESENT();
+		return m.remove(o)==outer.PRESENT();
 	}
 
 	public void clear() {
@@ -184,15 +184,15 @@ class TreeSetView extends java.util.AbstractSet implements SortedSet {
 	}
 
 	public SortedSet subSet(Object fromElement, Object toElement) {
-		return new TreeSetView(clazz, m.subMap(fromElement, toElement));
+		return new TreeSetView(outer, m.subMap(fromElement, toElement));
 	}
 
 	public SortedSet headSet(Object toElement) {
-		return new TreeSetView(clazz, m.headMap(toElement));
+		return new TreeSetView(outer, m.headMap(toElement));
 	}
 
 	public SortedSet tailSet(Object fromElement) {
-		return new TreeSetView(clazz, m.tailMap(fromElement));
+		return new TreeSetView(outer, m.tailMap(fromElement));
 	}
 
 	public Comparator comparator() {

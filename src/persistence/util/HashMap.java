@@ -69,7 +69,7 @@ public class HashMap extends AbstractMap implements Map, Cloneable {
 	}
 
 	protected PersistentClass createClass() {
-		return new HashMapClass(getStore());
+		return getClass() == HashMap.class?new HashMapClass(this):super.createClass();
 	}
 
 	public Array getTable() {
@@ -114,12 +114,20 @@ public class HashMap extends AbstractMap implements Map, Cloneable {
 
 	// internal utilities
 
+	Object NULL() {
+		throw new UnsupportedOperationException();
+	}
+
+	Object NULL_KEY() {
+		return ((HashMapClass)getStore().get(HashMap.class)).NULL_KEY();
+	}
+
 	Object maskNull(Object key) {
-		return (key == null ? ((HashMapClass)persistentClass()).NULL_KEY() : key);
+		return (key == null ? NULL_KEY() : key);
 	}
 
 	Object unmaskNull(Object key) {
-		return (key == ((HashMapClass)persistentClass()).NULL_KEY() ? null : key);
+		return (key == NULL_KEY() ? null : key);
 	}
 
 	static int hash(Object x) {
@@ -350,8 +358,8 @@ public class HashMap extends AbstractMap implements Map, Cloneable {
 			setHash(h);
 		}
 
-		private HashMapClass enclosingClass() {
-			return (HashMapClass)getStore().get(HashMap.class);
+		Object NULL_KEY() {
+			return ((HashMapClass)getStore().get(HashMap.class)).NULL_KEY();
 		}
 
 		Object getKey0() {
@@ -387,7 +395,7 @@ public class HashMap extends AbstractMap implements Map, Cloneable {
 		}
 
 		Object unmaskNull(Object key) {
-			return (key == enclosingClass().NULL_KEY() ? null : key);
+			return (key == NULL_KEY() ? null : key);
 		}
 
 		public Object getKey() {
@@ -424,7 +432,7 @@ public class HashMap extends AbstractMap implements Map, Cloneable {
 		}
 
 		public int hashCode() {
-			return (getKey0()==enclosingClass().NULL_KEY() ? 0 : getKey0().hashCode()) ^
+			return (getKey0()==NULL_KEY() ? 0 : getKey0().hashCode()) ^
 				(getValue0()==null  ? 0 : getValue0().hashCode());
 		}
 
