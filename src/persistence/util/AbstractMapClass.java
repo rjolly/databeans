@@ -8,8 +8,8 @@ public final class AbstractMapClass extends PersistentClass {
 	public AbstractMapClass() {
 	}
 
-	public AbstractMapClass(final Store store) {
-		super(store, AbstractMap.class);
+	public AbstractMapClass(final Store store, final Class clazz) {
+		super(store, clazz);
 		setNULL(new PersistentObject(store));
 	}
 

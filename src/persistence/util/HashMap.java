@@ -350,7 +350,7 @@ public class HashMap extends AbstractMap implements Map, Cloneable {
 			setHash(h);
 		}
 
-		protected HashMapClass enclosingClass() {
+		private HashMapClass enclosingClass() {
 			return (HashMapClass)getStore().get(HashMap.class);
 		}
 

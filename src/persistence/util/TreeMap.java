@@ -14,6 +14,8 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.SortedMap;
+
+import persistence.PersistentClass;
 import persistence.PersistentObject;
 import persistence.Store;
 
@@ -224,13 +226,17 @@ public class TreeMap extends AbstractMap implements SortedMap, Cloneable {
 		}
 	}
 
+	protected AbstractMapClass abstractMapClass() {
+		return (AbstractMapClass)getStore().get(TreeMap.class);
+	}
+
 	Object put0(Object key, Object value) {
 		Entry t = getRoot();
 
 		if (t == null) {
 			incrementSize();
 			setRoot(new Entry(getStore(), key, value, null));
-			return ((AbstractMapClass)persistentClass()).NULL();
+			return abstractMapClass().NULL();
 		}
 
 		while (true) {
@@ -244,7 +250,7 @@ public class TreeMap extends AbstractMap implements SortedMap, Cloneable {
 					incrementSize();
 					t.setLeft(new Entry(getStore(), key, value, t));
 					fixAfterInsertion(t.getLeft());
-					return ((AbstractMapClass)persistentClass()).NULL();
+					return abstractMapClass().NULL();
 				}
 			} else { // cmp > 0
 				if (t.getRight() != null) {
@@ -253,7 +259,7 @@ public class TreeMap extends AbstractMap implements SortedMap, Cloneable {
 					incrementSize();
 					t.setRight(new Entry(getStore(), key, value, t));
 					fixAfterInsertion(t.getRight());
-					return ((AbstractMapClass)persistentClass()).NULL();
+					return abstractMapClass().NULL();
 				}
 			}
 		}
@@ -262,8 +268,8 @@ public class TreeMap extends AbstractMap implements SortedMap, Cloneable {
 	Object remove0(Object key) {
 		Entry p = getEntry(key);
 		if (p == null)
-			return ((AbstractMapClass)persistentClass()).NULL();
-		
+			return abstractMapClass().NULL();
+
 		Object oldValue = p.getValue0();
 		deleteEntry(p);
 		return oldValue;

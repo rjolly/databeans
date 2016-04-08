@@ -23,7 +23,7 @@ public abstract class AbstractMap extends PersistentObject implements Map {
 	}
 
 	protected PersistentClass createClass() {
-		return new AbstractMapClass(getStore());
+		return new AbstractMapClass(getStore(), getClass());
 	}
 
 	// Query Operations
