@@ -1,6 +1,7 @@
 package persistence;
 
 import java.util.Map;
+import persistence.util.LinkedHashMap;
 
 public class PersistentSystem extends PersistentObject {
 	public PersistentSystem() {
@@ -8,13 +9,14 @@ public class PersistentSystem extends PersistentObject {
 
 	public PersistentSystem(final Store store) {
 		super(store);
+		setClasses(new LinkedHashMap(store));
 	}
 
 	public Map getClasses() {
 		return (Map)get("classes");
 	}
 
-	public void setClasses(Map map) {
+	private void setClasses(Map map) {
 		set("classes",map);
 	}
 

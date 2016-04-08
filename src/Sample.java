@@ -2,8 +2,9 @@ import java.text.NumberFormat;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.SortedSet;
-import java.util.TreeSet;
 import persistence.Store;
+import persistence.util.ArrayList;
+import persistence.util.TreeSet;
 
 public class Sample {
 	public static void main(String args[]) throws Exception {
@@ -11,7 +12,8 @@ public class Sample {
 
 		// Populate
 
-		Collection employees=new java.util.ArrayList();
+		store.setRoot(new ArrayList(store));
+		Collection employees=(Collection)store.root();
 
 		Department accounting=new Department(store);
 		accounting.setName("Accounting");
@@ -163,7 +165,7 @@ public class Sample {
 				System.out.println(e+" "+format.format(e.getSalary()));
 		}
 
-		SortedSet bySalary=new TreeSet(SalaryComparator.comparator);
+		SortedSet bySalary=new TreeSet(store, SalaryComparator.comparator);
 		bySalary.addAll(employees);
 
 		System.out.println();
