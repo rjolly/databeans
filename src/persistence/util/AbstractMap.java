@@ -13,7 +13,7 @@ import java.util.Set;
 import persistence.PersistentObject;
 import persistence.Store;
 
-public abstract class AbstractMap extends PersistentObject implements Map {
+public abstract class AbstractMap<K,V> extends PersistentObject implements Map<K,V> {
 	public AbstractMap() {
 	}
 
@@ -36,16 +36,16 @@ public abstract class AbstractMap extends PersistentObject implements Map {
 	}
 
 	public boolean containsValue(Object value) {
-		Iterator i = entrySet().iterator();
+		Iterator<Entry<K,V>> i = entrySet().iterator();
 		if (value==null) {
 			while (i.hasNext()) {
-				Entry e = (Entry) i.next();
+				Entry<K,V> e = i.next();
 				if (e.getValue()==null)
 					return true;
 			}
 		} else {
 			while (i.hasNext()) {
-				Entry e = (Entry) i.next();
+				Entry<K,V> e = i.next();
 				if (value.equals(e.getValue()))
 					return true;
 			}
@@ -54,16 +54,16 @@ public abstract class AbstractMap extends PersistentObject implements Map {
 	}
 
 	public boolean containsKey(Object key) {
-		Iterator i = entrySet().iterator();
+		Iterator<Entry<K,V>> i = entrySet().iterator();
 		if (key==null) {
 			while (i.hasNext()) {
-				Entry e = (Entry) i.next();
+				Entry<K,V> e = i.next();
 				if (e.getKey()==null)
 					return true;
 			}
 		} else {
 			while (i.hasNext()) {
-				Entry e = (Entry) i.next();
+				Entry<K,V> e = i.next();
 				if (key.equals(e.getKey()))
 					return true;
 			}
@@ -71,17 +71,17 @@ public abstract class AbstractMap extends PersistentObject implements Map {
 		return false;
 	}
 
-	public synchronized Object get(Object key) {
-		Iterator i = entrySet().iterator();
+	public synchronized V get(Object key) {
+		Iterator<Entry<K,V>> i = entrySet().iterator();
 		if (key==null) {
 			while (i.hasNext()) {
-				Entry e = (Entry) i.next();
+				Entry<K,V> e = i.next();
 				if (e.getKey()==null)
 					return e.getValue();
 			}
 		} else {
 			while (i.hasNext()) {
-				Entry e = (Entry) i.next();
+				Entry<K,V> e = i.next();
 				if (key.equals(e.getKey()))
 					return e.getValue();
 			}
@@ -91,40 +91,40 @@ public abstract class AbstractMap extends PersistentObject implements Map {
 
 	// Modification Operations
 
-	abstract Object NULL();
+	abstract V NULL();
 
-	public synchronized Object put(Object key, Object value) {
-		Object obj=put0(key,value);
+	public synchronized V put(K key, V value) {
+		V obj=put0(key,value);
 		return obj==NULL()?null:obj;
 	}
 
-	Object put0(Object key, Object value) {
+	V put0(K key, V value) {
 		throw new UnsupportedOperationException();
 	}
 
-	public synchronized Object remove(Object key) {
-		Object obj=remove0(key);
+	public synchronized V remove(Object key) {
+		V obj=remove0(key);
 		return obj==NULL()?null:obj;
 	}
 
-	Object remove0(Object key) {
-		Iterator i = entrySet().iterator();
-		Entry correctEntry = null;
+	V remove0(Object key) {
+		Iterator<Entry<K,V>> i = entrySet().iterator();
+		Entry<K,V> correctEntry = null;
 		if (key==null) {
 			while (correctEntry==null && i.hasNext()) {
-				Entry e = (Entry) i.next();
+				Entry<K,V> e = i.next();
 				if (e.getKey()==null)
 					correctEntry = e;
 			}
 		} else {
 			while (correctEntry==null && i.hasNext()) {
-				Entry e = (Entry) i.next();
+				Entry<K,V> e = i.next();
 				if (key.equals(e.getKey()))
 					correctEntry = e;
 			}
 		}
 
-		Object oldValue = NULL();
+		V oldValue = NULL();
 		if (correctEntry !=null) {
 			oldValue = correctEntry.getValue();
 			i.remove();
@@ -134,12 +134,9 @@ public abstract class AbstractMap extends PersistentObject implements Map {
 
 	// Bulk Operations
 
-	public void putAll(Map t) {
-		Iterator i = t.entrySet().iterator();
-		while (i.hasNext()) {
-			Entry e = (Entry) i.next();
+	public void putAll(Map<? extends K, ? extends V> m) {
+		for (Entry<? extends K, ? extends V> e : m.entrySet())
 			put(e.getKey(), e.getValue());
-		}
 	}
 
 	public void clear() {
@@ -148,22 +145,22 @@ public abstract class AbstractMap extends PersistentObject implements Map {
 
 	// Views
 
-	transient volatile Set keySet = null;
-	transient volatile Collection values = null;
+	transient volatile Set<K> keySet = null;
+	transient volatile Collection<V> values = null;
 
-	public Set keySet() {
+	public Set<K> keySet() {
 		if (keySet == null) {
-			keySet = new java.util.AbstractSet() {
-				public Iterator iterator() {
-					return new Iterator() {
-						private Iterator i = entrySet().iterator();
+			keySet = new java.util.AbstractSet<K>() {
+				public Iterator<K> iterator() {
+					return new Iterator<K>() {
+						private Iterator<Entry<K,V>> i = entrySet().iterator();
 
 						public boolean hasNext() {
 							return i.hasNext();
 						}
 
-						public Object next() {
-							return ((Entry)i.next()).getKey();
+						public K next() {
+							return i.next().getKey();
 						}
 
 						public void remove() {
@@ -184,19 +181,19 @@ public abstract class AbstractMap extends PersistentObject implements Map {
 		return keySet;
 	}
 
-	public Collection values() {
+	public Collection<V> values() {
 		if (values == null) {
-			values = new java.util.AbstractCollection() {
-				public Iterator iterator() {
-					return new Iterator() {
-						private Iterator i = entrySet().iterator();
+			values = new java.util.AbstractCollection<V>() {
+				public Iterator<V> iterator() {
+					return new Iterator<V>() {
+						private Iterator<Entry<K,V>> i = entrySet().iterator();
 
 						public boolean hasNext() {
 							return i.hasNext();
 						}
 
-						public Object next() {
-							return ((Entry)i.next()).getValue();
+						public V next() {
+							return i.next().getValue();
 						}
 
 						public void remove() {
@@ -217,31 +214,32 @@ public abstract class AbstractMap extends PersistentObject implements Map {
 		return values;
 	}
 
-	public abstract Set entrySet();
+	public abstract Set<Entry<K,V>> entrySet();
 
 	// Comparison and hashing
 
+	@SuppressWarnings("unchecked")
 	public synchronized boolean equals(PersistentObject o) {
 		if (o == AbstractMap.this)
 			return true;
 
 		if (!(o instanceof Map))
 			return false;
-		Map t = (Map) o;
-		if (t.size() != size())
+		Map<K,V> m = (Map<K,V>) o;
+		if (m.size() != size())
 			return false;
 
 		try {
-			Iterator i = entrySet().iterator();
+			Iterator<Entry<K,V>> i = entrySet().iterator();
 			while (i.hasNext()) {
-				Entry e = (Entry) i.next();
-				Object key = e.getKey();
-				Object value = e.getValue();
+				Entry<K,V> e = i.next();
+				K key = e.getKey();
+				V value = e.getValue();
 				if (value == null) {
-					if (!(t.get(key)==null && t.containsKey(key)))
+					if (!(m.get(key)==null && m.containsKey(key)))
 						return false;
 				} else {
-					if (!value.equals(t.get(key)))
+					if (!value.equals(m.get(key)))
 						return false;
 				}
 			}
@@ -256,7 +254,7 @@ public abstract class AbstractMap extends PersistentObject implements Map {
 
 	public synchronized int hashCode() {
 		int h = 0;
-		Iterator i = entrySet().iterator();
+		Iterator<Entry<K,V>> i = entrySet().iterator();
 		while (i.hasNext())
 			h += i.next().hashCode();
 		return h;
@@ -266,12 +264,12 @@ public abstract class AbstractMap extends PersistentObject implements Map {
 		StringBuffer buf = new StringBuffer();
 		buf.append("{");
 
-		Iterator i = entrySet().iterator();
+		Iterator<Entry<K,V>> i = entrySet().iterator();
 		boolean hasNext = i.hasNext();
 		while (hasNext) {
-			Entry e = (Entry) (i.next());
-			Object key = e.getKey();
-			Object value = e.getValue();
+			Entry<K,V> e = i.next();
+			K key = e.getKey();
+			V value = e.getValue();
 			buf.append((key == AbstractMap.this ?  "(this Map)" : key) + "=" +
 				(value == AbstractMap.this ? "(this Map)": value));
 

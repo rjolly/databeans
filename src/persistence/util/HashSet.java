@@ -13,32 +13,32 @@ import persistence.PersistentClass;
 import persistence.PersistentObject;
 import persistence.Store;
 
-public class HashSet extends AbstractSet implements Set, Cloneable {
+public class HashSet<E> extends AbstractSet<E> implements Set<E> {
 	public HashSet() {
 	}
 
 	public HashSet(final Store store) {
-		this(store, new HashMap(store));
+		this(store, new HashMap<E,Object>(store));
 	}
 
-	public HashSet(final Store store, Collection c) {
-		this(store, new HashMap(store, Math.max((int) (c.size()/.75f) + 1, 16)));
+	public HashSet(final Store store, Collection<? extends E> c) {
+		this(store, new HashMap<E,Object>(store, Math.max((int) (c.size()/.75f) + 1, 16)));
 		addAll(c);
 	}
 
 	public HashSet(final Store store, int initialCapacity, float loadFactor) {
-		this(store, new HashMap(store, initialCapacity, loadFactor));
+		this(store, new HashMap<E,Object>(store, initialCapacity, loadFactor));
 	}
 
 	public HashSet(final Store store, int initialCapacity) {
-		this(store, new HashMap(store, initialCapacity));
+		this(store, new HashMap<E,Object>(store, initialCapacity));
 	}
 
 	public HashSet(final Store store, int initialCapacity, float loadFactor, boolean dummy) {
-		this(store, new LinkedHashMap(store, initialCapacity, loadFactor));
+		this(store, new LinkedHashMap<E,Object>(store, initialCapacity, loadFactor));
 	}
 
-	HashSet(final Store store, HashMap map) {
+	HashSet(final Store store, HashMap<E,Object> map) {
 		super(store);
 		setMap(map);
 	}
@@ -47,19 +47,19 @@ public class HashSet extends AbstractSet implements Set, Cloneable {
 		return getClass() == HashSet.class?new HashSetClass(this):super.createClass();
 	}
 
-	HashMap map() {
+	HashMap<E,Object> map() {
 		return getMap();
 	}
 
-	public HashMap getMap() {
-		return (HashMap)get("map");
+	public HashMap<E,Object> getMap() {
+		return get("map");
 	}
 
-	public void setMap(HashMap map) {
+	public void setMap(HashMap<E,Object> map) {
 		set("map",map);
 	}
 
-	public Iterator iterator() {
+	public Iterator<E> iterator() {
 		return map().keySet().iterator();
 	}
 
@@ -79,8 +79,8 @@ public class HashSet extends AbstractSet implements Set, Cloneable {
 		return ((HashSetClass)getStore().get(HashSet.class)).PRESENT();
 	}
 
-	public boolean add(Object o) {
-		return map().put(o, PRESENT())==null;
+	public boolean add(E e) {
+		return map().put(e, PRESENT())==null;
 	}
 
 	public boolean remove(Object o) {
@@ -91,9 +91,10 @@ public class HashSet extends AbstractSet implements Set, Cloneable {
 		map().clear();
 	}
 
+	@SuppressWarnings("unchecked")
 	public synchronized PersistentObject clone() {
-		HashSet newSet = (HashSet)super.clone();
-		newSet.setMap((HashMap)getMap().clone());
+		HashSet<E> newSet = (HashSet<E>)super.clone();
+		newSet.setMap((HashMap<E, Object>)getMap().clone());
 		return newSet;
 	}
 }

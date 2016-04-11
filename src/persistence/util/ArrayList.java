@@ -14,67 +14,71 @@ import persistence.PersistentArray;
 import persistence.PersistentObject;
 import persistence.Store;
 
-public class ArrayList extends AbstractList implements List, RandomAccess, Cloneable {
+public class ArrayList<E> extends AbstractList<E> implements List<E>, RandomAccess {
 	public ArrayList() {
 	}
 
+	@SuppressWarnings("unchecked")
 	public ArrayList(final Store store, int initialCapacity) {
 		super(store);
 		if (initialCapacity < 0)
 			throw new IllegalArgumentException("Illegal Capacity: "+
 				initialCapacity);
-		setElementData(new PersistentArray(store, Object.class, initialCapacity));
+		setElementData((Array<E>)new PersistentArray<>(store, Object.class, initialCapacity));
 	}
 
 	public ArrayList(final Store store) {
 		this(store, 10);
 	}
 
-	public ArrayList(final Store store, Collection c) {
+	@SuppressWarnings("unchecked")
+	public ArrayList(final Store store, Collection<? extends E> c) {
 		super(store);
 		setSize(c.size());
 		// Allow 10% room for growth
 		Object elementData[] = new Object[
 			(int)Math.min((getSize()*110L)/100,Integer.MAX_VALUE)];
 		c.toArray(elementData);
-		setElementData(new PersistentArray(store, elementData));
+		setElementData((Array<E>)new PersistentArray<>(store, elementData));
 	}
 
-	public Array getElementData() {
-		return (Array)get("elementData");
+	public Array<E> getElementData() {
+		return get("elementData");
 	}
 
-	public void setElementData(Array array) {
+	public void setElementData(Array<E> array) {
 		set("elementData",array);
 	}
 
 	public int getSize() {
-		return ((Integer)get("size")).intValue();
+		return get("size");
 	}
 
 	public void setSize(int n) {
-		set("size",new Integer(n));
+		set("size",n);
 	}
 
+	@SuppressWarnings("unchecked")
 	public synchronized void trimToSize() {
 		setModCount(getModCount()+1);
 		int oldCapacity = getElementData().length();
 		if (getSize() < oldCapacity) {
-			Array oldData = getElementData();
-			setElementData(new PersistentArray(getStore(), Object.class, getSize()));
+			Array<E> oldData = getElementData();
+			setElementData((Array<E>)new PersistentArray<>(getStore(), Object.class, getSize()));
 			PersistentArray.copy(oldData, 0, getElementData(), 0, getSize());
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	public synchronized void ensureCapacity(int minCapacity) {
 		setModCount(getModCount()+1);
 		int oldCapacity = getElementData().length();
 		if (minCapacity > oldCapacity) {
-			Array oldData = getElementData();
+			Array<E> oldData = getElementData();
 			int newCapacity = (oldCapacity * 3)/2 + 1;
 			if (newCapacity < minCapacity)
 				newCapacity = minCapacity;
-			setElementData(new PersistentArray(getStore(), Object.class, newCapacity));
+			setElementData((Array<E>)new PersistentArray<>(getStore(), Object.class, newCapacity));
 			PersistentArray.copy(oldData, 0, getElementData(), 0, getSize());
 		}
 	}
@@ -117,9 +121,10 @@ public class ArrayList extends AbstractList implements List, RandomAccess, Clone
 		return -1;
 	}
 
+	@SuppressWarnings("unchecked")
 	public synchronized PersistentObject clone() {
-		ArrayList v = (ArrayList)super.clone();
-		v.setElementData(new PersistentArray(getStore(), Object.class, getSize()));
+		ArrayList<E> v = (ArrayList<E>)super.clone();
+		v.setElementData((Array<E>)new PersistentArray<>(getStore(), Object.class, getSize()));
 		PersistentArray.copy(getElementData(), 0, v.getElementData(), 0, getSize());
 		v.setModCount(0);
 		return v;
@@ -131,10 +136,10 @@ public class ArrayList extends AbstractList implements List, RandomAccess, Clone
 		return result;
 	}
 
-	public synchronized Object[] toArray(Object a[]) {
+	@SuppressWarnings("unchecked")
+	public synchronized <T> T[] toArray(T a[]) {
 		if (a.length < getSize())
-			a = (Object[])java.lang.reflect.Array.newInstance(
-				a.getClass().getComponentType(), getSize());
+			a = (T[])java.lang.reflect.Array.newInstance(a.getClass().getComponentType(), getSize());
 
 		PersistentArray.copy(getElementData(), 0, a, 0, getSize());
 
@@ -146,28 +151,28 @@ public class ArrayList extends AbstractList implements List, RandomAccess, Clone
 
 	// Positional Access Operations
 
-	public synchronized Object get(int index) {
+	public synchronized E get(int index) {
 		RangeCheck(index);
 
 		return getElementData().get(index);
 	}
 
-	public synchronized Object set(int index, Object element) {
+	public synchronized E set(int index, E element) {
 		RangeCheck(index);
 
-		Object oldValue = getElementData().get(index);
+		E oldValue = getElementData().get(index);
 		getElementData().set(index,element);
 		return oldValue;
 	}
 
-//	public boolean add(Object o) {
-//		ensureCapacity(getSize() + 1);  // Increments modCount!!
+//	public boolean add(E o) {
+//		ensureCapacity(getSize() + 1); // Increments modCount !!
 //		getElementData().set(getSize(),o);
 //		setSize(getSize()+1);
 //		return true;
 //	}
 
-	public synchronized void add(int index, Object element) {
+	public synchronized void add(int index, E element) {
 		if (index > getSize() || index < 0)
 			throw new IndexOutOfBoundsException(
 				"Index: "+index+", Size: "+getSize());
@@ -179,11 +184,11 @@ public class ArrayList extends AbstractList implements List, RandomAccess, Clone
 		setSize(getSize()+1);
 	}
 
-	public synchronized Object remove(int index) {
+	public synchronized E remove(int index) {
 		RangeCheck(index);
 		
 		setModCount(getModCount()+1);
-		Object oldValue = getElementData().get(index);
+		E oldValue = getElementData().get(index);
 		
 		int numMoved = getSize() - index - 1;
 		if (numMoved > 0)
@@ -207,28 +212,26 @@ public class ArrayList extends AbstractList implements List, RandomAccess, Clone
 //		setSize(0);
 //	}
 
-//	public boolean addAll(Collection c) {
+//	public boolean addAll(Collection<? extends E> c) {
 //		Object[] a = c.toArray();
 //		int numNew = a.length;
-//		ensureCapacity(getSize() + numNew);  // Increments modCount
+//		ensureCapacity(getSize() + numNew); // Increments modCount
 //		Arrays.copy(a, 0, getElementData(), getSize(), numNew);
 //		setSize(getSize()+numNew);
 //		return numNew != 0;
 //	}
 
-//	public boolean addAll(int index, Collection c) {
+//	public boolean addAll(int index, Collection<? extends E> c) {
 //		if (index > getSize() || index < 0)
-//			throw new IndexOutOfBoundsException(
-//				"Index: " + index + ", Size: " + getSize());
+//			throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + getSize());
 //
 //		Object[] a = c.toArray();
 //		int numNew = a.length;
-//		ensureCapacity(getSize() + numNew);  // Increments modCount
+//		ensureCapacity(getSize() + numNew); // Increments modCount
 //
 //		int numMoved = getSize() - index;
 //		if (numMoved > 0)
-//			Arrays.copy(getElementData(), index, getElementData(), index + numNew,
-//							 numMoved);
+//			Arrays.copy(getElementData(), index, getElementData(), index + numNew, numMoved);
 //
 //		Arrays.copy(a, 0, getElementData(), index, numNew);
 //		setSize(getSize()+numNew);
@@ -238,8 +241,7 @@ public class ArrayList extends AbstractList implements List, RandomAccess, Clone
 //	protected void removeRange(int fromIndex, int toIndex) {
 //		setModCount(getModCount()+1);
 //		int numMoved = getSize() - toIndex;
-//		Arrays.copy(getElementData(), toIndex, getElementData(), fromIndex,
-//						 numMoved);
+//		Arrays.copy(getElementData(), toIndex, getElementData(), fromIndex, numMoved);
 //
 //		// Let gc do its work
 //		int newSize = getSize() - (toIndex-fromIndex);
@@ -250,7 +252,6 @@ public class ArrayList extends AbstractList implements List, RandomAccess, Clone
 
 	private void RangeCheck(int index) {
 		if (index >= size())
-			throw new IndexOutOfBoundsException(
-				"Index: "+index+", Size: "+size());
+			throw new IndexOutOfBoundsException("Index: "+index+", Size: "+size());
 	}
 }

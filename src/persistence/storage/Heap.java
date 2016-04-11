@@ -14,7 +14,7 @@ public interface Heap {
 	boolean status(long ptr);
 	long allocatedSpace();
 	long maxSpace();
-	Iterator iterator();
+	Iterator<Long> iterator();
 
 	boolean readBoolean(long ptr);
 	byte readByte(long ptr);

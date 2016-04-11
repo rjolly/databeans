@@ -12,8 +12,8 @@ public class Sample {
 
 		// Populate
 
-		store.setRoot(new ArrayList(store));
-		Collection employees=(Collection)store.root();
+		store.setRoot(new ArrayList<Employee>(store));
+		Collection<Employee> employees=store.root();
 
 		Department accounting=new Department(store);
 		accounting.setName("Accounting");
@@ -159,19 +159,19 @@ public class Sample {
 		average.setName("");
 		average.setSalary(24878.);
 
-		for(Iterator it=employees.iterator();it.hasNext();) {
-			Employee e=(Employee)it.next();
+		for(Iterator<Employee> it=employees.iterator();it.hasNext();) {
+			Employee e=it.next();
 			if(e.getSalary()<average.getSalary())
 				System.out.println(e+" "+format.format(e.getSalary()));
 		}
 
-		SortedSet bySalary=new TreeSet(store, SalaryComparator.comparator);
+		SortedSet<Employee> bySalary=new TreeSet<>(store, SalaryComparator.comparator);
 		bySalary.addAll(employees);
 
 		System.out.println();
 
-		for(Iterator it=bySalary.tailSet(average).iterator();it.hasNext();) {
-			Employee e=(Employee)it.next();
+		for(Iterator<Employee> it=bySalary.tailSet(average).iterator();it.hasNext();) {
+			Employee e=it.next();
 			System.out.println(e+" "+format.format(e.getSalary()));
 		}
 

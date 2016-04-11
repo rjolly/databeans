@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 public class PersistentClass extends PersistentObject {
-	transient Map map;
+	transient Map<String, Field> map;
 	transient int size;
 	transient String name;
 
@@ -23,7 +23,7 @@ public class PersistentClass extends PersistentObject {
 		this(obj.store, obj.getClass(), obj.secondary());
 	}
 
-	PersistentClass(final Store store, final Class clazz, final String secondary[]) {
+	PersistentClass(final Store store, final Class<? extends PersistentObject> clazz, final String secondary[]) {
 		super(store, clazz == PersistentClass.class?new ClassClass():null);
 		init(clazz, secondary);
 		if (clazz == PersistentClass.class) {
@@ -32,8 +32,7 @@ public class PersistentClass extends PersistentObject {
 		}
 	}
 
-	protected void init(Class clazz, final String secondary[]) {
-		if(!PersistentObject.class.isAssignableFrom(clazz)) throw new RuntimeException("type not persistent");
+	protected void init(Class<? extends PersistentObject> clazz, final String secondary[]) {
 		final List<String> s = Arrays.asList(secondary);
 		BeanInfo info;
 		try {
@@ -60,7 +59,7 @@ public class PersistentClass extends PersistentObject {
 	}
 
 	void setup() {
-		map=new LinkedHashMap();
+		map=new LinkedHashMap<>();
 		size=Field.HEADER_SIZE;
 		String str=getFields();
 		String fields[]=str.length()==0?new String[0]:str.split(";");
@@ -85,7 +84,7 @@ public class PersistentClass extends PersistentObject {
 		return f;
 	}
 
-	Iterator fieldIterator() {
+	Iterator<Field> fieldIterator() {
 		if(map==null) setup();
 		return map.values().iterator();
 	}
@@ -96,7 +95,7 @@ public class PersistentClass extends PersistentObject {
 	}
 
 	public String getName() {
-		return (String)get("name");
+		return get("name");
 	}
 
 	public void setName(String str) {
@@ -104,7 +103,7 @@ public class PersistentClass extends PersistentObject {
 	}
 
 	public String getFields() {
-		return (String)get("fields");
+		return get("fields");
 	}
 
 	public void setFields(String str) {
@@ -121,17 +120,18 @@ public class PersistentClass extends PersistentObject {
 		return s.toString();
 	}
 
-	static PersistentObject newInstance(Class clazz) {
+	static PersistentObject newInstance(Class<? extends PersistentObject> clazz) {
 		try {
-			return (PersistentObject)clazz.newInstance();
+			return clazz.newInstance();
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	PersistentObject newInstance() {
 		try {
-			return newInstance(Class.forName(name()));
+			return newInstance((Class<? extends PersistentObject>)Class.forName(name()));
 		} catch (ClassNotFoundException e) {
 			throw new RuntimeException(e);
 		}

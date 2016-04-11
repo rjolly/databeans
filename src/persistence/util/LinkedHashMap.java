@@ -13,7 +13,7 @@ import java.util.NoSuchElementException;
 import persistence.Array;
 import persistence.Store;
 
-public class LinkedHashMap extends HashMap {
+public class LinkedHashMap<K,V> extends HashMap<K,V> {
 	public LinkedHashMap() {
 	}
 
@@ -29,7 +29,7 @@ public class LinkedHashMap extends HashMap {
 		super(store);
 	}
 
-	public LinkedHashMap(final Store store, final Map m) {
+	public LinkedHashMap(final Store store, final Map<? extends K, ? extends V> m) {
 		super(store, m);
 	}
 
@@ -38,37 +38,39 @@ public class LinkedHashMap extends HashMap {
 		setAccessOrder(accessOrder);
 	}
 
-	public Entry getHeader() {
-		return (Entry)get("header");
+	public Entry<K,V> getHeader() {
+		return get("header");
 	}
 
-	public void setHeader(Entry entry) {
+	public void setHeader(Entry<K,V> entry) {
 		set("header",entry);
 	}
 
 	public boolean isAccessOrder() {
-		return ((Boolean)get("accessOrder")).booleanValue();
+		return get("accessOrder");
 	}
 
 	public void setAccessOrder(boolean b) {
-		set("accessOrder",new Boolean(b));
+		set("accessOrder",b);
 	}
 
 	void init() {
-		setHeader(new Entry(getStore(), -1, null, null, null));
+		setHeader(new Entry<K,V>(getStore(), -1, null, null, null));
 		getHeader().setBefore(getHeader());
 		getHeader().setAfter(getHeader());
 	}
 
-	void transfer(Array newTable) {
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	void transfer(Array<HashMap.Entry> newTable) {
 		int newCapacity = newTable.length();
-		for (Entry e = getHeader().getAfter(); e != getHeader(); e = e.getAfter()) {
+		for (Entry<K,V> e = getHeader().getAfter(); e != getHeader(); e = e.getAfter()) {
 			int index = indexFor(e.getHash(), newCapacity);
-			e.setNext((HashMap.Entry)newTable.get(index));
+			e.setNext(newTable.get(index));
 			newTable.set(index,e);
 		}
 	}
 
+	@SuppressWarnings("rawtypes")
 	public synchronized boolean containsValue(Object value) {
 		// Overridden to take advantage of faster iterator
 		if (value==null) {
@@ -83,22 +85,25 @@ public class LinkedHashMap extends HashMap {
 		return false;
 	}
 
-	public synchronized Object get(Object key) {
-		Entry e = (Entry)getEntry(key);
+	public synchronized V get(Object key) {
+		Entry<K,V> e = (Entry<K,V>)getEntry(key);
 		if (e == null)
 			return null;
 		e.recordAccess(LinkedHashMap.this);
 		return e.getValue();
 	}
 
-	public Object put(Object key, Object value) {
-		HashMap.Entry e = getEntry(key);
+	public V put(K key, V value) {
+		HashMap.Entry<K,V> e = getEntry(key);
 		if(e != null) return put(e,value);
-		else return putMapping(key,value);
+		else {
+			Map.Entry<K,V> entry = putMapping(key,value);
+			return (entry == null ? null : entry.getValue());
+		}
 	}
 
-	synchronized Object put(HashMap.Entry entry, Object value) {
-		Object oldValue = entry.getValue();
+	synchronized V put(HashMap.Entry<K,V> entry, V value) {
+		V oldValue = entry.getValue();
 		entry.setValue(value);
 		entry.recordAccess(LinkedHashMap.this);
 		return oldValue;
@@ -110,27 +115,27 @@ public class LinkedHashMap extends HashMap {
 		getHeader().setAfter(getHeader());
 	}
 
-	public static class Entry extends HashMap.Entry {
+	public static class Entry<K,V> extends HashMap.Entry<K,V> {
 		public Entry() {
 		}
 
-		public Entry(final Store store, final int hash, final Object key, final Object value, final HashMap.Entry next) {
+		public Entry(final Store store, final int hash, final K key, final V value, final HashMap.Entry<K,V> next) {
 			super(store, hash, key, value, next);
 		}
 
-		public Entry getBefore() {
-			return (Entry)get("before");
+		public Entry<K,V> getBefore() {
+			return get("before");
 		}
 
-		public void setBefore(Entry entry) {
+		public void setBefore(Entry<K,V> entry) {
 			set("before",entry);
 		}
 
-		public Entry getAfter() {
-			return (Entry)get("after");
+		public Entry<K,V> getAfter() {
+			return get("after");
 		}
 
-		public void setAfter(Entry entry) {
+		public void setAfter(Entry<K,V> entry) {
 			set("after",entry);
 		}
 
@@ -139,15 +144,15 @@ public class LinkedHashMap extends HashMap {
 			getAfter().setBefore(getBefore());
 		}
 
-		private void addBefore(Entry existingEntry) {
+		private void addBefore(Entry<K,V> existingEntry) {
 			setAfter(existingEntry);
 			setBefore(existingEntry.getBefore());
 			getBefore().setAfter(this);
 			getAfter().setBefore(this);
 		}
 
-		void recordAccess(HashMap m) {
-			LinkedHashMap lm = (LinkedHashMap)m;
+		void recordAccess(HashMap<K,V> m) {
+			LinkedHashMap<K,V> lm = (LinkedHashMap<K,V>)m;
 			if (lm.isAccessOrder()) {
 				lm.setModCount(lm.getModCount()+1);
 				remove();
@@ -155,14 +160,14 @@ public class LinkedHashMap extends HashMap {
 			}
 		}
 
-		void recordRemoval(HashMap m) {
+		void recordRemoval(HashMap<K,V> m) {
 			remove();
 		}
 	}
 
-	private abstract class LinkedHashIterator implements Iterator {
-		Entry nextEntry = getHeader().getAfter();
-		Entry lastReturned = null;
+	private abstract class LinkedHashIterator<T> implements Iterator<T> {
+		Entry<K,V> nextEntry = getHeader().getAfter();
+		Entry<K,V> lastReturned = null;
 
 		int expectedModCount = modCount();
 
@@ -181,38 +186,38 @@ public class LinkedHashMap extends HashMap {
 			expectedModCount = modCount();
 		}
 
-		Entry nextEntry() {
+		Entry<K,V> nextEntry() {
 			if (modCount() != expectedModCount)
 				throw new ConcurrentModificationException();
 			if (nextEntry == getHeader())
 				throw new NoSuchElementException();
 
-			Entry e = lastReturned = nextEntry;
+			Entry<K,V> e = lastReturned = nextEntry;
 			nextEntry = e.getAfter();
 			return e;
 		}
 	}
 
-	private class KeyIterator extends LinkedHashIterator {
-		public Object next() { return nextEntry().getKey(); }
+	private class KeyIterator extends LinkedHashIterator<K> {
+		public K next() { return nextEntry().getKey(); }
 	}
 
-	private class ValueIterator extends LinkedHashIterator {
-		public Object next() { return nextEntry().getValue(); }
+	private class ValueIterator extends LinkedHashIterator<V> {
+		public V next() { return nextEntry().getValue(); }
 	}
 
-	private class EntryIterator extends LinkedHashIterator {
-		public Object next() { return nextEntry(); }
+	private class EntryIterator extends LinkedHashIterator<Map.Entry<K,V>> {
+		public Map.Entry<K,V> next() { return nextEntry(); }
 	}
 
-	Iterator newKeyIterator()   { return new KeyIterator();   }
-	Iterator newValueIterator() { return new ValueIterator(); }
-	Iterator newEntryIterator() { return new EntryIterator(); }
+	Iterator<K> newKeyIterator()   { return new KeyIterator();   }
+	Iterator<V> newValueIterator() { return new ValueIterator(); }
+	Iterator<Map.Entry<K,V>> newEntryIterator() { return new EntryIterator(); }
 
-	HashMap.Entry addEntry(int hash, Object key, Object value, int bucketIndex) {
-		HashMap.Entry entry=createEntry(hash, key, value, bucketIndex);
+	HashMap.Entry<K,V> addEntry(int hash, K key, V value, int bucketIndex) {
+		HashMap.Entry<K,V> entry=createEntry(hash, key, value, bucketIndex);
 
-		Entry eldest = getHeader().getAfter();
+		Entry<K,V> eldest = getHeader().getAfter();
 		if (removeEldestEntry(eldest)) {
 			removeEntryForKey(eldest.getKey());
 		} else {
@@ -222,15 +227,16 @@ public class LinkedHashMap extends HashMap {
 		return entry;
 	}
 
-	HashMap.Entry createEntry(int hash, Object key, Object value, int bucketIndex) {
-		Entry e = new Entry(getStore(), hash, key, value, (HashMap.Entry)getTable().get(bucketIndex));
+	@SuppressWarnings("unchecked")
+	HashMap.Entry<K,V> createEntry(int hash, K key, V value, int bucketIndex) {
+		Entry<K,V> e = new Entry<>(getStore(), hash, key, value, getTable().get(bucketIndex));
 		getTable().set(bucketIndex,e);
 		e.addBefore(getHeader());
 		setSize(getSize()+1);
 		return e;
 	}
 
-	protected boolean removeEldestEntry(Map.Entry eldest) {
+	protected boolean removeEldestEntry(Map.Entry<K,V> eldest) {
 		return false;
 	}
 }

@@ -9,26 +9,22 @@ public class PersistentSystem extends PersistentObject {
 
 	PersistentSystem(final Store store) {
 		super(store);
-		setClasses(new LinkedHashMap(store));
+		setClasses(new LinkedHashMap<String, PersistentClass>(store));
 	}
 
-	public Map getClasses() {
-		return (Map)get("classes");
+	public Map<String, PersistentClass> getClasses() {
+		return get("classes");
 	}
 
-	private void setClasses(Map map) {
+	private void setClasses(Map<String, PersistentClass> map) {
 		set("classes",map);
 	}
 
-	public Object getRoot() {
+	public <T> T getRoot() {
 		return get("root");
 	}
 
-	public void setRoot(Object obj) {
+	public <T> void setRoot(final T obj) {
 		set("root",obj);
-	}
-
-	public Object root() {
-		return getRoot();
 	}
 }

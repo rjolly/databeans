@@ -10,7 +10,7 @@ import java.util.Collection;
 import java.util.Set;
 import persistence.Store;
 
-public class LinkedHashSet extends HashSet implements Set, Cloneable {
+public class LinkedHashSet<E> extends HashSet<E> implements Set<E> {
 	public LinkedHashSet() {
 	}
 
@@ -26,7 +26,7 @@ public class LinkedHashSet extends HashSet implements Set, Cloneable {
 		super(store, 16, .75f, true);
 	}
 
-	public LinkedHashSet(final Store store, Collection c) {
+	public LinkedHashSet(final Store store, Collection<? extends E> c) {
 		super(store, Math.max(2*c.size(), 11), .75f, true);
 		addAll(c);
 	}

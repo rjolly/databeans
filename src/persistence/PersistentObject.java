@@ -1,9 +1,8 @@
 package persistence;
 
-import java.io.Serializable;
 import java.util.Iterator;
 
-public class PersistentObject implements Cloneable, Serializable {
+public class PersistentObject {
 	static final String secondary[] = new String[] {"class", "store"};
 	transient PersistentClass clazz;
 	transient Store store;
@@ -37,20 +36,21 @@ public class PersistentObject implements Cloneable, Serializable {
 		return c;
 	}
 
-	public final Object get(String name) {
+	public final <T> T get(String name) {
 		return get(clazz.getField(name));
 	}
 
-	public final Object set(String name, Object value) {
+	public final <T> T set(String name, T value) {
 		return set(clazz.getField(name),value);
 	}
 
-	Object get(Field field) {
-		return store.get(base,field);
+	@SuppressWarnings("unchecked")
+	<T> T get(Field field) {
+		return (T)store.get(base,field);
 	}
 
-	synchronized Object set(Field field, Object value) {
-		Object obj=get(field);
+	synchronized <T> T set(Field field, T value) {
+		T obj=get(field);
 		store.set(base,field,value);
 		return obj;
 	}
@@ -67,7 +67,7 @@ public class PersistentObject implements Cloneable, Serializable {
 		return this == obj || (obj instanceof PersistentObject && equals((PersistentObject)obj));
 	}
 
-	boolean equals(PersistentObject obj) {
+	protected boolean equals(PersistentObject obj) {
 		return base.equals(obj.base);
 	}
 
@@ -75,9 +75,9 @@ public class PersistentObject implements Cloneable, Serializable {
 		return clazz.name()+"@"+Long.toHexString(base);
 	}
 
-	public synchronized Object clone() {
+	public synchronized PersistentObject clone() {
 		final PersistentObject obj = store.create(getClass());
-		final Iterator t = clazz.fieldIterator();
+		final Iterator<Field> t = clazz.fieldIterator();
 		while (t.hasNext()) {
 			final Field field = (Field)t.next();
 			obj.set(field, get(field));

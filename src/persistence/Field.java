@@ -28,7 +28,7 @@ class Field {
 		this(desc.getName(), desc.getPropertyType());
 	}
 
-	Field(String name, Class type) {
+	Field(String name, Class<?> type) {
 		this(name, new ObjectStreamField(name,type).getTypeCode());
 	}
 

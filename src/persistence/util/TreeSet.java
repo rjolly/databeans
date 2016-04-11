@@ -16,29 +16,29 @@ import persistence.PersistentClass;
 import persistence.PersistentObject;
 import persistence.Store;
 
-public class TreeSet extends AbstractSet implements SortedSet, Cloneable {
+public class TreeSet<E> extends AbstractSet<E> implements SortedSet<E> {
 	public TreeSet() {
 	}
 
-	public TreeSet(final Store store, SortedMap map) {
+	public TreeSet(final Store store, SortedMap<E,Object> map) {
 		super(store);
 		setM(map);
 	}
 
 	public TreeSet(final Store store) {
-		this(store, new TreeMap(store));
+		this(store, new TreeMap<E,Object>(store));
 	}
 
-	public TreeSet(final Store store, Comparator c) {
-		this(store, new TreeMap(store, c));
+	public TreeSet(final Store store, Comparator<? super E> c) {
+		this(store, new TreeMap<E,Object>(store, c));
 	}
 
-	public TreeSet(final Store store, Collection c) {
+	public TreeSet(final Store store, Collection<? extends E> c) {
 		this(store);
 		addAll(c);		
 	}
 
-	public TreeSet(final Store store, SortedSet s) {
+	public TreeSet(final Store store, SortedSet<E> s) {
 		this(store, s.comparator());
 		addAll(s);
 	}
@@ -47,23 +47,23 @@ public class TreeSet extends AbstractSet implements SortedSet, Cloneable {
 		return getClass() == TreeSet.class?new TreeSetClass(this):super.createClass();
 	}
 
-	SortedMap m() {
+	SortedMap<E,Object> m() {
 		return getM();
 	}
 
-	Set keySet() {
+	Set<E> keySet() {
 		return m().keySet();
 	}
 
-	public SortedMap getM() {
-		return (SortedMap)get("m");
+	public SortedMap<E,Object> getM() {
+		return get("m");
 	}
 
-	public void setM(SortedMap map) {
+	public void setM(SortedMap<E,Object> map) {
 		set("m",map);
 	}
 
-	public Iterator iterator() {
+	public Iterator<E> iterator() {
 		return keySet().iterator();
 	}
 
@@ -83,8 +83,8 @@ public class TreeSet extends AbstractSet implements SortedSet, Cloneable {
 		return ((TreeSetClass)getStore().get(TreeSet.class)).PRESENT();
 	}
 
-	public boolean add(Object o) {
-		return m().put(o, PRESENT())==null;
+	public boolean add(E e) {
+		return m().put(e, PRESENT())==null;
 	}
 
 	public boolean remove(Object o) {
@@ -99,10 +99,10 @@ public class TreeSet extends AbstractSet implements SortedSet, Cloneable {
 //		// Use linear-time version if applicable
 //		if (m().size()==0 && c.size() > 0 && c instanceof SortedSet && 
 //			m() instanceof TreeMap) {
-//			SortedSet set = (SortedSet)c;
-//			TreeMap map = (TreeMap)m();
-//			Comparator cc = set.comparator();
-//			Comparator mc = map.comparator();
+//			SortedSet<E> set = (SortedSet<E>)c;
+//			TreeMap<E,Object> map = (TreeMap<E,Object>)m();
+//			Comparator<? super E> cc = set.comparator();
+//			Comparator<? super E> mc = map.comparator();
 //			if (cc==mc || (cc != null && cc.equals(mc))) {
 //				map.addAllForTreeSet(set, persistentClass().PRESENT());
 //				return true;
@@ -111,51 +111,52 @@ public class TreeSet extends AbstractSet implements SortedSet, Cloneable {
 //		return super.addAll(c);
 //	}
 
-	public SortedSet subSet(Object fromElement, Object toElement) {
-		return new TreeSetView(this, m().subMap(fromElement, toElement));
+	public SortedSet<E> subSet(E fromElement, E toElement) {
+		return new TreeSetView<>(this, m().subMap(fromElement, toElement));
 	}
 
-	public SortedSet headSet(Object toElement) {
-		return new TreeSetView(this, m().headMap(toElement));
+	public SortedSet<E> headSet(E toElement) {
+		return new TreeSetView<>(this, m().headMap(toElement));
 	}
 
-	public SortedSet tailSet(Object fromElement) {
-		return new TreeSetView(this, m().tailMap(fromElement));
+	public SortedSet<E> tailSet(E fromElement) {
+		return new TreeSetView<>(this, m().tailMap(fromElement));
 	}
 
-	public Comparator comparator() {
+	public Comparator<? super E> comparator() {
 		return m().comparator();
 	}
 
-	public Object first() {
+	public E first() {
 		return m().firstKey();
 	}
 
-	public Object last() {
+	public E last() {
 		return m().lastKey();
 	}
 
+	@SuppressWarnings("unchecked")
 	public synchronized PersistentObject clone() {
-		TreeSet clone = (TreeSet)super.clone();
-		clone.setM(new TreeMap(getStore(), getM()));
+		TreeSet<E> clone = (TreeSet<E>)super.clone();
+		clone.setM(new TreeMap<>(getStore(), getM()));
 		return clone;
 	}
 }
 
-class TreeSetView extends java.util.AbstractSet implements SortedSet {
+class TreeSetView<E> extends java.util.AbstractSet<E> implements SortedSet<E> {
 
-	private SortedMap m; // The backing Map
-	private Set keySet;  // The keySet view of the backing Map
+	private SortedMap<E,Object> m; // The backing Map
+	private Set<E> keySet;  // The keySet view of the backing Map
 
-	TreeSet outer;
+	TreeSet<E> outer;
 
-	TreeSetView(TreeSet outer, SortedMap m) {
+	TreeSetView(TreeSet<E> outer, SortedMap<E,Object> m) {
 		this.outer = outer;
 		this.m = m;
 		keySet = m.keySet();
 	}
 
-	public Iterator iterator() {
+	public Iterator<E> iterator() {
 		return keySet.iterator();
 	}
 
@@ -171,8 +172,8 @@ class TreeSetView extends java.util.AbstractSet implements SortedSet {
 		return m.containsKey(o);
 	}
 
-	public boolean add(Object o) {
-		return m.put(o, outer.PRESENT())==null;
+	public boolean add(E e) {
+		return m.put(e, outer.PRESENT())==null;
 	}
 
 	public boolean remove(Object o) {
@@ -183,27 +184,27 @@ class TreeSetView extends java.util.AbstractSet implements SortedSet {
 		m.clear();
 	}
 
-	public SortedSet subSet(Object fromElement, Object toElement) {
-		return new TreeSetView(outer, m.subMap(fromElement, toElement));
+	public SortedSet<E> subSet(E fromElement, E toElement) {
+		return new TreeSetView<>(outer, m.subMap(fromElement, toElement));
 	}
 
-	public SortedSet headSet(Object toElement) {
-		return new TreeSetView(outer, m.headMap(toElement));
+	public SortedSet<E> headSet(E toElement) {
+		return new TreeSetView<>(outer, m.headMap(toElement));
 	}
 
-	public SortedSet tailSet(Object fromElement) {
-		return new TreeSetView(outer, m.tailMap(fromElement));
+	public SortedSet<E> tailSet(E fromElement) {
+		return new TreeSetView<>(outer, m.tailMap(fromElement));
 	}
 
-	public Comparator comparator() {
+	public Comparator<? super E> comparator() {
 		return m.comparator();
 	}
 
-	public Object first() {
+	public E first() {
 		return m.firstKey();
 	}
 
-	public Object last() {
+	public E last() {
 		return m.lastKey();
 	}
 }

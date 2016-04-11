@@ -1,7 +1,7 @@
 import persistence.PersistentObject;
 import persistence.Store;
 
-public class Employee extends PersistentObject implements Comparable {
+public class Employee extends PersistentObject implements Comparable<Employee> {
 	public Employee() {
 	}
 
@@ -61,7 +61,7 @@ public class Employee extends PersistentObject implements Comparable {
 		return getName()+" ("+getDepartment()+")";
 	}
 
-	public int compareTo(Object o) {
-		return getName().compareTo(((Employee)o).getName());
+	public int compareTo(Employee e) {
+		return getName().compareTo(e.getName());
 	}
 }

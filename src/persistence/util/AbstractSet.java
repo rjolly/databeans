@@ -12,7 +12,7 @@ import java.util.Set;
 import persistence.PersistentObject;
 import persistence.Store;
 
-public abstract class AbstractSet extends AbstractCollection implements Set {
+public abstract class AbstractSet<E> extends AbstractCollection<E> implements Set<E> {
 	public AbstractSet() {
 	}
 
@@ -20,14 +20,14 @@ public abstract class AbstractSet extends AbstractCollection implements Set {
 		super(store);
 	}
 
-	public boolean removeAll(Collection c) {
+	public boolean removeAll(Collection<?> c) {
 		boolean modified = false;
 
 		if (size() > c.size()) {
-			for (Iterator i = c.iterator(); i.hasNext(); )
+			for (Iterator<?> i = c.iterator(); i.hasNext(); )
 				modified |= remove(i.next());
 		} else {
-			for (Iterator i = iterator(); i.hasNext(); ) {
+			for (Iterator<?> i = iterator(); i.hasNext(); ) {
 				if(c.contains(i.next())) {
 					i.remove();
 					modified = true;
@@ -45,7 +45,7 @@ public abstract class AbstractSet extends AbstractCollection implements Set {
 
 		if (!(o instanceof Set))
 			return false;
-		Collection c = (Collection) o;
+		Collection<?> c = (Collection<?>) o;
 		if (c.size() != size())
 			return false;
 		try {
@@ -59,9 +59,9 @@ public abstract class AbstractSet extends AbstractCollection implements Set {
 
 	public synchronized int hashCode() {
 		int h = 0;
-		Iterator i = iterator();
+		Iterator<E> i = iterator();
 		while (i.hasNext()) {
-			Object obj = i.next();
+			E obj = i.next();
 			if (obj != null)
 				h += obj.hashCode();
 		}

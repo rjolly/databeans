@@ -107,7 +107,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 		return maxSpace;
 	}
 
-	public Iterator iterator() {
+	public Iterator<Long> iterator() {
 		return new FileHeapIterator();
 	}
 
@@ -334,7 +334,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 		} else return d;
 	}
 
-	class Chunk implements Comparable {
+	class Chunk implements Comparable<Chunk> {
 		long pos;
 		long size;
 
@@ -506,8 +506,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 			MemoryModel.model.writePointer(FileHeap.this,pos+Integer_SIZE+2*Long_SIZE,c==null?0:c.pos);
 		}
 
-		public int compareTo(Object o) {
-			Chunk c=(Chunk)o;
+		public int compareTo(Chunk c) {
 			if(size<c.size) return -1;
 			else if(size>c.size) return 1;
 			else {
@@ -531,7 +530,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 		return pos<space?new Chunk(pos):null;
 	}
 
-	class FileHeapIterator implements Iterator {
+	class FileHeapIterator implements Iterator<Long> {
 		Chunk next;
 
 		FileHeapIterator() {
@@ -542,7 +541,7 @@ public class FileHeap extends RandomAccessFile implements Heap {
 			return next != null;
 		}
 
-		public Object next() {
+		public Long next() {
 			if (next == null) throw new NoSuchElementException();
 			Chunk lastReturned = next;
 			next = next.next();

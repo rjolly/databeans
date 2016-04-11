@@ -3,13 +3,13 @@ package persistence;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-public final class ArrayClass extends PersistentClass {
+public final class ArrayClass<C> extends PersistentClass {
 	transient int header;
 
 	public ArrayClass() {
 	}
 
-	ArrayClass(final Store store, Class componentType, int length) {
+	ArrayClass(final Store store, Class<C> componentType, int length) {
 		this(store, new Field("element",componentType).typeCode, length);
 	}
 
@@ -35,9 +35,9 @@ public final class ArrayClass extends PersistentClass {
 		} else throw new RuntimeException("array index : "+index+" out of bounds : "+length);
 	}
 
-	Iterator fieldIterator() {
+	Iterator<Field> fieldIterator() {
 		if(map==null) setup();
-		return new Iterator() {
+		return new Iterator<Field>() {
 			int length=getLength();
 			int index=0;
 
@@ -45,7 +45,7 @@ public final class ArrayClass extends PersistentClass {
 				return index<length;
 			}
 
-			public Object next() {
+			public Field next() {
 				if (index>=length) throw new NoSuchElementException();
 				return getField(index++);
 			}
@@ -57,18 +57,18 @@ public final class ArrayClass extends PersistentClass {
 	}
 
 	public int getLength() {
-		return ((Integer)get("length")).intValue();
+		return get("length");
 	}
 
 	public void setLength(int n) {
-		set("length",new Integer(n));
+		set("length",n);
 	}
 
 	public char getTypeCode() {
-		return ((Character)get("typeCode")).charValue();
+		return get("typeCode");
 	}
 
 	public void setTypeCode(char c) {
-		set("typeCode",new Character(c));
+		set("typeCode",c);
 	}
 }

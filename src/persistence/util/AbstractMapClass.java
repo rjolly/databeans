@@ -3,24 +3,25 @@ package persistence.util;
 import persistence.PersistentClass;
 import persistence.PersistentObject;
 
-public final class AbstractMapClass extends PersistentClass {
+public final class AbstractMapClass<K,V> extends PersistentClass {
 	public AbstractMapClass() {
 	}
 
+	@SuppressWarnings("unchecked")
 	AbstractMapClass(final PersistentObject obj) {
 		super(obj);
-		setNULL(new PersistentObject(getStore()));
+		setNULL((V)new PersistentObject(getStore()));
 	}
 
-	PersistentObject NULL() {
+	V NULL() {
 		return getNULL();
 	}
 
-	public PersistentObject getNULL() {
-		return (PersistentObject)get("NULL");
+	public V getNULL() {
+		return get("NULL");
 	}
 
-	private void setNULL(PersistentObject obj) {
+	private void setNULL(V obj) {
 		set("NULL",obj);
 	}
 }

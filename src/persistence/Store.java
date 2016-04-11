@@ -14,13 +14,10 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
-import java.rmi.RemoteException;
-import java.rmi.server.UnicastRemoteObject;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.WeakHashMap;
-
 import persistence.beans.XMLDecoder;
 import persistence.beans.XMLEncoder;
 import persistence.storage.Collector;
@@ -28,16 +25,16 @@ import persistence.storage.FileHeap;
 import persistence.storage.Heap;
 import persistence.storage.MemoryModel;
 
-public class Store extends UnicastRemoteObject implements Collector {
+public class Store implements Collector {
 	final Heap heap;
-	final Map cache=new WeakHashMap();
+	final Map<Long, Reference<PersistentObject>> cache=new WeakHashMap<>();
 	PersistentSystem system;
 	boolean readOnly;
 	boolean closed;
-	Map classes;
+	Map<String, PersistentClass> classes;
 	long boot;
 
-	public Store(String name) throws RemoteException {
+	public Store(String name) {
 		try {
 			heap=new FileHeap(name,this);
 		} catch (FileNotFoundException e) {
@@ -56,9 +53,9 @@ public class Store extends UnicastRemoteObject implements Collector {
 	}
 
 	synchronized void create() {
-		classes=new LinkedHashMap();
+		classes=new LinkedHashMap<>();
 		createSystem();
-		system.getClasses().putAll(new LinkedHashMap(classes));
+		system.getClasses().putAll(new LinkedHashMap<>(classes));
 		system.getClasses().putAll(classes);
 		classes=system.getClasses();
 	}
@@ -77,14 +74,14 @@ public class Store extends UnicastRemoteObject implements Collector {
 	}
 
 	void release() {
-		Iterator t=heap.iterator();
+		Iterator<Long> t=heap.iterator();
 		while(t.hasNext()) {
 			long ptr=((Long)t.next()).longValue();
 			if(heap.status(ptr)) clearRefCount(ptr,true);
 		}
 	}
 
-	public PersistentClass get(final Class clazz) {
+	public PersistentClass get(final Class<? extends PersistentObject> clazz) {
 		final PersistentObject obj = PersistentClass.newInstance(clazz);
 		obj.store = this;
 		return persistentClass(obj);
@@ -93,23 +90,23 @@ public class Store extends UnicastRemoteObject implements Collector {
 	PersistentClass persistentClass(final PersistentObject obj) {
 		final String name = obj.getClass().getName();
 		synchronized(classes) {
-			PersistentClass clazz = (PersistentClass)classes.get(name);
+			PersistentClass clazz = classes.get(name);
 			if (clazz == null) classes.put(name, clazz = obj.createClass());
 			return clazz;
 		}
 	}
 
-	public Object root() {
-		return system.root();
+	public <T> T root() {
+		return system.getRoot();
 	}
 
-	public void setRoot(Object obj) {
+	public <T> void setRoot(T obj) {
 		system.setRoot(obj);
 	}
 
-	public PersistentObject create(final Class clazz) {
+	public PersistentObject create(final Class<? extends PersistentObject> clazz) {
 		try {
-			return (PersistentObject)clazz.getConstructor(Store.class).newInstance(this);
+			return clazz.getConstructor(Store.class).newInstance(this);
 		} catch (final Exception ex) {
 			throw new RuntimeException(ex);
 		}
@@ -157,12 +154,12 @@ public class Store extends UnicastRemoteObject implements Collector {
 
 	void cache(PersistentObject obj) {
 		cache.remove(obj.base);
-		cache.put(obj.base,new WeakReference(obj));
+		cache.put(obj.base,new WeakReference<>(obj));
 	}
 
 	PersistentObject get(long base) {
-		Reference w=(Reference)cache.get(base);
-		return w==null?null:(PersistentObject)w.get();
+		Reference<PersistentObject> w=cache.get(base);
+		return w==null?null:w.get();
 	}
 
 	synchronized void release(PersistentObject obj) {
@@ -191,7 +188,7 @@ public class Store extends UnicastRemoteObject implements Collector {
 		}
 	}
 
-	void shutdown() throws RemoteException {
+	void shutdown() {
 		close();
 		System.gc();
 	}
@@ -204,8 +201,8 @@ public class Store extends UnicastRemoteObject implements Collector {
 	}
 
 	void updateClasses() {
-		for(Iterator it=classes.values().iterator();it.hasNext();) {
-			if(refCount((PersistentClass)it.next())==1) it.remove();
+		for(Iterator<PersistentClass> it=classes.values().iterator();it.hasNext();) {
+			if(refCount(it.next())==1) it.remove();
 		}
 	}
 
@@ -221,9 +218,8 @@ public class Store extends UnicastRemoteObject implements Collector {
 		return heap.maxSpace();
 	}
 
-	public synchronized void close() throws RemoteException {
+	public synchronized void close() {
 		if(closed) return;
-		UnicastRemoteObject.unexportObject(this,true);
 		if(!readOnly) heap.mount(false);
 		closed=true;
 	}
@@ -238,7 +234,7 @@ public class Store extends UnicastRemoteObject implements Collector {
 	}
 
 	void mark() {
-		Iterator t=heap.iterator();
+		Iterator<Long> t=heap.iterator();
 		while(t.hasNext()) {
 			long ptr=((Long)t.next()).longValue();
 			if(heap.status(ptr)) {
@@ -254,7 +250,7 @@ public class Store extends UnicastRemoteObject implements Collector {
 	}
 
 	void sweep() {
-		Iterator t=heap.iterator();
+		Iterator<Long> t=heap.iterator();
 		while(t.hasNext()) {
 			long ptr=((Long)t.next()).longValue();
 			if(heap.status(ptr)) {
@@ -268,7 +264,7 @@ public class Store extends UnicastRemoteObject implements Collector {
 		PersistentClass c=getClass(base);
 		if(c!=null) {
 			mark(c.base);
-			Iterator t=c.fieldIterator();
+			Iterator<Field> t=c.fieldIterator();
 			while(t.hasNext()) {
 				Field field=(Field)t.next();
 				switch (field.typeCode) {
@@ -301,7 +297,7 @@ public class Store extends UnicastRemoteObject implements Collector {
 		if(c!=null) {
 //			Field.CLASS.set(patch,base,new Long(0));
 			decRefCount(c.base);
-			Iterator t=c.fieldIterator();
+			Iterator<Field> t=c.fieldIterator();
 			while(t.hasNext()) {
 				Field field=(Field)t.next();
 				switch (field.typeCode) {
@@ -371,7 +367,6 @@ public class Store extends UnicastRemoteObject implements Collector {
 	}
 
 	void clearRefCount(long base, boolean memory) {
-		int n=MemoryModel.model.lastByteShift;
 		long r=((Long)Field.REF_COUNT.get(heap,base)).longValue();
 		long s=r&MemoryModel.model.lastByteMask;
 		r=r^s;
@@ -516,7 +511,7 @@ public class Store extends UnicastRemoteObject implements Collector {
 			return 0;
 		}
 
-		public Iterator iterator() {
+		public Iterator<Long> iterator() {
 			return null;
 		}
 

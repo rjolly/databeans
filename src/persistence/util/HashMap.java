@@ -18,7 +18,7 @@ import persistence.PersistentClass;
 import persistence.PersistentObject;
 import persistence.Store;
 
-public class HashMap extends AbstractMap implements Map, Cloneable {
+public class HashMap<K,V> extends AbstractMap<K,V> implements Map<K,V> {
 	static final int DEFAULT_INITIAL_CAPACITY = 16;
 	static final int MAXIMUM_CAPACITY = 1 << 30;
 	static final float DEFAULT_LOAD_FACTOR = 0.75f;
@@ -44,7 +44,7 @@ public class HashMap extends AbstractMap implements Map, Cloneable {
 
 		setLoadFactor(loadFactor);
 		setThreshold((int)(capacity * loadFactor));
-		setTable(new PersistentArray(store, Entry.class, capacity));
+		setTable(new PersistentArray<>(store, Entry.class, capacity));
 		init();
 	}
 
@@ -56,78 +56,77 @@ public class HashMap extends AbstractMap implements Map, Cloneable {
 		super(store);
 		setLoadFactor(DEFAULT_LOAD_FACTOR);
 		setThreshold((int)(DEFAULT_INITIAL_CAPACITY * DEFAULT_LOAD_FACTOR));
-		setTable(new PersistentArray(store, Entry.class, DEFAULT_INITIAL_CAPACITY));
+		setTable(new PersistentArray<>(store, Entry.class, DEFAULT_INITIAL_CAPACITY));
 		init();
 	}
 
 	void init() {
 	}
 
-	public HashMap(final Store store, final Map m) {
+	public HashMap(final Store store, final Map<? extends K, ? extends V> m) {
 		this(store, Math.max((int) (m.size() / DEFAULT_LOAD_FACTOR) + 1, DEFAULT_INITIAL_CAPACITY), DEFAULT_LOAD_FACTOR);
 		putAllForCreate(m);
 	}
 
 	protected PersistentClass createClass() {
-		return getClass() == HashMap.class?new HashMapClass(this):super.createClass();
+		return getClass() == HashMap.class?new HashMapClass<>(this):super.createClass();
 	}
 
-	public Array getTable() {
-		return (Array)get("table");
+	@SuppressWarnings("rawtypes")
+	public Array<Entry> getTable() {
+		return get("table");
 	}
 
-	public void setTable(Array array) {
+	@SuppressWarnings("rawtypes")
+	public void setTable(Array<Entry> array) {
 		set("table",array);
 	}
 
 	public int getSize() {
-		return ((Integer)get("size")).intValue();
+		return get("size");
 	}
 
 	public void setSize(int n) {
-		set("size",new Integer(n));
+		set("size",n);
 	}
 
 	public int getThreshold() {
-		return ((Integer)get("threshold")).intValue();
+		return get("threshold");
 	}
 
 	public void setThreshold(int n) {
-		set("threshold",new Integer(n));
+		set("threshold",n);
 	}
 
 	public float getLoadFactor() {
-		return ((Float)get("loadFactor")).floatValue();
+		return get("loadFactor");
 	}
 
 	public void setLoadFactor(float f) {
-		set("loadFactor",new Float(f));
+		set("loadFactor",f);
 	}
 
 	public int getModCount() {
-		return ((Integer)get("modCount")).intValue();
+		return get("modCount");
 	}
 
 	public void setModCount(int n) {
-		set("modCount",new Integer(n));
+		set("modCount",n);
 	}
 
 	// internal utilities
 
-	Object NULL() {
+	V NULL() {
 		throw new UnsupportedOperationException();
 	}
 
-	Object NULL_KEY() {
-		return ((HashMapClass)getStore().get(HashMap.class)).NULL_KEY();
+	@SuppressWarnings("unchecked")
+	K NULL_KEY() {
+		return ((HashMapClass<K,V>)getStore().get(HashMap.class)).NULL_KEY();
 	}
 
-	Object maskNull(Object key) {
+	K maskNull(K key) {
 		return (key == null ? NULL_KEY() : key);
-	}
-
-	Object unmaskNull(Object key) {
-		return (key == NULL_KEY() ? null : key);
 	}
 
 	static int hash(Object x) {
@@ -156,16 +155,17 @@ public class HashMap extends AbstractMap implements Map, Cloneable {
 //		return getSize() == 0;
 //	}
 
-	public Object get(Object key) {
-		Entry e=getEntry(key);
-		return e==null?e:e.getValue();
+	public V get(Object key) {
+		Entry<K,V> e=getEntry(key);
+		return e==null?null:e.getValue();
 	}
 
+	@SuppressWarnings("unchecked")
 	public synchronized boolean containsKey(Object key) {
-		Object k = maskNull(key);
+		K k = maskNull((K)key);
 		int hash = hash(k);
 		int i = indexFor(hash, getTable().length());
-		Entry e = (Entry)getTable().get(i);
+		Entry<K,V> e = getTable().get(i);
 		while (e != null) {
 			if (e.getHash() == hash && eq(k, e.getKey()))
 				return true;
@@ -174,32 +174,34 @@ public class HashMap extends AbstractMap implements Map, Cloneable {
 		return false;
 	}
 
-	synchronized Entry getEntry(Object key) {
-		Object k = maskNull(key);
+	@SuppressWarnings("unchecked")
+	synchronized Entry<K,V> getEntry(Object key) {
+		K k = maskNull((K)key);
 		int hash = hash(k);
 		int i = indexFor(hash, getTable().length());
-		Entry e = (Entry)getTable().get(i);
+		Entry<K,V> e = getTable().get(i);
 		while (e != null && !(e.getHash() == hash && eq(k, e.getKey0())))
 			e=e.getNext();
 		return e;
 	}
 
-	public Object put(Object key, Object value) {
-		Entry e = getEntry(key);
+	public V put(K key, V value) {
+		Entry<K,V> e = getEntry(key);
 		if(e != null) {
-			Object oldValue = e.getValue();
+			V oldValue = e.getValue();
 			e.setValue(value);
 			e.recordAccess(this);
 			return oldValue;
 		} else return putMapping(key,value).getValue();
 	}
 
-	private void putForCreate(Object key, Object value) {
-		Object k = maskNull(key);
+	@SuppressWarnings("unchecked")
+	private void putForCreate(K key, V value) {
+		K k = maskNull(key);
 		int hash = hash(k);
 		int i = indexFor(hash, getTable().length());
 
-		for (Entry e = (Entry)getTable().get(i); e != null; e = e.getNext()) {
+		for (Entry<K,V> e = getTable().get(i); e != null; e = e.getNext()) {
 			if (e.getHash() == hash && eq(k, e.getKey())) {
 				e.setValue(value);
 				return;
@@ -209,38 +211,40 @@ public class HashMap extends AbstractMap implements Map, Cloneable {
 		createEntry(hash, k, value, i);
 	}
 
-	void putAllForCreate(Map m) {
-		for (Iterator i = m.entrySet().iterator(); i.hasNext(); ) {
-			Map.Entry e = (Map.Entry) i.next();
+	void putAllForCreate(Map<? extends K, ? extends V> m) {
+		for (Iterator<? extends Map.Entry<? extends K, ? extends V>> i = m.entrySet().iterator(); i.hasNext(); ) {
+			Map.Entry<? extends K, ? extends V> e = i.next();
 			putForCreate(e.getKey(), e.getValue());
 		}
 	}
 
+	@SuppressWarnings("rawtypes")
 	void resize(int newCapacity) {
-		Array oldTable = getTable();
+		Array<Entry> oldTable = getTable();
 		int oldCapacity = oldTable.length();
 		if (oldCapacity == MAXIMUM_CAPACITY) {
 			setThreshold(Integer.MAX_VALUE);
 			return;
 		}
 
-		Array newTable = new PersistentArray(getStore(), Entry.class, newCapacity);
+		Array<Entry> newTable = new PersistentArray<>(getStore(), Entry.class, newCapacity);
 		transfer(newTable);
 		setTable(newTable);
 		setThreshold((int)(newCapacity * getLoadFactor()));
 	}
 
-	void transfer(Array newTable) {
-		Array src = getTable();
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	void transfer(Array<Entry> newTable) {
+		Array<Entry> src = getTable();
 		int newCapacity = newTable.length();
 		for (int j = 0; j < src.length(); j++) {
-			Entry e = (Entry)src.get(j);
+			Entry<K,V> e = src.get(j);
 			if (e != null) {
 				src.set(j,null);
 				do {
-					Entry next = e.getNext();
+					Entry<K,V> next = e.getNext();
 					int i = indexFor(e.getHash(), newCapacity);  
-					e.setNext((Entry)newTable.get(i));
+					e.setNext(newTable.get(i));
 					newTable.set(i,e);
 					e = next;
 				} while (e != null);
@@ -264,26 +268,27 @@ public class HashMap extends AbstractMap implements Map, Cloneable {
 //				resize(newCapacity);
 //		}
 //
-//		for (Iterator i = m.entrySet().iterator(); i.hasNext(); ) {
-//			Map.Entry e = (Map.Entry) i.next();
+//		for (Iterator<Map.Entry<K,V>> i = m.entrySet().iterator(); i.hasNext(); ) {
+//			Map.Entry<K,V> e = i.next();
 //			put(e.getKey(), e.getValue());
 //		}
 //	}
   
-	public Object remove(Object key) {
-		return(removeEntryForKey(key));
+	public V remove(Object key) {
+		Entry<K,V> e = removeEntryForKey(key);
+		return (e == null ? null : e.getValue());
 	}
 
-	Entry removeEntryForKey(Object key) {
-		return (Entry)removeMapping(getEntry(key));
+	Entry<K,V> removeEntryForKey(Object key) {
+		return (Entry<K,V>)removeMapping(getEntry(key));
 	}
 
-	Map.Entry putMapping(Map.Entry entry) {
+	Map.Entry<K,V> putMapping(Map.Entry<K,V> entry) {
 		return putMapping(entry.getKey(),entry.getValue());
 	}
 
-	public synchronized Map.Entry putMapping(Object key, Object value) {
-		Object k = maskNull(key);
+	public synchronized Map.Entry<K,V> putMapping(K key, V value) {
+		K k = maskNull(key);
 		int hash = hash(k);
 		int i = indexFor(hash, getTable().length());
 		
@@ -291,15 +296,16 @@ public class HashMap extends AbstractMap implements Map, Cloneable {
 		return addEntry(hash, k, value, i);
 	}
 
-	synchronized Map.Entry removeMapping(Map.Entry entry) {
-		Object k = maskNull(entry.getKey());
+	@SuppressWarnings("unchecked")
+	synchronized Map.Entry<K,V> removeMapping(Map.Entry<K,V> entry) {
+		K k = maskNull(entry.getKey());
 		int hash = hash(k);
 		int i = indexFor(hash, getTable().length());
-		Entry prev = (Entry)getTable().get(i);
-		Entry e = prev;
+		Entry<K,V> prev = getTable().get(i);
+		Entry<K,V> e = prev;
 		
 		while (e != null) {
-			Entry next = e.getNext();
+			Entry<K,V> next = e.getNext();
 			if (e.getHash() == hash && e.equals(entry)) {
 				setModCount(getModCount()+1);
 				setSize(getSize()-1);
@@ -319,38 +325,40 @@ public class HashMap extends AbstractMap implements Map, Cloneable {
 
 //	public void clear() {
 //		setModCount(getModCount()+1);
-//		Array tab = getTable();
+//		Array<Entry> tab = getTable();
 //		for (int i = 0; i < tab.length(); i++) 
 //			tab.set(i,null);
 //		setSize(0);
 //	}
 
+	@SuppressWarnings("rawtypes")
 	public synchronized boolean containsValue(Object value) {
 		if (value == null)
 			return containsNullValue();
 		
-		Array tab = getTable();
+		Array<Entry> tab = getTable();
 		for (int i = 0; i < tab.length() ; i++)
-			for (Entry e = (Entry)tab.get(i) ; e != null ; e = e.getNext())
+			for (Entry e = tab.get(i) ; e != null ; e = e.getNext())
 				if (value.equals(e.getValue()))
 					return true;
 		return false;
 	}
 
+	@SuppressWarnings("rawtypes")
 	private boolean containsNullValue() {
-		Array tab = getTable();
+		Array<Entry> tab = getTable();
 		for (int i = 0; i < tab.length() ; i++)
-			for (Entry e = (Entry)tab.get(i) ; e != null ; e = e.getNext())
+			for (Entry e = tab.get(i) ; e != null ; e = e.getNext())
 				if (e.getValue() == null)
 					return true;
 		return false;
 	}
 
-	public static class Entry extends PersistentObject implements Map.Entry {
+	public static class Entry<K,V> extends PersistentObject implements Map.Entry<K,V> {
 		public Entry() {
 		}
 
-		public Entry(final Store store, final int h, final Object k, final Object v, final Entry n) {
+		public Entry(final Store store, final int h, final K k, final V v, final Entry<K,V> n) {
 			super(store);
 			setValue0(v);
 			setNext(n);
@@ -358,64 +366,66 @@ public class HashMap extends AbstractMap implements Map, Cloneable {
 			setHash(h);
 		}
 
-		Object NULL_KEY() {
-			return ((HashMapClass)getStore().get(HashMap.class)).NULL_KEY();
+		@SuppressWarnings("unchecked")
+		K NULL_KEY() {
+			return ((HashMapClass<K,V>)getStore().get(HashMap.class)).NULL_KEY();
 		}
 
-		Object getKey0() {
+		K getKey0() {
 			return get("key");
 		}
 
-		void setKey0(Object obj) {
+		void setKey0(K obj) {
 			set("key",obj);
 		}
 
-		Object getValue0() {
+		V getValue0() {
 			return get("value");
 		}
 
-		void setValue0(Object obj) {
+		void setValue0(V obj) {
 			set("value",obj);
 		}
 
 		public int getHash() {
-			return ((Integer)get("hash")).intValue();
+			return get("hash");
 		}
 
 		public void setHash(int n) {
-			set("hash",new Integer(n));
+			set("hash",n);
 		}
 
-		public Entry getNext() {
-			return (Entry)get("next");
+		public Entry<K,V> getNext() {
+			return get("next");
 		}
 
-		public void setNext(Entry entry) {
+		public void setNext(Entry<K,V> entry) {
 			set("next",entry);
 		}
 
-		Object unmaskNull(Object key) {
+		K unmaskNull(K key) {
 			return (key == NULL_KEY() ? null : key);
 		}
 
-		public Object getKey() {
+		public K getKey() {
 			return unmaskNull(getKey0());
 		}
 
-		public Object getValue() {
+		public V getValue() {
 			return getValue0();
 		}
 	
-		public Object setValue(Object newValue) {
-			Object oldValue = getValue0();
+		public V setValue(V newValue) {
+			V oldValue = getValue0();
 			setValue0(newValue);
 			return oldValue;
 		}
 
-		void recordAccess(HashMap m) {}
+		void recordAccess(HashMap<K,V> m) {}
 
-		void recordRemoval(HashMap m) {}
+		void recordRemoval(HashMap<K,V> m) {}
 
+		@SuppressWarnings("rawtypes")
 		public boolean equals(PersistentObject o) {
 			if (!(o instanceof Map.Entry))
 				return false;
@@ -441,42 +451,45 @@ public class HashMap extends AbstractMap implements Map, Cloneable {
 		}
 	}
 
-	Entry addEntry(int hash, Object key, Object value, int bucketIndex) {
-		Entry entry=createEntry(hash,key,value,bucketIndex);
+	Entry<K,V> addEntry(int hash, K key, V value, int bucketIndex) {
+		Entry<K,V> entry=createEntry(hash,key,value,bucketIndex);
 		if (getSize() >= getThreshold()) 
 			resize(2 * getTable().length());
 		return entry;
 	}
 
-	Entry createEntry(int hash, Object key, Object value, int bucketIndex) {
-		Entry entry;
-		getTable().set(bucketIndex,entry=new Entry(getStore(), hash, key, value, (Entry)getTable().get(bucketIndex)));
+	@SuppressWarnings("unchecked")
+	Entry<K,V> createEntry(int hash, K key, V value, int bucketIndex) {
+		Entry<K,V> entry;
+		getTable().set(bucketIndex,entry=new Entry<>(getStore(), hash, key, value, getTable().get(bucketIndex)));
 		setSize(getSize()+1);
 		return entry;
 	}
 
-	synchronized Entry nextEntry(Entry entry) {
-		Entry n;
-		Array t = getTable();
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	synchronized Entry<K,V> nextEntry(Entry<K,V> entry) {
+		Entry<K,V> n;
+		Array<Entry> t = getTable();
 		if(entry == null) {
 			n = entry;
 			int i = t.length();
 			if (getSize() != 0) {
-				while (n == null && i > 0) n = (Entry)t.get(--i);
+				while (n == null && i > 0) n = t.get(--i);
 			}
 		} else {
 			n = entry.getNext();
 			Object k = maskNull(entry.getKey0());
 			int hash = hash(k);
 			int i = indexFor(hash, t.length());
-			while (n == null && i > 0) n = (Entry)t.get(--i);
+			while (n == null && i > 0) n = t.get(--i);
 		}
 		return n;
 	}
 
+	@SuppressWarnings("unchecked")
 	public synchronized PersistentObject clone() {
-		HashMap result = (HashMap)super.clone();
-		result.setTable(new PersistentArray(getStore(), Entry.class, getTable().length()));
+		HashMap<K,V> result = (HashMap<K,V>)super.clone();
+		result.setTable(new PersistentArray<>(getStore(), Entry.class, getTable().length()));
 		result.setModCount(0);
 		result.setSize(0);
 		result.init();
@@ -489,10 +502,10 @@ public class HashMap extends AbstractMap implements Map, Cloneable {
 		return getModCount();
 	}
 
-	private abstract class HashIterator implements Iterator {
-		Entry next;				  // next entry to return
+	private abstract class HashIterator<E> implements Iterator<E> {
+		Entry<K,V> next;			// next entry to return
 		int expectedModCount;		// For fast-fail 
-		Entry current;			   // current entry
+		Entry<K,V> current;			// current entry
 
 		HashIterator() {
 			expectedModCount = modCount();
@@ -503,10 +516,10 @@ public class HashMap extends AbstractMap implements Map, Cloneable {
 			return next != null;
 		}
 
-		Entry nextEntry() { 
+		Entry<K,V> nextEntry() { 
 			if (modCount() != expectedModCount)
 				throw new ConcurrentModificationException();
-			Entry e = next;
+			Entry<K,V> e = next;
 			if (e == null) 
 				throw new NoSuchElementException();
 
@@ -527,46 +540,46 @@ public class HashMap extends AbstractMap implements Map, Cloneable {
 
 	}
 
-	private class ValueIterator extends HashIterator {
-		public Object next() {
+	private class ValueIterator extends HashIterator<V> {
+		public V next() {
 			return nextEntry().getValue();
 		}
 	}
 
-	private class KeyIterator extends HashIterator {
-		public Object next() {
+	private class KeyIterator extends HashIterator<K> {
+		public K next() {
 			return nextEntry().getKey();
 		}
 	}
 
-	private class EntryIterator extends HashIterator {
-		public Object next() {
+	private class EntryIterator extends HashIterator<Map.Entry<K,V>> {
+		public Map.Entry<K,V> next() {
 			return nextEntry();
 		}
 	}
 
 	// Subclass overrides these to alter behavior of views' iterator() method
-	Iterator newKeyIterator()   {
+	Iterator<K> newKeyIterator()   {
 		return new KeyIterator();
 	}
-	Iterator newValueIterator()   {
+	Iterator<V> newValueIterator()   {
 		return new ValueIterator();
 	}
-	Iterator newEntryIterator()   {
+	Iterator<Map.Entry<K,V>> newEntryIterator()   {
 		return new EntryIterator();
 	}
 
 	// Views
 
-	private transient Set entrySet = null;
+	private transient Set<Map.Entry<K,V>> entrySet = null;
 
-	public Set keySet() {
-		Set ks = keySet;
+	public Set<K> keySet() {
+		Set<K> ks = keySet;
 		return (ks != null ? ks : (keySet = new KeySet()));
 	}
 
-	private class KeySet extends java.util.AbstractSet {
-		public Iterator iterator() {
+	private class KeySet extends java.util.AbstractSet<K> {
+		public Iterator<K> iterator() {
 			return newKeyIterator();
 		}
 		public int size() {
@@ -583,13 +596,13 @@ public class HashMap extends AbstractMap implements Map, Cloneable {
 //		}
 	}
 
-	public Collection values() {
-		Collection vs = values;
+	public Collection<V> values() {
+		Collection<V> vs = values;
 		return (vs != null ? vs : (values = new Values()));
 	}
 
-	private class Values extends java.util.AbstractCollection {
-		public Iterator iterator() {
+	private class Values extends java.util.AbstractCollection<V> {
+		public Iterator<V> iterator() {
 			return newValueIterator();
 		}
 		public int size() {
@@ -603,27 +616,29 @@ public class HashMap extends AbstractMap implements Map, Cloneable {
 //		}
 	}
 
-	public Set entrySet() {
-		Set es = entrySet;
+	public Set<Map.Entry<K,V>> entrySet() {
+		Set<Map.Entry<K,V>> es = entrySet;
 		return (es != null ? es : (entrySet = new EntrySet()));
 	}
 
-	private class EntrySet extends java.util.AbstractSet {
-		public Iterator iterator() {
+	private class EntrySet extends java.util.AbstractSet<Map.Entry<K,V>> {
+		public Iterator<Map.Entry<K,V>> iterator() {
 			return newEntryIterator();
 		}
+		@SuppressWarnings("unchecked")
 		public boolean contains(Object o) {
 			if (!(o instanceof Map.Entry))
 				return false;
-			Map.Entry e = (Map.Entry)o;
-			Entry candidate = getEntry(e.getKey());
+			Map.Entry<K,V> e = (Map.Entry<K,V>)o;
+			Entry<K,V> candidate = getEntry(e.getKey());
 			return candidate != null && candidate.equals(e);
 		}
+		@SuppressWarnings("unchecked")
 		public boolean remove(Object o) {
 			if (!(o instanceof Map.Entry))
 				return false;
 			
-			Map.Entry entry = (Map.Entry)o;
+			Map.Entry<K,V> entry = (Map.Entry<K,V>)o;
 			return removeMapping(entry) != null;
 		}
 		public int size() {
