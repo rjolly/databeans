@@ -1,6 +1,5 @@
 import java.text.NumberFormat;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.SortedSet;
 import persistence.Store;
 import persistence.util.ArrayList;
@@ -159,8 +158,7 @@ public class Sample {
 		average.setName("");
 		average.setSalary(24878.);
 
-		for(Iterator<Employee> it=employees.iterator();it.hasNext();) {
-			Employee e=it.next();
+		for(final Employee e : employees) {
 			if(e.getSalary()<average.getSalary())
 				System.out.println(e+" "+format.format(e.getSalary()));
 		}
@@ -170,8 +168,7 @@ public class Sample {
 
 		System.out.println();
 
-		for(Iterator<Employee> it=bySalary.tailSet(average).iterator();it.hasNext();) {
-			Employee e=it.next();
+		for(final Employee e : bySalary.tailSet(average)) {
 			System.out.println(e+" "+format.format(e.getSalary()));
 		}
 

@@ -36,11 +36,11 @@ public class PersistentObject {
 		return c;
 	}
 
-	public final <T> T get(String name) {
+	protected final <T> T get(String name) {
 		return get(clazz.getField(name));
 	}
 
-	public final <T> T set(String name, T value) {
+	protected final <T> T set(String name, T value) {
 		return set(clazz.getField(name),value);
 	}
 

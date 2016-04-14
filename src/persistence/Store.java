@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.util.Iterator;
@@ -168,23 +169,19 @@ public class Store implements Collector {
 		decRefCount(obj.base,true);
 	}
 
-	void inport(String name) {
-		try {
-			XMLDecoder d = new XMLDecoder(this,new BufferedInputStream(new FileInputStream(name)));
+	public void inport(String name) throws IOException {
+		try (final InputStream is = new FileInputStream(name)) {
+			XMLDecoder d = new XMLDecoder(this,new BufferedInputStream(is));
 			system.setRoot(d.readObject());
 			d.close();
-		} catch (IOException e) {
-			throw new RuntimeException(e);
 		}
 	}
 
-	void export(String name) {
-		try {
-			XMLEncoder e = new XMLEncoder(this,new BufferedOutputStream(new FileOutputStream(name)));
+	public void export(String name) throws IOException {
+		try (final OutputStream os = new FileOutputStream(name)) {
+			XMLEncoder e = new XMLEncoder(this,new BufferedOutputStream(os));
 			e.writeObject(system.getRoot());
 			e.close();
-		} catch (IOException e) {
-			throw new RuntimeException(e);
 		}
 	}
 
@@ -210,11 +207,11 @@ public class Store implements Collector {
 		return refCount(clazz.base);
 	}
 
-	long allocatedSpace() {
+	public long allocatedSpace() {
 		return heap.allocatedSpace();
 	}
 
-	long maxSpace() {
+	public long maxSpace() {
 		return heap.maxSpace();
 	}
 
