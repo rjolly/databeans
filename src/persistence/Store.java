@@ -4,6 +4,7 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.Closeable;
 import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -26,7 +27,7 @@ import persistence.storage.FileHeap;
 import persistence.storage.Heap;
 import persistence.storage.MemoryModel;
 
-public class Store implements Collector {
+public class Store implements Collector, Closeable {
 	final Heap heap;
 	final Map<Long, Reference<PersistentObject>> cache=new WeakHashMap<>();
 	PersistentSystem system;
@@ -185,18 +186,6 @@ public class Store implements Collector {
 		}
 	}
 
-	void shutdown() {
-		close();
-		System.gc();
-	}
-
-	void userGc() {
-		gc();
-		synchronized(classes) {
-			updateClasses();
-		}
-	}
-
 	void updateClasses() {
 		for(Iterator<PersistentClass> it=classes.values().iterator();it.hasNext();) {
 			if(refCount(it.next())==1) it.remove();
@@ -217,7 +206,11 @@ public class Store implements Collector {
 
 	public synchronized void close() {
 		if(closed) return;
-		if(!readOnly) heap.mount(false);
+		try {
+			if(!readOnly) heap.mount(false);
+		} finally {
+			heap.close();
+		}
 		closed=true;
 	}
 
@@ -228,6 +221,9 @@ public class Store implements Collector {
 		mark();
 		mark(boot);
 		sweep();
+		synchronized(classes) {
+			updateClasses();
+		}
 	}
 
 	void mark() {
@@ -479,6 +475,9 @@ public class Store implements Collector {
 		}
 
 		public void mount(boolean n) {
+		}
+
+		public void close() {
 		}
 
 		public long alloc(int size) {

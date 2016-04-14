@@ -7,6 +7,7 @@ public interface Heap {
 	void setBoot(long ptr);
 	boolean mounted();
 	void mount(boolean n);
+	void close();
 	long alloc(int size);
 	long realloc(long ptr, int size);
 	void free(long ptr);

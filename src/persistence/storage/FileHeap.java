@@ -59,6 +59,14 @@ public class FileHeap extends RandomAccessFile implements Heap {
 		MemoryModel.model.writePointer(this,3*Long_SIZE,n?1:0);
 	}
 
+	public void close() {
+		try {
+			super.close();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	public long alloc(int size) {
 		long s;
 		Chunk c;
