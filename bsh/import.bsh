@@ -1,3 +1,0 @@
-import persistence.*;
-conn=Connections.getAdminConnection("//localhost/store");
-conn.inport(bsh.args.length>0?bsh.args[0]:"data.xml");
