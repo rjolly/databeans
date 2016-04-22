@@ -2,7 +2,7 @@ package persistence;
 
 import java.util.Iterator;
 
-public class PersistentObject {
+public class PersistentObject implements Cloneable {
 	transient PersistentClass clazz;
 	transient Store store;
 	transient Long base;
@@ -63,8 +63,9 @@ public class PersistentObject {
 		return clazz.name()+"@"+Long.toHexString(base);
 	}
 
-	public synchronized PersistentObject clone() {
-		final PersistentObject obj = store.create(getClass());
+	public PersistentObject clone() throws CloneNotSupportedException {
+		final PersistentObject obj = (PersistentObject)super.clone();
+		store.create(obj);
 		final Iterator<Field> t = clazz.fieldIterator();
 		while (t.hasNext()) {
 			final Field field = (Field)t.next();

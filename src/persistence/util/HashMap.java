@@ -18,7 +18,7 @@ import persistence.PersistentClass;
 import persistence.PersistentObject;
 import persistence.Store;
 
-public class HashMap<K,V> extends AbstractMap<K,V> implements Map<K,V> {
+public class HashMap<K,V> extends AbstractMap<K,V> implements Map<K,V>, Cloneable {
 	static final int DEFAULT_INITIAL_CAPACITY = 16;
 	static final int MAXIMUM_CAPACITY = 1 << 30;
 	static final float DEFAULT_LOAD_FACTOR = 0.75f;
@@ -488,13 +488,17 @@ public class HashMap<K,V> extends AbstractMap<K,V> implements Map<K,V> {
 
 	@SuppressWarnings("unchecked")
 	public synchronized PersistentObject clone() {
-		HashMap<K,V> result = (HashMap<K,V>)super.clone();
+		HashMap<K, V> result;
+		try {
+			result = (HashMap<K,V>)super.clone();
+		} catch (CloneNotSupportedException e) {
+			throw new InternalError();
+		}
 		result.setTable(new PersistentArray<>(getStore(), Entry.class, getTable().length()));
 		result.setModCount(0);
 		result.setSize(0);
 		result.init();
 		result.putAllForCreate(HashMap.this);
-		
 		return result;
 	}
 

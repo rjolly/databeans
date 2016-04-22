@@ -17,7 +17,7 @@ import persistence.PersistentObject;
 import persistence.Secondary;
 import persistence.Store;
 
-public class TreeSet<E> extends AbstractSet<E> implements SortedSet<E> {
+public class TreeSet<E> extends AbstractSet<E> implements SortedSet<E>, Cloneable {
 	public TreeSet() {
 	}
 
@@ -139,9 +139,14 @@ public class TreeSet<E> extends AbstractSet<E> implements SortedSet<E> {
 
 	@SuppressWarnings("unchecked")
 	public synchronized PersistentObject clone() {
-		TreeSet<E> clone = (TreeSet<E>)super.clone();
-		clone.setM(new TreeMap<>(getStore(), getM()));
-		return clone;
+			TreeSet<E> clone;
+			try {
+				clone = (TreeSet<E>)super.clone();
+			} catch (final CloneNotSupportedException e) {
+				throw new InternalError();
+			}
+			clone.setM(new TreeMap<>(getStore(), getM()));
+			return clone;
 	}
 }
 

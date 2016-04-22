@@ -106,14 +106,6 @@ public class Store implements Collector, Closeable {
 		system.setRoot(obj);
 	}
 
-	public PersistentObject create(final Class<? extends PersistentObject> clazz) {
-		try {
-			return clazz.getConstructor(Store.class).newInstance(this);
-		} catch (final Exception ex) {
-			throw new RuntimeException(ex);
-		}
-	}
-
 	synchronized void create(final PersistentObject obj) {
 		if(readOnly) throw new RuntimeException("read only");
 		final PersistentClass clazz = obj.clazz;

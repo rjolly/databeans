@@ -13,7 +13,7 @@ import persistence.PersistentClass;
 import persistence.PersistentObject;
 import persistence.Store;
 
-public class HashSet<E> extends AbstractSet<E> implements Set<E> {
+public class HashSet<E> extends AbstractSet<E> implements Set<E>, Cloneable {
 	public HashSet() {
 	}
 
@@ -93,8 +93,12 @@ public class HashSet<E> extends AbstractSet<E> implements Set<E> {
 
 	@SuppressWarnings("unchecked")
 	public synchronized PersistentObject clone() {
-		HashSet<E> newSet = (HashSet<E>)super.clone();
-		newSet.setMap((HashMap<E, Object>)getMap().clone());
-		return newSet;
+		try {
+			HashSet<E> newSet = (HashSet<E>)super.clone();
+			newSet.setMap((HashMap<E, Object>)getMap().clone());
+			return newSet;
+		} catch (final CloneNotSupportedException e) {
+			throw new InternalError();
+		}
 	}
 }

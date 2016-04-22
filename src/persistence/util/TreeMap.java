@@ -18,7 +18,7 @@ import persistence.PersistentClass;
 import persistence.PersistentObject;
 import persistence.Store;
 
-public class TreeMap<K,V> extends AbstractMap<K,V> implements SortedMap<K,V> {
+public class TreeMap<K,V> extends AbstractMap<K,V> implements SortedMap<K,V>, Cloneable {
 	public TreeMap() {
 	}
 
@@ -295,7 +295,12 @@ public class TreeMap<K,V> extends AbstractMap<K,V> implements SortedMap<K,V> {
 
 	@SuppressWarnings("unchecked")
 	public synchronized PersistentObject clone() {
-		TreeMap<K,V> clone = (TreeMap<K,V>)super.clone();
+		TreeMap<K, V> clone;
+		try {
+			clone = (TreeMap<K,V>)super.clone();
+		} catch (final CloneNotSupportedException e) {
+			throw new InternalError();
+		}
 
 		// Put clone into "virgin" state (except for comparator)
 		clone.setRoot(null);

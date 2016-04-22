@@ -113,7 +113,7 @@ public class Statement {
 				return new PersistentArray(store, ReflectionUtils.componentTypeFor(((Character)arguments[0]).charValue()), ((Integer)arguments[1]).intValue());
 			}
 			if (methodName == "newInstance" && PersistentObject.class.isAssignableFrom((Class)target)) {
-				return store.create((Class)target);
+				return ((Class)target).getConstructor(Store.class).newInstance(store);
 			}
 			if (methodName == "newInstance" && arguments.length != 0) {
 				// The Character class, as of 1.4, does not have a constructor

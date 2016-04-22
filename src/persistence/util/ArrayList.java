@@ -14,7 +14,7 @@ import persistence.PersistentArray;
 import persistence.PersistentObject;
 import persistence.Store;
 
-public class ArrayList<E> extends AbstractList<E> implements List<E>, RandomAccess {
+public class ArrayList<E> extends AbstractList<E> implements List<E>, RandomAccess, Cloneable {
 	public ArrayList() {
 	}
 
@@ -123,11 +123,15 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, RandomAcce
 
 	@SuppressWarnings("unchecked")
 	public synchronized PersistentObject clone() {
-		ArrayList<E> v = (ArrayList<E>)super.clone();
-		v.setElementData((Array<E>)new PersistentArray<>(getStore(), Object.class, getSize()));
-		PersistentArray.copy(getElementData(), 0, v.getElementData(), 0, getSize());
-		v.setModCount(0);
-		return v;
+		try {
+			ArrayList<E> v = (ArrayList<E>)super.clone();
+			v.setElementData((Array<E>)new PersistentArray<>(getStore(), Object.class, getSize()));
+			PersistentArray.copy(getElementData(), 0, v.getElementData(), 0, getSize());
+			v.setModCount(0);
+			return v;
+		} catch (final CloneNotSupportedException e) {
+			throw new InternalError();
+		}
 	}
 
 	public synchronized Object[] toArray() {
