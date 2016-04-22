@@ -7,10 +7,9 @@ public final class HashMapClass<K, V> extends PersistentClass {
 	public HashMapClass() {
 	}
 
-	@SuppressWarnings("unchecked")
 	HashMapClass(final PersistentObject obj) {
 		super(obj);
-		setNULL_KEY((K)new PersistentObject(getStore()));
+		set("NULL_KEY", new PersistentObject(getStore()));
 	}
 
 	K NULL_KEY() {
@@ -19,9 +18,5 @@ public final class HashMapClass<K, V> extends PersistentClass {
 
 	public K getNULL_KEY() {
 		return get("NULL_KEY");
-	}
-
-	private void setNULL_KEY(K obj) {
-		set("NULL_KEY",obj);
 	}
 }

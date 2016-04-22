@@ -9,7 +9,7 @@ public final class HashSetClass extends PersistentClass {
 
 	HashSetClass(final PersistentObject obj) {
 		super(obj);
-		setPRESENT(new PersistentObject(getStore()));
+		set("PRESENT", new PersistentObject(getStore()));
 	}
 
 	// Dummy value to associate with an Object in the backing Map
@@ -19,9 +19,5 @@ public final class HashSetClass extends PersistentClass {
 
 	public PersistentObject getPRESENT() {
 		return (PersistentObject)get("PRESENT");
-	}
-
-	private void setPRESENT(PersistentObject obj) {
-		set("PRESENT",obj);
 	}
 }
