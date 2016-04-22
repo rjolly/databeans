@@ -9,6 +9,7 @@ package persistence.util;
 import java.util.Collection;
 import java.util.Iterator;
 import persistence.PersistentObject;
+import persistence.Secondary;
 import persistence.Store;
 
 public abstract class AbstractCollection<E> extends PersistentObject implements Collection<E> {
@@ -19,16 +20,13 @@ public abstract class AbstractCollection<E> extends PersistentObject implements 
 		super(store);
 	}
 
-	protected String[] secondary() {
-		return concat(super.secondary(), new String[] {"empty"});
-	}
-
 	// Query Operations
 
 	public abstract Iterator<E> iterator();
 
 	public abstract int size();
 
+	@Secondary
 	public boolean isEmpty() {
 		return size() == 0;
 	}

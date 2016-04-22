@@ -11,6 +11,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import persistence.PersistentObject;
+import persistence.Secondary;
 import persistence.Store;
 
 public abstract class AbstractMap<K,V> extends PersistentObject implements Map<K,V> {
@@ -21,16 +22,13 @@ public abstract class AbstractMap<K,V> extends PersistentObject implements Map<K
 		super(store);
 	}
 
-	protected String[] secondary() {
-		return concat(super.secondary(), new String[] {"empty"});
-	}
-
 	// Query Operations
 
 	public int size() {
 		return entrySet().size();
 	}
 
+	@Secondary
 	public boolean isEmpty() {
 		return size() == 0;
 	}

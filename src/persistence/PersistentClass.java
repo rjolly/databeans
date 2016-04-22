@@ -5,10 +5,8 @@ import java.beans.IndexedPropertyDescriptor;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 public class PersistentClass extends PersistentObject {
@@ -20,20 +18,19 @@ public class PersistentClass extends PersistentObject {
 	}
 
 	public PersistentClass(final PersistentObject obj) {
-		this(obj.store, obj.getClass(), obj.secondary());
+		this(obj.store, obj.getClass());
 	}
 
-	PersistentClass(final Store store, final Class<? extends PersistentObject> clazz, final String secondary[]) {
+	PersistentClass(final Store store, final Class<? extends PersistentObject> clazz) {
 		super(store, clazz == PersistentClass.class?new ClassClass():null);
-		init(clazz, secondary);
+		init(clazz);
 		if (clazz == PersistentClass.class) {
 			setup();
 			setClass(this);
 		}
 	}
 
-	protected void init(Class<? extends PersistentObject> clazz, final String secondary[]) {
-		final List<String> s = Arrays.asList(secondary);
+	protected void init(Class<? extends PersistentObject> clazz) {
 		BeanInfo info;
 		try {
 			info=Introspector.getBeanInfo(clazz);
@@ -46,7 +43,8 @@ public class PersistentClass extends PersistentObject {
 		for(int i=0;i<desc.length;i++) {
 			PropertyDescriptor d=desc[i];
 			if(d instanceof IndexedPropertyDescriptor) continue;
-			if(s.contains(d.getName())) continue;
+			if(d.getName().equals("class")) continue;
+			if(d.getReadMethod().isAnnotationPresent(Secondary.class)) continue;
 			buffer.append(first?"":";").append(new Field(d));
 			first=false;
 		}

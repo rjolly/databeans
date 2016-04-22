@@ -14,7 +14,7 @@ public final class ArrayClass<C> extends PersistentClass {
 	}
 
 	ArrayClass(final Store store, char typeCode, int length) {
-		super(store, PersistentArray.class, secondary);
+		super(store, PersistentArray.class);
 		setTypeCode(typeCode);
 		setLength(length);
 	}

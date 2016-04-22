@@ -4,7 +4,7 @@ final class ClassClass extends PersistentClass {
 	transient String fields;
 
 	ClassClass() {
-		init(PersistentClass.class, secondary);
+		init(PersistentClass.class);
 	}
 
 	public String getName() {

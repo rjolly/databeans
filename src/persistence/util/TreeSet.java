@@ -14,6 +14,7 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 import persistence.PersistentClass;
 import persistence.PersistentObject;
+import persistence.Secondary;
 import persistence.Store;
 
 public class TreeSet<E> extends AbstractSet<E> implements SortedSet<E> {
@@ -71,6 +72,7 @@ public class TreeSet<E> extends AbstractSet<E> implements SortedSet<E> {
 		return m().size();
 	}
 
+	@Secondary
 	public boolean isEmpty() {
 		return m().isEmpty();
 	}

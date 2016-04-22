@@ -3,7 +3,6 @@ package persistence;
 import java.util.Iterator;
 
 public class PersistentObject {
-	static final String secondary[] = new String[] {"class", "store"};
 	transient PersistentClass clazz;
 	transient Store store;
 	transient Long base;
@@ -25,17 +24,6 @@ public class PersistentObject {
 		return new PersistentClass(this);
 	}
 
-	protected String[] secondary() {
-		return secondary;
-	}
-
-	protected static String[] concat(final String a[], final String b[]) {
-		final String c[] = new String[a.length + b.length];
-		System.arraycopy(a, 0, c, 0, a.length);
-		System.arraycopy(b, 0, c, a.length, b.length);
-		return c;
-	}
-
 	protected final <T> T get(String name) {
 		return get(clazz.getField(name));
 	}
@@ -55,7 +43,7 @@ public class PersistentObject {
 		return obj;
 	}
 
-	public Store getStore() {
+	protected final Store getStore() {
 		return store;
 	}
 
