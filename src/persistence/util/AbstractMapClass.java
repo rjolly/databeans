@@ -7,7 +7,7 @@ public final class AbstractMapClass<K,V> extends PersistentClass {
 	public AbstractMapClass() {
 	}
 
-	AbstractMapClass(final PersistentObject obj) {
+	public AbstractMapClass(final PersistentObject obj) {
 		super(obj);
 		set("NULL", new PersistentObject(getStore()));
 	}

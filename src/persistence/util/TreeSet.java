@@ -12,11 +12,12 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
-import persistence.PersistentClass;
 import persistence.PersistentObject;
 import persistence.Secondary;
 import persistence.Store;
+import persistence.annotation.PersistentClass;
 
+@PersistentClass(TreeSetClass.class)
 public class TreeSet<E> extends AbstractSet<E> implements SortedSet<E>, Cloneable {
 	public TreeSet() {
 	}
@@ -42,10 +43,6 @@ public class TreeSet<E> extends AbstractSet<E> implements SortedSet<E>, Cloneabl
 	public TreeSet(final Store store, SortedSet<E> s) {
 		this(store, s.comparator());
 		addAll(s);
-	}
-
-	protected PersistentClass createClass() {
-		return getClass() == TreeSet.class?new TreeSetClass(this):super.createClass();
 	}
 
 	SortedMap<E,Object> m() {

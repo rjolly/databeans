@@ -14,10 +14,6 @@ public final class PersistentArray<C> extends PersistentObject implements Array<
 		super(store, new ArrayClass<>(store, componentType, length));
 	}
 
-	protected PersistentClass createClass() {
-		throw new UnsupportedOperationException();
-	}
-
 	@SuppressWarnings("unchecked")
 	private ArrayClass<C> arrayClass() {
 		return (ArrayClass<C>)clazz;

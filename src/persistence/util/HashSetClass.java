@@ -7,7 +7,7 @@ public final class HashSetClass extends PersistentClass {
 	public HashSetClass() {
 	}
 
-	HashSetClass(final PersistentObject obj) {
+	public HashSetClass(final PersistentObject obj) {
 		super(obj);
 		set("PRESENT", new PersistentObject(getStore()));
 	}

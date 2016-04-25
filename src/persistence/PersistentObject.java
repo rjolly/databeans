@@ -20,8 +20,14 @@ public class PersistentObject implements Cloneable {
 		store.create(this);
 	}
 
-	protected PersistentClass createClass() {
-		return new PersistentClass(this);
+	final PersistentClass createClass() {
+		final persistence.annotation.PersistentClass ann = getClass().getAnnotation(persistence.annotation.PersistentClass.class);
+		final Class<? extends PersistentClass> cls = ann == null?PersistentClass.class:ann.value();
+		try {
+			return cls.getConstructor(PersistentObject.class).newInstance(this);
+		} catch (final Exception e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	protected final <T> T get(String name) {

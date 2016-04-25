@@ -14,10 +14,11 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.SortedMap;
-import persistence.PersistentClass;
 import persistence.PersistentObject;
 import persistence.Store;
+import persistence.annotation.PersistentClass;
 
+@PersistentClass(AbstractMapClass.class)
 public class TreeMap<K,V> extends AbstractMap<K,V> implements SortedMap<K,V>, Cloneable {
 	public TreeMap() {
 	}
@@ -44,10 +45,6 @@ public class TreeMap<K,V> extends AbstractMap<K,V> implements SortedMap<K,V>, Cl
 		} catch (java.io.IOException cannotHappen) {
 		} catch (ClassNotFoundException cannotHappen) {
 		}
-	}
-
-	protected PersistentClass createClass() {
-		return getClass() == TreeMap.class?new AbstractMapClass<>(this):super.createClass();
 	}
 
 	public Comparator<? super K> getComparator() {

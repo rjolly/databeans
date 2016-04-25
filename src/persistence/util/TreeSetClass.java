@@ -7,7 +7,7 @@ public final class TreeSetClass extends PersistentClass {
 	public TreeSetClass() {
 	}
 
-	TreeSetClass(final PersistentObject obj) {
+	public TreeSetClass(final PersistentObject obj) {
 		super(obj);
 		set("PRESENT", new PersistentObject(getStore()));
 	}

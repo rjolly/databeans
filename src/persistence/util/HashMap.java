@@ -14,10 +14,11 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import persistence.Array;
 import persistence.PersistentArray;
-import persistence.PersistentClass;
 import persistence.PersistentObject;
 import persistence.Store;
+import persistence.annotation.PersistentClass;
 
+@PersistentClass(HashMapClass.class)
 public class HashMap<K,V> extends AbstractMap<K,V> implements Map<K,V>, Cloneable {
 	static final int DEFAULT_INITIAL_CAPACITY = 16;
 	static final int MAXIMUM_CAPACITY = 1 << 30;
@@ -66,10 +67,6 @@ public class HashMap<K,V> extends AbstractMap<K,V> implements Map<K,V>, Cloneabl
 	public HashMap(final Store store, final Map<? extends K, ? extends V> m) {
 		this(store, Math.max((int) (m.size() / DEFAULT_LOAD_FACTOR) + 1, DEFAULT_INITIAL_CAPACITY), DEFAULT_LOAD_FACTOR);
 		putAllForCreate(m);
-	}
-
-	protected PersistentClass createClass() {
-		return getClass() == HashMap.class?new HashMapClass<>(this):super.createClass();
 	}
 
 	@SuppressWarnings("rawtypes")

@@ -9,10 +9,11 @@ package persistence.util;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
-import persistence.PersistentClass;
 import persistence.PersistentObject;
 import persistence.Store;
+import persistence.annotation.PersistentClass;
 
+@PersistentClass(HashSetClass.class)
 public class HashSet<E> extends AbstractSet<E> implements Set<E>, Cloneable {
 	public HashSet() {
 	}
@@ -41,10 +42,6 @@ public class HashSet<E> extends AbstractSet<E> implements Set<E>, Cloneable {
 	HashSet(final Store store, HashMap<E,Object> map) {
 		super(store);
 		setMap(map);
-	}
-
-	protected PersistentClass createClass() {
-		return getClass() == HashSet.class?new HashSetClass(this):super.createClass();
 	}
 
 	HashMap<E,Object> map() {

@@ -7,7 +7,7 @@ public final class HashMapClass<K, V> extends PersistentClass {
 	public HashMapClass() {
 	}
 
-	HashMapClass(final PersistentObject obj) {
+	public HashMapClass(final PersistentObject obj) {
 		super(obj);
 		set("NULL_KEY", new PersistentObject(getStore()));
 	}
