@@ -9,6 +9,7 @@ package persistence.beans;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Constructor;
 
 import java.util.Vector;
 import java.util.Hashtable;
@@ -19,6 +20,7 @@ import java.beans.BeanInfo;
 import java.beans.PropertyDescriptor;
 import java.beans.EventHandler;
 import java.beans.Introspector;
+import java.beans.ConstructorProperties;
 
 import persistence.PersistentArray;
 import persistence.Store;
@@ -1075,12 +1077,50 @@ class MetaData {
 				pd = (PersistenceDelegate)c.getConstructor(new Class[] {Store.class}).newInstance(new Object[] {store});
 				internalPersistenceDelegates.put(typeName, pd);
 			} catch (ClassNotFoundException e) {
+				String[] properties = getConstructorProperties(type);
+				if (properties != null) {
+					pd = new DefaultPersistenceDelegate(store, properties);
+					internalPersistenceDelegates.put(typeName, pd);
+				}
 			} catch (Exception e) {
 				System.err.println("Internal error: " + e);
 			}
 		}
 
 		return (pd != null) ? pd : defaultPersistenceDelegate;
+	}
+
+	private static String[] getConstructorProperties(Class type) {
+		String[] names = null;
+		int length = 0;
+		for (Constructor<?> constructor : type.getConstructors()) {
+			String[] value = getAnnotationValue(constructor);
+			if ((value != null) && (length < value.length) && isValid(constructor, value)) {
+				names = value;
+				length = value.length;
+			}
+		}
+		return names;
+	}
+
+	private static String[] getAnnotationValue(Constructor<?> constructor) {
+		ConstructorProperties annotation = ((ConstructorProperties) constructor.getAnnotation(ConstructorProperties.class));
+		return (annotation != null)
+				? annotation.value()
+				: null;
+	}
+
+	private static boolean isValid(Constructor<?> constructor, String[] names) {
+		Class[] parameters = constructor.getParameterTypes();
+		if (1 + names.length != parameters.length) {
+			return false;
+		}
+		for (String name : names) {
+			if (name == null) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	// Wrapper for Introspector.getBeanInfo to handle exception handling.

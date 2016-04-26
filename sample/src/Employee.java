@@ -1,3 +1,4 @@
+import java.beans.ConstructorProperties;
 import persistence.PersistentObject;
 import persistence.Store;
 
@@ -5,20 +6,18 @@ public class Employee extends PersistentObject implements Comparable<Employee> {
 	public Employee() {
 	}
 
-	public Employee(final Store store) {
+	@ConstructorProperties({"name"})
+	public Employee(final Store store, final String name) {
 		super(store);
+		set("name", name);
 	}
 
 	public String getName() {
-		return (String)get("name");
-	}
-
-	public void setName(String s) {
-		set("name",s);
+		return get("name");
 	}
 
 	public Department getDepartment() {
-		return (Department)get("department");
+		return get("department");
 	}
 
 	public void setDepartment(Department d) {
@@ -26,7 +25,7 @@ public class Employee extends PersistentObject implements Comparable<Employee> {
 	}
 
 	public String getLocation() {
-		return (String)get("location");
+		return get("location");
 	}
 
 	public void setLocation(String s) {
@@ -34,15 +33,15 @@ public class Employee extends PersistentObject implements Comparable<Employee> {
 	}
 
 	public double getSalary() {
-		return ((Double)get("salary")).doubleValue();
+		return get("salary");
 	}
 
 	public void setSalary(double d) {
-		set("salary",new Double(d));
+		set("salary",d);
 	}
 
 	public Employee getManager() {
-		return (Employee)get("manager");
+		return get("manager");
 	}
 
 	public void setManager(Employee e) {
@@ -50,7 +49,7 @@ public class Employee extends PersistentObject implements Comparable<Employee> {
 	}
 
 	public String getJob() {
-		return (String)get("job");
+		return get("job");
 	}
 
 	public void setJob(String s) {

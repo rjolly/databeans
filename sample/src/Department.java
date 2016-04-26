@@ -1,3 +1,4 @@
+import java.beans.ConstructorProperties;
 import persistence.PersistentObject;
 import persistence.Store;
 
@@ -5,16 +6,14 @@ public class Department extends PersistentObject {
 	public Department() {
 	}
 
-	public Department(final Store store) {
+	@ConstructorProperties({"name"})
+	public Department(final Store store, final String name) {
 		super(store);
+		set("name", name);
 	}
 
 	public String getName() {
-		return (String)get("name");
-	}
-
-	public void setName(String s) {
-		set("name",s);
+		return get("name");
 	}
 
 	public String toString() {

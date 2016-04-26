@@ -12,6 +12,9 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import persistence.Store;
 import persistence.PersistentArray;
 import persistence.PersistentObject;
@@ -113,7 +116,7 @@ public class Statement {
 				return new PersistentArray(store, ReflectionUtils.componentTypeFor(((Character)arguments[0]).charValue()), ((Integer)arguments[1]).intValue());
 			}
 			if (methodName == "newInstance" && PersistentObject.class.isAssignableFrom((Class)target)) {
-				return ((Class)target).getConstructor(Store.class).newInstance(store);
+				return ((Class)target).getConstructor(concat(new Class[] {Store.class}, argClasses)).newInstance(concat(new Object[] {store}, arguments));
 			}
 			if (methodName == "newInstance" && arguments.length != 0) {
 				// The Character class, as of 1.4, does not have a constructor
@@ -171,6 +174,13 @@ public class Statement {
 			}
 		}
 		throw new NoSuchMethodException(toString());
+	}
+
+	static <T> T[] concat(final T a[], final T b[]) {
+		final List<T> list = new ArrayList<>();
+		list.addAll(Arrays.asList(a));
+		list.addAll(Arrays.asList(b));
+		return list.toArray(a);
 	}
 
 	String instanceName(Object instance) {
