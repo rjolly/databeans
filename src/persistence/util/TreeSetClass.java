@@ -18,6 +18,6 @@ public final class TreeSetClass extends PersistentClass {
 	}
 
 	public PersistentObject getPRESENT() {
-		return (PersistentObject)get("PRESENT");
+		return get("PRESENT");
 	}
 }
